@@ -6,7 +6,7 @@ import { Agency } from './models/Agency';
 import { Route } from './models/Route';
 
 import { SerialPort } from 'serialport';
-import { RegexParser } from '@serialport/parser-regex'
+import { ReadlineParser } from '@serialport/parser-readline'
 
 const IBIS_SEND_INTERVAL = 10
 const IBIS_TERMINAL_RECEIVE_INTERVAL = 0.5
@@ -44,7 +44,7 @@ function signTelegram(message: string): string {
 }
 
 function main() {
-  const parser = port.pipe(new RegexParser({ regex: /[\r\n]+/ }))
+  const parser = port.pipe(new ReadlineParser({ delimiter: '\r' }))
   parser.on('data', console.log)
   
   setInterval(() => {
