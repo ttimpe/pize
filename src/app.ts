@@ -20,7 +20,7 @@ const port = new SerialPort({
 })
 
 function sendTelegram(telegram: string) {
-  const signedTelegram = signTelegram(telegram) + '\r'
+  const signedTelegram = signTelegram(telegram + '\r')
   port.write(signedTelegram)
   console.log('out > '+ signedTelegram)
 }
