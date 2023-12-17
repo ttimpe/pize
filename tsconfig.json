@@ -15,5 +15,5 @@
       "build": "tsc --build",
       "clean": "tsc --build --clean"
     },
-    "lib": ["es2015"]
+    "lib": ["es2018"]
   }
