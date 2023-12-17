@@ -51,3 +51,4 @@ function main() {
     sendTelegram('mS2')
   },IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
 }
+main()
