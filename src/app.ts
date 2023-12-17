@@ -44,8 +44,9 @@ function signTelegram(message: string): string {
 }
 
 function main() {
-  const parser = port.pipe(new ReadlineParser({ delimiter: '\r' }))
-  parser.on('data', console.log)
+  port.on('data', function (data: string) {
+    console.log('in >', data)
+  })
   
   setInterval(() => {
     sendTelegram('mS2')
