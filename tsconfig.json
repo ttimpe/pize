@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+      "module": "commonjs",
+      "esModuleInterop": true,
+      "types": ["node", "sequelize"],
+      "target": "es6",
+      "moduleResolution": "node",
+      "sourceMap": true,
+      "outDir": "dist"
+    },
+    "include": [
+      "src/**/*"
+    ],
+    "scripts": {
+      "build": "tsc --build",
+      "clean": "tsc --build --clean"
+    },
+    "lib": ["es2015"]
+  }
