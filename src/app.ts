@@ -5,30 +5,49 @@ import { sequelize } from './sequelize';
 import { Agency } from './models/Agency';
 import { Route } from './models/Route';
 
-async function listRoutesByAgency(agencyName: string) {
-  try {
-    const agency = await Agency.findOne({
-      where: {
-        agency_name: agencyName,
-      },
-      include: {
-        model: Route,
-        as: 'routes', // This assumes you've defined an association between Agency and Route
-      },
-    });
+import { SerialPort } from 'serialport';
+import { RegexParser } from '@serialport/parser-regex'
 
-    if (!agency) {
-      console.log(`Agency ${agencyName} not found.`);
-      return;
-    }
+const IBIS_SEND_INTERVAL = 10
+const IBIS_TERMINAL_RECEIVE_INTERVAL = 0.5
 
-    console.log(`Routes operated by ${agency.agency_name}:`);
-    agency['routes'].forEach((route) => {
-      console.log(`Route ID: ${route.route_id}, Name: ${route.route_short_name}`);
-    });
-  } catch (error) {
-    console.error('Error listing routes by agency:', error);
-  }
+const port = new SerialPort({
+  path: process.argv[2],
+  baudRate: 1200,
+  dataBits: 7,
+  stopBits: 2,
+  parity: 'even'
+})
+
+function sendTelegram(telegram: string) {
+  const signedTelegram = signTelegram(telegram) + '\r'
+  port.write(signedTelegram)
+  console.log('out > '+ signedTelegram)
 }
 
-listRoutesByAgency('moBiel'); // Replace with the actual agency name
+
+
+function onReceiveTelegram(telegram: string) {
+  console.log('in > ' + telegram)
+
+}
+
+function signTelegram(message: string): string {
+
+  let checkByte = 0x7F;
+  for (const char of message) {
+      const byte = char.charCodeAt(0);
+      checkByte = checkByte ^ byte;
+  }
+  message += String.fromCharCode(checkByte);
+  return message;
+}
+
+function main() {
+  const parser = port.pipe(new RegexParser({ regex: /[\r\n]+/ }))
+  parser.on('data', console.log)
+  
+  setInterval(() => {
+    sendTelegram('mS2')
+  },IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
+}
