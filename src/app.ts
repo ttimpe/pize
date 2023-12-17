@@ -22,12 +22,12 @@ const port = new SerialPort({
 function sendTelegram(telegram: string) {
   const signedTelegram = signTelegram(telegram + '\r')
   port.write(signedTelegram)
-  console.log('out > '+ signedTelegram)
+  console.log('out > '+ signedTelegram.replace('\r', '\\r'))
 }
 
 
 function writeTextToTerminal(line: number, text: string) {
-  let telegram = 'ms2?'+line.toString() + '0' + text.padEnd(16)
+  let telegram = 'mC2?' + line.toString() + '0' + text.padEnd(16)
   sendTelegram(telegram)
 }
 
