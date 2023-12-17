@@ -29,7 +29,7 @@ function sendTelegram(telegram: string) {
 function writeTextToTerminal(line: number, text: string) {
   // char code 48 is 0
 
-  let telegram = 'mC2' + String.fromCharCode(48 + text.length) + line.toString() + '0' + text
+  let telegram = 'mC2' + String.fromCharCode(47 + text.length) + line.toString() + '0' + text
   sendTelegram(telegram)
 }
 
