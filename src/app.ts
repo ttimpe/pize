@@ -26,9 +26,26 @@ function sendTelegram(telegram: string) {
 }
 
 
+function writeTextToTerminal(line: number, text: string) {
+  let telegram = 'ms2?'+line.toString() + line.padEnd(16)
+  sendTelegram(telegram)
+}
+
+
 
 function onReceiveTelegram(telegram: string) {
+  telegram = telegram.substring(1)
   console.log('in > ' + telegram)
+  // Check if terminal input
+  if (telegram.startsWith('m')) {
+    switch (telegram[1]) {
+      case 'Q':
+        break;
+      default:
+        writeTextToTerminal(0, telegram[1])
+        break;
+    }
+  }
 
 }
 
