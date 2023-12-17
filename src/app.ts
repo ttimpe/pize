@@ -27,7 +27,7 @@ function sendTelegram(telegram: string) {
 
 
 function writeTextToTerminal(line: number, text: string) {
-  let telegram = 'ms2?'+line.toString() + text.padEnd(16)
+  let telegram = 'ms2?'+line.toString() + '0' + text.padEnd(16)
   sendTelegram(telegram)
 }
 
