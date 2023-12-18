@@ -19,6 +19,7 @@ let course = ''
 let route = ''
 let ziel = ''
 let richtung = 'Z'
+let isAwaitingNumberInput = false
 let telegramQueue = []
 const port = new SerialPort({
   path: process.argv[2],
@@ -42,9 +43,6 @@ function writeTextToTerminal(line: number, text: string, mode: number = 2) {
   sendTelegram(telegram)
 }
 
-function queueTelegram(telegram: string) {
-
-}
 
 
 function writeSecondLine() {
@@ -63,43 +61,52 @@ function writeSecondLine() {
 
 function onPressLinieKurs() {
   writeTextToTerminal(0,'LINIE-KURS:     ', 3)
+  isAwaitingNumberInput = true
+
   currentDisplayMode = DisplayMode.LinieKurs
 }
 
 function onPressRoute() {
   clearScreen()
   writeTextToTerminal(0,'ROUTE        :  ', 3)
+  isAwaitingNumberInput = true
   currentDisplayMode = DisplayMode.Route
 
 }
 function onPressMeldung() {
   clearScreen()
   writeTextToTerminal(0,'MELDUNG    :   ', 3)
+  isAwaitingNumberInput = true
   currentDisplayMode = DisplayMode.Meldung
 
 }
 
 function onPressZielSonderzeichen() {
   clearScreen()
+  isAwaitingNumberInput = true
   currentDisplayMode = DisplayMode.Ziel
+
   writeTextToTerminal(0, 'ZIEL        :', 3)
 
 }
 
 function onPressRichtung() {
   clearScreen()
+  isAwaitingNumberInput = true
   currentDisplayMode = DisplayMode.Richtung
   writeTextToTerminal(0,'RICHTUNG     :  ', 3)
 }
 
 function onPressHstNr() {
   clearScreen()
+  isAwaitingNumberInput = true
   currentDisplayMode = DisplayMode.HstNr
   writeTextToTerminal(0,'HALTEST.NR.: ', 3)
 }
 
 
 function onPressUhrzeitDatum() {
+  isAwaitingNumberInput = false
   if (currentDisplayMode != DisplayMode.DatumUhrzeit) {
     currentDisplayMode = DisplayMode.DatumUhrzeit
     let d = new Date()
@@ -116,8 +123,8 @@ function onPressUhrzeitDatum() {
 
 function clearScreen() {
   sendTelegram('mC2?00                ')
-  sendTelegram('mS2')
-} 
+}
+
 function onReceiveTelegram(telegram: string) {
   telegram = telegram.substring(1)
   console.log('in > ' + telegram)
@@ -161,6 +168,7 @@ function onReceiveTelegram(telegram: string) {
   }
   if (currentDisplayMode == DisplayMode.LinieKurs) {
     if (telegram.startsWith('m?')) {
+      isAwaitingNumberInput = false
       line = telegram.substring(2, 5)
       course = telegram.substring(5,7)
       sendTelegram('l' + line)
@@ -172,6 +180,7 @@ function onReceiveTelegram(telegram: string) {
   }
   if (currentDisplayMode == DisplayMode.Route) {
     if (telegram.startsWith('m?')) {
+      isAwaitingNumberInput = false
       route = telegram.substring(2, 5)
       sendTelegram('r' + route)
       currentDisplayMode = DisplayMode.None
@@ -181,6 +190,7 @@ function onReceiveTelegram(telegram: string) {
   }
   if (currentDisplayMode == DisplayMode.Richtung) {
     if (telegram.startsWith('m?')) {
+      isAwaitingNumberInput = false
       richtung = telegram.substring(2, 5)
       currentDisplayMode = DisplayMode.None
       clearScreen()
@@ -190,6 +200,7 @@ function onReceiveTelegram(telegram: string) {
   if (currentDisplayMode == DisplayMode.Meldung) {
     if (telegram.startsWith('m?')) {
       // TODO: Implement Meldung
+      isAwaitingNumberInput = false
       currentDisplayMode = DisplayMode.None
       clearScreen()
       return
@@ -197,6 +208,7 @@ function onReceiveTelegram(telegram: string) {
   }
   if (currentDisplayMode == DisplayMode.Ziel) {
     if (telegram.startsWith('m?')) {
+      isAwaitingNumberInput = false
       ziel = telegram.substring(2, 5)
       sendTelegram('z' + ziel)
       writeSecondLine()
@@ -231,11 +243,13 @@ function main() {
   playSound('1', 1)
   setInterval(() => {
     console.log('currentDisplayMode', currentDisplayMode)
+    if (!isAwaitingNumberInput) {
     if (currentDisplayMode == DisplayMode.None || currentDisplayMode == DisplayMode.DatumUhrzeit) {
       sendTelegram('mS2')
     } else {
       sendTelegram('mS3')
     }
+  }
   },IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
 }
 main()
