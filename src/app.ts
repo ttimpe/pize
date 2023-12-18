@@ -56,7 +56,7 @@ function onPressRoute() {
 }
 function onPressMeldung() {
   clearScreen()
-  writeTextToTerminal(0,'MELDUNG    :')
+  writeTextToTerminal(0,'MELDUNG    :', 3)
   currentDisplayMode = DisplayMode.Meldung
 
 }
