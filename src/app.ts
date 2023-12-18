@@ -52,7 +52,7 @@ function onPressRoute() {
 }
 
 function clearScreen() {
-  sendTelegram('mC2?                ')
+  sendTelegram('mC0?                ')
 } 
 function onReceiveTelegram(telegram: string) {
   telegram = telegram.substring(1)
@@ -110,7 +110,6 @@ function onReceiveTelegram(telegram: string) {
     if (telegram.startsWith('m?')) {
       route = telegram.substring(2, 5)
       sendTelegram('r' + route)
-      currentInputMode = InputMode.None
     }
   }
   }
