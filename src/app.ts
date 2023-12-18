@@ -8,9 +8,13 @@ import { Route } from './models/Route';
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline'
 import { Button } from './enums/buttons'
+import { InputMode } from './enums/inputMode'
+
 
 const IBIS_SEND_INTERVAL = 10
-const IBIS_TERMINAL_RECEIVE_INTERVAL = 5
+const IBIS_TERMINAL_RECEIVE_INTERVAL = 2
+
+let currentInputMode :InputMode = InputMode.None
 
 const port = new SerialPort({
   path: process.argv[2],
@@ -66,6 +70,7 @@ function onReceiveTelegram(telegram: string) {
         writeTextToTerminal(0,'MELDUNG:')
         break;
       case Button.LinieKurs:
+        currentInputMode = InputMode.LinieKurs
         writeTextToTerminal(0,'LINIE-KURS:     ')
         break;
       case Button.Route:
@@ -95,7 +100,12 @@ function main() {
   parser.on('data', onReceiveTelegram)
   
   setInterval(() => {
-    sendTelegram('mS3')
+    if (currentInputMode == InputMode.LinieKurs) {
+      sendTelegram('ms3')
+    }
+    if (currentInputMode == InputMode.None) {
+      sendTelegram('mS2')
+    }
   },IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
 }
 main()
