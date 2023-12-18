@@ -115,8 +115,8 @@ function onPressUhrzeitDatum() {
 
 
 function clearScreen() {
-  sendTelegram('mS2')
   sendTelegram('mC2?00                ')
+  sendTelegram('mS2')
 } 
 function onReceiveTelegram(telegram: string) {
   telegram = telegram.substring(1)
