@@ -101,7 +101,7 @@ function main() {
   
   setInterval(() => {
     if (currentInputMode == InputMode.LinieKurs) {
-      sendTelegram('ms3')
+      sendTelegram('mS3')
     }
     if (currentInputMode == InputMode.None) {
       sendTelegram('mS2')
