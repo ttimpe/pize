@@ -95,6 +95,54 @@ function onPressHstNr() {
   currentDisplayMode = DisplayMode.HstNr
   writeTextToTerminal(0,'HALTEST.NR.: ', 3)
 }
+function onPressWeicheLinks() {
+
+}
+function onPressWeicheGerade() {
+
+}
+function onPressWeicheRechts() {
+
+}
+function onPressAnsageStumm() {
+
+}
+function onPressAnsageAussen() {
+  if (currentDisplayMode != DisplayMode.AnsageAussen) {
+    currentDisplayMode = DisplayMode.AnsageAussen
+    writeTextToTerminal(0, '  ** AUSSEN **  ')
+  } else {
+    clearScreen()
+    currentDisplayMode = DisplayMode.None
+  }
+}
+function onPressSprechwunsch() {
+
+}
+function onPressLStAnFG() {
+  if (currentDisplayMode != DisplayMode.LStAnFG) {
+    currentDisplayMode = DisplayMode.LStAnFG
+    writeTextToTerminal(0, '* LS-FAHRGAST * ')
+  } else {
+    clearScreen()
+    currentDisplayMode = DisplayMode.None
+  }
+}
+function onPressUnfall() {
+
+}
+function onPressHstWiederholen() {
+
+}
+function onPressAnsageInnen() {
+  if (currentDisplayMode != DisplayMode.AnsageInnen) {
+    currentDisplayMode = DisplayMode.AnsageInnen
+    writeTextToTerminal(0, '   ** INNEN **  ')
+  } else {
+    clearScreen()
+    currentDisplayMode = DisplayMode.None
+  }
+} 
 
 
 function onPressUhrzeitDatum() {
@@ -154,6 +202,32 @@ function onReceiveTelegram(telegram: string) {
         break;
       case Button.Sonderzeichen:
         onPressZielSonderzeichen()
+        break;
+      case Button.WeicheLinks:
+        onPressWeicheLinks()
+        break;
+      case Button.WeicheGerade:
+        onPressWeicheGerade()
+        break;
+      case Button.WeicheRechts:
+        onPressWeicheRechts()
+        break;
+      case Button.AnsageStumm:
+        onPressAnsageStumm()
+        break;
+      case Button.AnsageAussen:
+        onPressAnsageAussen()
+        break;
+      case Button.LStAnFG:
+        onPressLStAnFG()
+        break;
+      case Button.Unfall:
+        onPressUnfall()
+        break;
+      case Button.HstWiederholen:
+        onPressHstWiederholen()
+      case Button.AnsageInnen:
+        onPressAnsageInnen()
         break;
     }
   }

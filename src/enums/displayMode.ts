@@ -9,5 +9,13 @@ export enum DisplayMode {
     Sonderzeichen = 7,
     Ziel = 8,
     DatumUhrzeit = 9,
-    None = 10
+    None = 10,
+    WeicheLinks = 11,
+    WeicheGerade = 12,
+    WeicheRechts = 13,
+    AnsageStumm = 14,
+    AnsageAussen = 15,
+    LStAnFG = 16,
+    Unfall = 17,
+    AnsageInnen = 18    
 }

@@ -9,5 +9,14 @@ export enum Button {
     LinieKurs = '7',
     Route = '8',
     Sonderzeichen = '9',
-    None = 'Q'
+    None = 'Q',
+    WeicheLinks = ':',
+    WeicheGerade = ';',
+    WeicheRechts = '<',
+    AnsageStumm = '=',
+    AnsageAussen = ' >',
+    LStAnFG = '+',
+    Unfall = ',',
+    HstWiederholen = '-',
+    AnsageInnen = '.'
 }
