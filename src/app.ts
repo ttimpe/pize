@@ -12,7 +12,7 @@ import { InputMode } from './enums/inputMode'
 
 
 const IBIS_SEND_INTERVAL = 10
-const IBIS_TERMINAL_RECEIVE_INTERVAL = 3
+const IBIS_TERMINAL_RECEIVE_INTERVAL = 1
 
 let currentInputMode :InputMode = InputMode.None
 
@@ -70,8 +70,8 @@ function onReceiveTelegram(telegram: string) {
         writeTextToTerminal(0,'MELDUNG:')
         break;
       case Button.LinieKurs:
+        writeTextToTerminal(0,'LINIE-KURS:     ')
         currentInputMode = InputMode.LinieKurs
-        writeTextToTerminal(0,'LINIE-KURS:    ')
         break;
       case Button.Route:
         writeTextToTerminal(0,'ROUTE        :')
@@ -101,7 +101,7 @@ function main() {
   
   setInterval(() => {
     if (currentInputMode == InputMode.LinieKurs) {
-     // sendTelegram('mS3')
+      sendTelegram('mS3')
     }
     if (currentInputMode == InputMode.None) {
       sendTelegram('mS2')
