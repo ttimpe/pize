@@ -91,7 +91,6 @@ function onPressUhrzeitDatum() {
 
 
 function clearScreen() {
-  sendTelegram('mC3?00                ')
   sendTelegram('mC2?00                ')
 } 
 function onReceiveTelegram(telegram: string) {
@@ -168,6 +167,7 @@ function onReceiveTelegram(telegram: string) {
       ziel = telegram.substring(2, 5)
       sendTelegram('z' + ziel)
       writeSecondLine()
+      sendTelegram('mS2')
       clearScreen()
       currentDisplayMode = DisplayMode.None
       return
