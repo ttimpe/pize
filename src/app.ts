@@ -135,6 +135,8 @@ function main() {
   setInterval(() => {
     if (currentInputMode == InputMode.None) {
       sendTelegram('mS2')
+    } else {
+      sendTelegram('mS3')
     }
   },IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
 }
