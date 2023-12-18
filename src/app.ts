@@ -10,7 +10,7 @@ import { ReadlineParser } from '@serialport/parser-readline'
 import { Button } from './enums/buttons'
 
 const IBIS_SEND_INTERVAL = 10
-const IBIS_TERMINAL_RECEIVE_INTERVAL = 0.5
+const IBIS_TERMINAL_RECEIVE_INTERVAL = 1
 
 const port = new SerialPort({
   path: process.argv[2],
