@@ -46,10 +46,14 @@ function onPressLinieKurs() {
 }
 
 function onPressRoute() {
+  clearScreen()
   writeTextToTerminal(0,'ROUTE        :  ')
   currentInputMode = InputMode.Route
 }
 
+function clearScreen() {
+  sendTelegram('mC2?                ')
+} 
 function onReceiveTelegram(telegram: string) {
   telegram = telegram.substring(1)
   console.log('in > ' + telegram)
@@ -98,6 +102,7 @@ function onReceiveTelegram(telegram: string) {
       course = telegram.substring(6,8)
       sendTelegram('l' + line)
       sendTelegram('k' + course)
+      writeTextToTerminal(1, line + course)
       onPressRoute()
     }
   }
@@ -128,14 +133,6 @@ function main() {
   parser.on('data', onReceiveTelegram)
   onPressLinieKurs()
   setInterval(() => {
-    
-    if (currentInputMode == InputMode.LinieKurs) {
-      sendTelegram('mS3')
-    }
-    if (currentInputMode == InputMode.Route) {
-      sendTelegram('mS3')
-    }
-
     if (currentInputMode == InputMode.None) {
       sendTelegram('mS2')
     }
