@@ -138,6 +138,7 @@ function onPressAnsageInnen() {
   console.log('onPressAnsageInnen')
   if (currentDisplayMode != DisplayMode.AnsageInnen) {
     currentDisplayMode = DisplayMode.AnsageInnen
+    clearScreen()
     writeTextToTerminal(0, '   ** INNEN **  ')
   } else {
     clearScreen()
