@@ -122,6 +122,7 @@ function onReceiveTelegram(telegram: string) {
       sendTelegram('k' + course)
       writeTextToTerminal(1, line + course)
       onPressRoute()
+      return
     }
   }
   if (currentDisplayMode == DisplayMode.Route) {
@@ -130,6 +131,7 @@ function onReceiveTelegram(telegram: string) {
       sendTelegram('r' + route)
       clearScreen()
       currentDisplayMode = DisplayMode.None
+      return
     }
   }
   }
