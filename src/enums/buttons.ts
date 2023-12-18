@@ -18,5 +18,6 @@ export enum Button {
     LStAnFG = '+',
     Unfall = ',',
     HstWiederholen = '-',
-    AnsageInnen = '.'
+    AnsageInnen = '.',
+    Sprechwunsch = '*'
 }

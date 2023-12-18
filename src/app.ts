@@ -304,7 +304,7 @@ function main() {
   playSound('1', 1)
   setInterval(() => {
     console.log('currentDisplayMode', currentDisplayMode)
-    if (currentDisplayMode == DisplayMode.None || currentDisplayMode == DisplayMode.DatumUhrzeit) {
+    if (currentDisplayMode == DisplayMode.None || currentDisplayMode == DisplayMode.DatumUhrzeit || currentDisplayMode == DisplayMode.WeicheLinks || currentDisplayMode == DisplayMode.WeicheGerade || currentDisplayMode == DisplayMode.WeicheRechts || currentDisplayMode == DisplayMode.AnsageAussen || currentDisplayMode == DisplayMode.Unfall || currentDisplayMode == DisplayMode.AnsageInnen) {
       sendTelegram('mS2')
     } else {
       sendTelegram('mS3')
