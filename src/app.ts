@@ -8,7 +8,7 @@ import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline'
 import { Button } from './enums/buttons'
 import { DisplayMode } from './enums/displayMode'
-
+import { Richtung } from './models/Richtung';
 
 const IBIS_SEND_INTERVAL = 10
 const IBIS_TERMINAL_RECEIVE_INTERVAL = 2
@@ -18,6 +18,7 @@ let line = ''
 let course = ''
 let route = ''
 let ziel = ''
+let richtung = 'Z'
 let telegramQueue = []
 const port = new SerialPort({
   path: process.argv[2],
@@ -47,7 +48,16 @@ function queueTelegram(telegram: string) {
 
 
 function writeSecondLine() {
-  writeTextToTerminal(1, line + course + ziel + 'Z' + '000')
+  let directionLetter = 'Z'
+  switch (richtung) {
+    case '1':
+      directionLetter = 'H'
+      break;
+    case '2':
+      directionLetter = 'R'
+      break;
+  }
+  writeTextToTerminal(1, line.padStart(3) + course.padStart(2) + ziel.padStart(3) + directionLetter)
 }
 
 
@@ -163,6 +173,15 @@ function onReceiveTelegram(telegram: string) {
     if (telegram.startsWith('m?')) {
       route = telegram.substring(2, 5)
       sendTelegram('r' + route)
+      clearScreen()
+      currentDisplayMode = DisplayMode.None
+      return
+    }
+  }
+  if (currentDisplayMode == DisplayMode.Richtung) {
+    if (telegram.startsWith('m?')) {
+      
+      richtung = telegram.substring(2, 5)
       clearScreen()
       currentDisplayMode = DisplayMode.None
       return
