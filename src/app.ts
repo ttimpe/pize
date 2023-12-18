@@ -70,7 +70,7 @@ function onPressUhrzeitDatum() {
 
 
 function clearScreen() {
-  sendTelegram('mC0?                ')
+  sendTelegram('mC2?                ')
 } 
 function onReceiveTelegram(telegram: string) {
   telegram = telegram.substring(1)
