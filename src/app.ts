@@ -68,8 +68,8 @@ function onPressUhrzeitDatum() {
     let outputString = d.toLocaleDateString('de', { dateStyle: "short" }) + '   ' + d.toLocaleTimeString('de', { timeStyle: "short" })
     writeTextToTerminal(0, outputString)
   } else {
-    currentDisplayMode = DisplayMode.None
     clearScreen()
+    currentDisplayMode = DisplayMode.None
   }
 }
 
@@ -84,7 +84,7 @@ function onReceiveTelegram(telegram: string) {
   // Check if terminal input
 
   if (telegram.startsWith('m')) {
-    if (currentDisplayMode == DisplayMode.None) {
+    if (currentDisplayMode == DisplayMode.None || currentDisplayMode == DisplayMode.DatumUhrzeit) {
     switch (telegram[1]) {
       case Button.None:
         break;
