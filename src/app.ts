@@ -64,7 +64,7 @@ function onPressRoute() {
 }
 function onPressMeldung() {
   clearScreen()
-  writeTextToTerminal(0,'MELDUNG    :', 3)
+  writeTextToTerminal(0,'MELDUNG    :   ', 3)
   currentDisplayMode = DisplayMode.Meldung
 
 }
@@ -74,6 +74,18 @@ function onPressZielSonderzeichen() {
   currentDisplayMode = DisplayMode.Ziel
   writeTextToTerminal(0, 'ZIEL        :', 3)
 
+}
+
+function onPressRichtung() {
+  clearScreen()
+  currentDisplayMode = DisplayMode.Richtung
+  writeTextToTerminal(0,'RICHTUNG     :  ', 3)
+}
+
+function onPressHstNr() {
+  clearScreen()
+  currentDisplayMode = DisplayMode.HstNr
+  writeTextToTerminal(0,'HALTEST.NR.: ', 3)
 }
 
 
@@ -117,10 +129,10 @@ function onReceiveTelegram(telegram: string) {
       case Button.NaechsteHaltestelle:
         break;
       case Button.HstNr:
-        writeTextToTerminal(0,'HALTEST.NR.:')
+        onPressHstNr()
         break;
       case Button.Richtung:
-        writeTextToTerminal(0,'RICHTUNG     :')
+        onPressRichtung()
         break;
       case Button.Meldung:
         onPressMeldung()
