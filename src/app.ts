@@ -67,8 +67,7 @@ function onPressUhrzeitDatum() {
   }
 }
 
-function setInputMode(mode: number) {
-}
+
 
 function clearScreen() {
   sendTelegram('mC0?                ')
@@ -158,7 +157,7 @@ function main() {
   onPressLinieKurs()
   playSound('1', 1)
   setInterval(() => {
-    if (currentDisplayMode == DisplayMode.None) {
+    if (currentDisplayMode == DisplayMode.None || DisplayMode.DatumUhrzeit) {
       sendTelegram('mS2')
     } else {
       sendTelegram('mS3')
