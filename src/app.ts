@@ -38,6 +38,10 @@ function writeTextToTerminal(line: number, text: string) {
   sendTelegram(telegram)
 }
 
+function onPressLinieKurs() {
+  writeTextToTerminal(0,'LINIE-KURS:     ')
+  currentInputMode = InputMode.LinieKurs
+}
 
 
 function onReceiveTelegram(telegram: string) {
@@ -72,8 +76,7 @@ function onReceiveTelegram(telegram: string) {
         writeTextToTerminal(0,'MELDUNG:')
         break;
       case Button.LinieKurs:
-        writeTextToTerminal(0,'LINIE-KURS:     ')
-        currentInputMode = InputMode.LinieKurs
+        onPressLinieKurs()
         break;
       case Button.Route:
         writeTextToTerminal(0,'ROUTE        :')
@@ -101,13 +104,14 @@ function signTelegram(message: string): string {
 function main() {
   const parser = port.pipe(new ReadlineParser({ delimiter: '\r' }))
   parser.on('data', onReceiveTelegram)
-  
+  onPressLinieKurs()
   setInterval(() => {
+    /*
     if (currentInputMode == InputMode.LinieKurs) {
       sendTelegram('mS3')
-    }
+    }*/
     if (currentInputMode == InputMode.None) {
-      sendTelegram('mS2')
+      sendTelegram('mS3')
     }
   },IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
 }
