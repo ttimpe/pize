@@ -66,13 +66,13 @@ function onReceiveTelegram(telegram: string) {
         writeTextToTerminal(0,'MELDUNG:')
         break;
       case Button.LinieKurs:
-        writeTextToTerminal(0,'LINIE-KURS:')
+        writeTextToTerminal(0,'LINIE-KURS:     ')
         break;
       case Button.Route:
-        writeTextToTerminal(0,'ROUTE:')
+        writeTextToTerminal(0,'ROUTE        :')
         break;
       case Button.Sonderzeichen:
-        writeTextToTerminal(0,'SONDERZEICH.:')
+        writeTextToTerminal(0,'SONDERZEICH. :')
         break;
     }
   }
