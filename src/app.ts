@@ -44,7 +44,9 @@ function onReceiveTelegram(telegram: string) {
   telegram = telegram.substring(1)
   console.log('in > ' + telegram)
   // Check if terminal input
+
   if (telegram.startsWith('m')) {
+    if (currentInputMode == InputMode.None) {
     switch (telegram[1]) {
       case Button.None:
         break;
@@ -80,6 +82,7 @@ function onReceiveTelegram(telegram: string) {
         writeTextToTerminal(0,'SONDERZEICH. :')
         break;
     }
+  }
   }
 
 }
