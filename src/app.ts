@@ -32,28 +32,28 @@ function sendTelegram(telegram: string) {
 }
 
 
-function writeTextToTerminal(line: number, text: string) {
+function writeTextToTerminal(line: number, text: string, mode: number = 2) {
   // char code 48 is 0
 
-  let telegram = 'mC3' + String.fromCharCode(47 + text.length) + line.toString() + '0' + text
+  let telegram = 'mC' + mode + String.fromCharCode(47 + text.length) + line.toString() + '0' + text
   sendTelegram(telegram)
 }
 
 
-function setDisplayMode(displayMode: DisplayMode) {
 
-}
 
 
 function onPressLinieKurs() {
-  writeTextToTerminal(0,'LINIE-KURS:     ')
+  clearScreen()
+  writeTextToTerminal(0,'LINIE-KURS:     ', 3)
   currentDisplayMode = DisplayMode.LinieKurs
 }
 
 function onPressRoute() {
   clearScreen()
+  writeTextToTerminal(0,'ROUTE        :  ', 3)
   currentDisplayMode = DisplayMode.Route
-  writeTextToTerminal(0,'ROUTE        :  ')
+
 }
 
 function onPressUhrzeitDatum() {
@@ -66,6 +66,9 @@ function onPressUhrzeitDatum() {
     currentDisplayMode = DisplayMode.None
     clearScreen()
   }
+}
+
+function setInputMode(mode: number) {
 }
 
 function clearScreen() {
