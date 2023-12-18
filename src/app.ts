@@ -10,7 +10,7 @@ import { ReadlineParser } from '@serialport/parser-readline'
 import { Button } from './enums/buttons'
 
 const IBIS_SEND_INTERVAL = 10
-const IBIS_TERMINAL_RECEIVE_INTERVAL = 1
+const IBIS_TERMINAL_RECEIVE_INTERVAL = 5
 
 const port = new SerialPort({
   path: process.argv[2],
@@ -23,14 +23,14 @@ const port = new SerialPort({
 function sendTelegram(telegram: string) {
   const signedTelegram = signTelegram(telegram + '\r')
   port.write(signedTelegram)
-  console.log('out > '+ signedTelegram.replace('\r', '\\r'))
+  console.log('out > ' + signedTelegram.replace('\r', '<CR>'))
 }
 
 
 function writeTextToTerminal(line: number, text: string) {
   // char code 48 is 0
 
-  let telegram = 'mC2' + String.fromCharCode(47 + text.length) + line.toString() + '0' + text
+  let telegram = 'mC3' + String.fromCharCode(47 + text.length) + line.toString() + '0' + text
   sendTelegram(telegram)
 }
 
@@ -95,7 +95,7 @@ function main() {
   parser.on('data', onReceiveTelegram)
   
   setInterval(() => {
-    sendTelegram('mS2')
+    sendTelegram('mS3')
   },IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
 }
 main()
