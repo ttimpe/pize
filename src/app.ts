@@ -43,6 +43,10 @@ function onPressLinieKurs() {
   currentInputMode = InputMode.LinieKurs
 }
 
+function onPressRoute() {
+  writeTextToTerminal(0,'ROUTE        :')
+  currentInputMode = InputMode.Route
+}
 
 function onReceiveTelegram(telegram: string) {
   telegram = telegram.substring(1)
@@ -79,7 +83,7 @@ function onReceiveTelegram(telegram: string) {
         onPressLinieKurs()
         break;
       case Button.Route:
-        writeTextToTerminal(0,'ROUTE        :')
+        onPressRoute()
         break;
       case Button.Sonderzeichen:
         writeTextToTerminal(0,'SONDERZEICH. :')
