@@ -134,8 +134,8 @@ function signTelegram(message: string): string {
 function main() {
   const parser = port.pipe(new ReadlineParser({ delimiter: '\r' }))
   parser.on('data', onReceiveTelegram)
-  playSound('1', 1)
   onPressLinieKurs()
+  playSound('1', 1)
   setInterval(() => {
     if (currentInputMode == InputMode.None) {
       sendTelegram('mS2')
