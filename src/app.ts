@@ -158,7 +158,7 @@ function main() {
   playSound('1', 1)
   setInterval(() => {
     console.log('currentDisplayMode', currentDisplayMode)
-    if (currentDisplayMode == DisplayMode.None || DisplayMode.DatumUhrzeit) {
+    if (currentDisplayMode == DisplayMode.None || currentDisplayMode == DisplayMode.DatumUhrzeit) {
       sendTelegram('mS2')
     } else {
       sendTelegram('mS3')
