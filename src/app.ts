@@ -128,8 +128,8 @@ function onReceiveTelegram(telegram: string) {
     if (telegram.startsWith('m?')) {
       route = telegram.substring(2, 5)
       sendTelegram('r' + route)
-      currentDisplayMode = DisplayMode.None
       clearScreen()
+      currentDisplayMode = DisplayMode.None
     }
   }
   }
@@ -157,6 +157,7 @@ function main() {
   onPressLinieKurs()
   playSound('1', 1)
   setInterval(() => {
+    console.log('currentDisplayMode', currentDisplayMode)
     if (currentDisplayMode == DisplayMode.None || DisplayMode.DatumUhrzeit) {
       sendTelegram('mS2')
     } else {
