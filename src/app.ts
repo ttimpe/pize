@@ -7,6 +7,7 @@ import { Route } from './models/Route';
 
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline'
+import { Button } from './enums/buttons'
 
 const IBIS_SEND_INTERVAL = 10
 const IBIS_TERMINAL_RECEIVE_INTERVAL = 0.5
@@ -41,10 +42,37 @@ function onReceiveTelegram(telegram: string) {
   // Check if terminal input
   if (telegram.startsWith('m')) {
     switch (telegram[1]) {
-      case 'Q':
+      case Button.None:
         break;
-      default:
-        writeTextToTerminal(0, telegram[1])
+      case Button.IFISStop:
+        
+        break;
+      case Button.Besetzung:
+
+        break;
+      case Button.UhrzeitDatum:
+        sendTelegram('01-01-2000 00:00')
+        break;
+      case Button.NaechsteHaltestelle:
+        break;
+      case Button.HstNr:
+        sendTelegram('HALTEST.NR.:')
+
+        break;
+      case Button.Richtung:
+        sendTelegram('RICHTUNG:')
+        break;
+      case Button.Meldung:
+        sendTelegram('MELDUNG:')
+        break;
+      case Button.LinieKurs:
+        sendTelegram('LINIE-KURS:')
+        break;
+      case Button.Route:
+        sendTelegram('ROUTE:')
+        break;
+      case Button.Sonderzeichen:
+        sendTelegram('SONDERZEICH.:')
         break;
     }
   }
