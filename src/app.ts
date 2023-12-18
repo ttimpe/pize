@@ -135,6 +135,7 @@ function onPressHstWiederholen() {
 
 }
 function onPressAnsageInnen() {
+  console.log('onPressAnsageInnen')
   if (currentDisplayMode != DisplayMode.AnsageInnen) {
     currentDisplayMode = DisplayMode.AnsageInnen
     writeTextToTerminal(0, '   ** INNEN **  ')
@@ -226,6 +227,7 @@ function onReceiveTelegram(telegram: string) {
         break;
       case Button.HstWiederholen:
         onPressHstWiederholen()
+        break;
       case Button.AnsageInnen:
         onPressAnsageInnen()
         break;

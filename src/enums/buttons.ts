@@ -14,7 +14,7 @@ export enum Button {
     WeicheGerade = ';',
     WeicheRechts = '<',
     AnsageStumm = '=',
-    AnsageAussen = ' >',
+    AnsageAussen = '>',
     LStAnFG = '+',
     Unfall = ',',
     HstWiederholen = '-',
