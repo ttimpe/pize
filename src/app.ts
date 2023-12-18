@@ -46,7 +46,7 @@ function onPressLinieKurs() {
 }
 
 function onPressRoute() {
-  writeTextToTerminal(0,'ROUTE        :')
+  writeTextToTerminal(0,'ROUTE        :  ')
   currentInputMode = InputMode.Route
 }
 
