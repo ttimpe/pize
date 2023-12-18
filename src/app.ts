@@ -115,6 +115,7 @@ function onPressUhrzeitDatum() {
 
 
 function clearScreen() {
+  sendTelegram('mS2')
   sendTelegram('mC2?00                ')
 } 
 function onReceiveTelegram(telegram: string) {
@@ -173,25 +174,24 @@ function onReceiveTelegram(telegram: string) {
     if (telegram.startsWith('m?')) {
       route = telegram.substring(2, 5)
       sendTelegram('r' + route)
-      clearScreen()
       currentDisplayMode = DisplayMode.None
+      clearScreen()
       return
     }
   }
   if (currentDisplayMode == DisplayMode.Richtung) {
     if (telegram.startsWith('m?')) {
-      
       richtung = telegram.substring(2, 5)
-      clearScreen()
       currentDisplayMode = DisplayMode.None
+      clearScreen()
       return
     }
   }
   if (currentDisplayMode == DisplayMode.Meldung) {
     if (telegram.startsWith('m?')) {
       // TODO: Implement Meldung
-      clearScreen()
       currentDisplayMode = DisplayMode.None
+      clearScreen()
       return
     }
   }
@@ -200,9 +200,8 @@ function onReceiveTelegram(telegram: string) {
       ziel = telegram.substring(2, 5)
       sendTelegram('z' + ziel)
       writeSecondLine()
-      sendTelegram('mS2')
-      clearScreen()
       currentDisplayMode = DisplayMode.None
+      clearScreen()
       return
     }
   }
