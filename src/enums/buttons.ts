@@ -1,4 +1,4 @@
-enum Button {
+export enum Button {
     IFISStop = '0',
     Besetzung = '1',
     UhrzeitDatum = '2',
