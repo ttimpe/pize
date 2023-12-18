@@ -110,8 +110,9 @@ function main() {
     if (currentInputMode == InputMode.LinieKurs) {
       sendTelegram('mS3')
     }*/
+    sendTelegram('mS3')
+
     if (currentInputMode == InputMode.None) {
-      sendTelegram('mS3')
     }
   },IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
 }
