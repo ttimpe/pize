@@ -15,7 +15,8 @@ const IBIS_SEND_INTERVAL = 10
 const IBIS_TERMINAL_RECEIVE_INTERVAL = 1
 
 let currentInputMode :InputMode = InputMode.None
-
+let line = ''
+let course = ''
 const port = new SerialPort({
   path: process.argv[2],
   baudRate: 1200,
@@ -90,6 +91,14 @@ function onReceiveTelegram(telegram: string) {
         break;
     }
   }
+  if (currentInputMode == InputMode.LinieKurs) {
+    if (telegram.startsWith('m?')) {
+      line = telegram.substring(2, 4)
+      course = telegram.substring(5,7)
+      sendTelegram('l' + line)
+      sendTelegram('k' + course)
+    }
+  }
   }
 
 }
@@ -110,13 +119,13 @@ function main() {
   parser.on('data', onReceiveTelegram)
   onPressLinieKurs()
   setInterval(() => {
-    /*
+    
     if (currentInputMode == InputMode.LinieKurs) {
       sendTelegram('mS3')
-    }*/
-    sendTelegram('mS3')
+    }
 
     if (currentInputMode == InputMode.None) {
+      sendTelegram('mS2')
     }
   },IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
 }
