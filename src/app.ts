@@ -180,8 +180,9 @@ function onReceiveTelegram(telegram: string) {
   if (currentDisplayMode == DisplayMode.Richtung) {
     if (telegram.startsWith('m?')) {
       richtung = telegram.substring(2, 5)
-      currentDisplayMode = DisplayMode.None
       clearScreen()
+      writeSecondLine()
+      currentDisplayMode = DisplayMode.None
       return
     }
   }
