@@ -7,6 +7,7 @@ export enum DisplayMode {
     LinieKurs = 5,
     Route = 6,
     Sonderzeichen = 7,
-    DatumUhrzeit = 8,
-    None = 9
+    Ziel = 8,
+    DatumUhrzeit = 9,
+    None = 10
 }

@@ -17,6 +17,7 @@ let currentDisplayMode :DisplayMode = DisplayMode.None
 let line = ''
 let course = ''
 let route = ''
+let ziel = ''
 const port = new SerialPort({
   path: process.argv[2],
   baudRate: 1200,
@@ -40,7 +41,9 @@ function writeTextToTerminal(line: number, text: string, mode: number = 2) {
 }
 
 
-
+function writeSecondLine() {
+  writeTextToTerminal(1, line + course + ziel + 'Z' + '000')
+}
 
 
 function onPressLinieKurs() {
@@ -58,6 +61,13 @@ function onPressMeldung() {
   clearScreen()
   writeTextToTerminal(0,'MELDUNG    :', 3)
   currentDisplayMode = DisplayMode.Meldung
+
+}
+
+function onPressZielSonderzeichen() {
+  clearScreen()
+  currentDisplayMode = DisplayMode.Ziel
+  writeTextToTerminal(0, 'ZIEL        :', 3)
 
 }
 
@@ -116,7 +126,7 @@ function onReceiveTelegram(telegram: string) {
         onPressRoute()
         break;
       case Button.Sonderzeichen:
-        writeTextToTerminal(0,'SONDERZEICH. :')
+        onPressZielSonderzeichen()
         break;
     }
   }
@@ -126,7 +136,7 @@ function onReceiveTelegram(telegram: string) {
       course = telegram.substring(5,7)
       sendTelegram('l' + line)
       sendTelegram('k' + course)
-      writeTextToTerminal(1, line + course)
+      writeSecondLine()
       onPressRoute()
       return
     }
@@ -136,6 +146,24 @@ function onReceiveTelegram(telegram: string) {
       route = telegram.substring(2, 5)
       sendTelegram('r' + route)
       clearScreen()
+      currentDisplayMode = DisplayMode.None
+      return
+    }
+  }
+  if (currentDisplayMode == DisplayMode.Meldung) {
+    if (telegram.startsWith('m?')) {
+      // TODO: Implement Meldung
+      clearScreen()
+      currentDisplayMode = DisplayMode.None
+      return
+    }
+  }
+  if (currentDisplayMode == DisplayMode.Ziel) {
+    if (telegram.startsWith('m?')) {
+      clearScreen()
+      ziel = telegram.substring(2, 5)
+      sendTelegram('z' + ziel)
+      writeSecondLine()
       currentDisplayMode = DisplayMode.None
       return
     }
