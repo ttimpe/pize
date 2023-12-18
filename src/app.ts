@@ -11,7 +11,7 @@ import { DisplayMode } from './enums/displayMode'
 
 
 const IBIS_SEND_INTERVAL = 10
-const IBIS_TERMINAL_RECEIVE_INTERVAL = 10
+const IBIS_TERMINAL_RECEIVE_INTERVAL = 2
 
 let currentDisplayMode :DisplayMode = DisplayMode.None
 let line = ''
