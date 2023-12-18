@@ -11,7 +11,7 @@ import { DisplayMode } from './enums/displayMode'
 
 
 const IBIS_SEND_INTERVAL = 10
-const IBIS_TERMINAL_RECEIVE_INTERVAL = 1
+const IBIS_TERMINAL_RECEIVE_INTERVAL = 10
 
 let currentDisplayMode :DisplayMode = DisplayMode.None
 let line = ''
@@ -76,6 +76,7 @@ function onPressZielSonderzeichen() {
 
 }
 
+
 function onPressUhrzeitDatum() {
   if (currentDisplayMode != DisplayMode.DatumUhrzeit) {
     currentDisplayMode = DisplayMode.DatumUhrzeit
@@ -87,6 +88,7 @@ function onPressUhrzeitDatum() {
     currentDisplayMode = DisplayMode.None
   }
 }
+
 
 
 
