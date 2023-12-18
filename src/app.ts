@@ -45,34 +45,34 @@ function onReceiveTelegram(telegram: string) {
       case Button.None:
         break;
       case Button.IFISStop:
-        
+
         break;
       case Button.Besetzung:
 
         break;
       case Button.UhrzeitDatum:
-        sendTelegram('01-01-2000 00:00')
+        writeTextToTerminal(0, '01-01-2000 00:00')
         break;
       case Button.NaechsteHaltestelle:
         break;
       case Button.HstNr:
-        sendTelegram('HALTEST.NR.:')
+        writeTextToTerminal(0,'HALTEST.NR.:')
 
         break;
       case Button.Richtung:
-        sendTelegram('RICHTUNG:')
+        writeTextToTerminal(0,'RICHTUNG:')
         break;
       case Button.Meldung:
-        sendTelegram('MELDUNG:')
+        writeTextToTerminal(0,'MELDUNG:')
         break;
       case Button.LinieKurs:
-        sendTelegram('LINIE-KURS:')
+        writeTextToTerminal(0,'LINIE-KURS:')
         break;
       case Button.Route:
-        sendTelegram('ROUTE:')
+        writeTextToTerminal(0,'ROUTE:')
         break;
       case Button.Sonderzeichen:
-        sendTelegram('SONDERZEICH.:')
+        writeTextToTerminal(0,'SONDERZEICH.:')
         break;
     }
   }
