@@ -93,8 +93,8 @@ function onReceiveTelegram(telegram: string) {
   }
   if (currentInputMode == InputMode.LinieKurs) {
     if (telegram.startsWith('m?')) {
-      line = telegram.substring(3, 6)
-      course = telegram.substring(7,9)
+      line = telegram.substring(2, 5)
+      course = telegram.substring(6,8)
       sendTelegram('l' + line)
       sendTelegram('k' + course)
     }
