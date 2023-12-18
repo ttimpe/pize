@@ -54,6 +54,12 @@ function onPressRoute() {
   currentDisplayMode = DisplayMode.Route
 
 }
+function onPressMeldung() {
+  clearScreen()
+  writeTextToTerminal(0,'MELDUNG    :')
+  currentDisplayMode = DisplayMode.Meldung
+
+}
 
 function onPressUhrzeitDatum() {
   if (currentDisplayMode != DisplayMode.DatumUhrzeit) {
@@ -70,7 +76,7 @@ function onPressUhrzeitDatum() {
 
 
 function clearScreen() {
-  sendTelegram('mC2?                ')
+  sendTelegram('mC2?00                ')
 } 
 function onReceiveTelegram(telegram: string) {
   telegram = telegram.substring(1)
@@ -101,7 +107,7 @@ function onReceiveTelegram(telegram: string) {
         writeTextToTerminal(0,'RICHTUNG     :')
         break;
       case Button.Meldung:
-        writeTextToTerminal(0,'MELDUNG:')
+        onPressMeldung()
         break;
       case Button.LinieKurs:
         onPressLinieKurs()
