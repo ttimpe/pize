@@ -2,19 +2,18 @@ import { Stop } from './models/Stop';
 import { Trip } from './models/Trip';
 import { sequelize } from './sequelize';
 
-import { Agency } from './models/Agency';
 import { Route } from './models/Route';
 
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline'
 import { Button } from './enums/buttons'
-import { InputMode } from './enums/inputMode'
+import { DisplayMode } from './enums/displayMode'
 
 
 const IBIS_SEND_INTERVAL = 10
 const IBIS_TERMINAL_RECEIVE_INTERVAL = 1
 
-let currentInputMode :InputMode = InputMode.None
+let currentDisplayMode :DisplayMode = DisplayMode.None
 let line = ''
 let course = ''
 let route = ''
@@ -40,15 +39,33 @@ function writeTextToTerminal(line: number, text: string) {
   sendTelegram(telegram)
 }
 
+
+function setDisplayMode(displayMode: DisplayMode) {
+
+}
+
+
 function onPressLinieKurs() {
   writeTextToTerminal(0,'LINIE-KURS:     ')
-  currentInputMode = InputMode.LinieKurs
+  currentDisplayMode = DisplayMode.LinieKurs
 }
 
 function onPressRoute() {
   clearScreen()
-  currentInputMode = InputMode.Route
+  currentDisplayMode = DisplayMode.Route
   writeTextToTerminal(0,'ROUTE        :  ')
+}
+
+function onPressUhrzeitDatum() {
+  if (currentDisplayMode != DisplayMode.DatumUhrzeit) {
+    currentDisplayMode = DisplayMode.DatumUhrzeit
+    let d = new Date()
+    let outputString = d.toLocaleDateString('de', { dateStyle: "short" }) + '   ' + d.toLocaleTimeString('de', { timeStyle: "short" })
+    writeTextToTerminal(0, outputString)
+  } else {
+    currentDisplayMode = DisplayMode.None
+    clearScreen()
+  }
 }
 
 function clearScreen() {
@@ -60,7 +77,7 @@ function onReceiveTelegram(telegram: string) {
   // Check if terminal input
 
   if (telegram.startsWith('m')) {
-    if (currentInputMode == InputMode.None) {
+    if (currentDisplayMode == DisplayMode.None) {
     switch (telegram[1]) {
       case Button.None:
         break;
@@ -71,7 +88,7 @@ function onReceiveTelegram(telegram: string) {
 
         break;
       case Button.UhrzeitDatum:
-        writeTextToTerminal(0, '01-01-2000 00:00')
+        onPressUhrzeitDatum()
         break;
       case Button.NaechsteHaltestelle:
         break;
@@ -80,7 +97,7 @@ function onReceiveTelegram(telegram: string) {
 
         break;
       case Button.Richtung:
-        writeTextToTerminal(0,'RICHTUNG:')
+        writeTextToTerminal(0,'RICHTUNG     :')
         break;
       case Button.Meldung:
         writeTextToTerminal(0,'MELDUNG:')
@@ -96,7 +113,7 @@ function onReceiveTelegram(telegram: string) {
         break;
     }
   }
-  if (currentInputMode == InputMode.LinieKurs) {
+  if (currentDisplayMode == DisplayMode.LinieKurs) {
     if (telegram.startsWith('m?')) {
       line = telegram.substring(2, 5)
       course = telegram.substring(5,7)
@@ -106,10 +123,12 @@ function onReceiveTelegram(telegram: string) {
       onPressRoute()
     }
   }
-  if (currentInputMode == InputMode.Route) {
+  if (currentDisplayMode == DisplayMode.Route) {
     if (telegram.startsWith('m?')) {
       route = telegram.substring(2, 5)
       sendTelegram('r' + route)
+      currentDisplayMode = DisplayMode.None
+      clearScreen()
     }
   }
   }
@@ -137,7 +156,7 @@ function main() {
   onPressLinieKurs()
   playSound('1', 1)
   setInterval(() => {
-    if (currentInputMode == InputMode.None) {
+    if (currentDisplayMode == DisplayMode.None) {
       sendTelegram('mS2')
     } else {
       sendTelegram('mS3')

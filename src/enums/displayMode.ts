@@ -1,4 +1,4 @@
-export enum InputMode {
+export enum DisplayMode {
     Besetzung,
     NaechsteHaltestelle,
     HstNr,
@@ -7,5 +7,6 @@ export enum InputMode {
     LinieKurs,
     Route,
     Sonderzeichen,
+    DatumUhrzeit,
     None
 }

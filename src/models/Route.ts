@@ -1,10 +1,8 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { sequelize } from '../sequelize';
-import { Agency } from './Agency';
 
 interface RouteAttributes {
   route_id: string;
-  agency_id: string | null;
   route_short_name: string;
   route_long_name: string;
   route_type: number;
@@ -30,7 +28,6 @@ Route.init(
       primaryKey: true,
       allowNull: false,
     },
-    agency_id: DataTypes.STRING,
     route_short_name: DataTypes.STRING,
     route_long_name: DataTypes.STRING,
     route_type: DataTypes.INTEGER
