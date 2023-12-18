@@ -111,7 +111,6 @@ function onReceiveTelegram(telegram: string) {
         break;
       case Button.HstNr:
         writeTextToTerminal(0,'HALTEST.NR.:')
-
         break;
       case Button.Richtung:
         writeTextToTerminal(0,'RICHTUNG     :')
@@ -160,10 +159,10 @@ function onReceiveTelegram(telegram: string) {
   }
   if (currentDisplayMode == DisplayMode.Ziel) {
     if (telegram.startsWith('m?')) {
-      clearScreen()
       ziel = telegram.substring(2, 5)
       sendTelegram('z' + ziel)
       writeSecondLine()
+      clearScreen()
       currentDisplayMode = DisplayMode.None
       return
     }
