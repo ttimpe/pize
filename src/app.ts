@@ -47,10 +47,10 @@ function writeTextToTerminal(line: number, text: string, mode: number = 2) {
 function writeSecondLine() {
   let directionLetter = 'Z'
   switch (richtung) {
-    case '1':
+    case '01':
       directionLetter = 'H'
       break;
-    case '2':
+    case '02':
       directionLetter = 'R'
       break;
   }
@@ -180,9 +180,9 @@ function onReceiveTelegram(telegram: string) {
   if (currentDisplayMode == DisplayMode.Richtung) {
     if (telegram.startsWith('m?')) {
       richtung = telegram.substring(2, 5)
-      clearScreen()
       writeSecondLine()
       currentDisplayMode = DisplayMode.None
+      clearScreen()
       return
     }
   }
