@@ -108,8 +108,10 @@ function onPressAnsageStumm() {
 
 }
 function onPressAnsageAussen() {
+  console.log('onPressAnsageInnen')
   if (currentDisplayMode != DisplayMode.AnsageAussen) {
     currentDisplayMode = DisplayMode.AnsageAussen
+    clearScreen()
     writeTextToTerminal(0, '  ** AUSSEN **  ')
   } else {
     clearScreen()
