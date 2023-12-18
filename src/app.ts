@@ -18,6 +18,7 @@ let line = ''
 let course = ''
 let route = ''
 let ziel = ''
+let telegramQueue = []
 const port = new SerialPort({
   path: process.argv[2],
   baudRate: 1200,
@@ -38,6 +39,10 @@ function writeTextToTerminal(line: number, text: string, mode: number = 2) {
 
   let telegram = 'mC' + mode + String.fromCharCode(47 + text.length) + line.toString() + '0' + text
   sendTelegram(telegram)
+}
+
+function queueTelegram(telegram: string) {
+
 }
 
 
@@ -86,6 +91,7 @@ function onPressUhrzeitDatum() {
 
 
 function clearScreen() {
+  sendTelegram('mC3?00                ')
   sendTelegram('mC2?00                ')
 } 
 function onReceiveTelegram(telegram: string) {
