@@ -47,8 +47,8 @@ function onPressLinieKurs() {
 
 function onPressRoute() {
   clearScreen()
-  writeTextToTerminal(0,'ROUTE        :  ')
   currentInputMode = InputMode.Route
+  writeTextToTerminal(0,'ROUTE        :  ')
 }
 
 function clearScreen() {
@@ -99,7 +99,7 @@ function onReceiveTelegram(telegram: string) {
   if (currentInputMode == InputMode.LinieKurs) {
     if (telegram.startsWith('m?')) {
       line = telegram.substring(2, 5)
-      course = telegram.substring(6,8)
+      course = telegram.substring(5,7)
       sendTelegram('l' + line)
       sendTelegram('k' + course)
       writeTextToTerminal(1, line + course)
