@@ -116,8 +116,8 @@ function onReceiveTelegram(telegram: string) {
 
 }
 
-function playSound() {
-  sendTelegram('mK')
+function playSound(id: string, repeat: number) {
+  sendTelegram('mK' + id + repeat)
 }
 
 function signTelegram(message: string): string {
@@ -134,7 +134,7 @@ function signTelegram(message: string): string {
 function main() {
   const parser = port.pipe(new ReadlineParser({ delimiter: '\r' }))
   parser.on('data', onReceiveTelegram)
-  playSound()
+  playSound('1', 1)
   onPressLinieKurs()
   setInterval(() => {
     if (currentInputMode == InputMode.None) {
