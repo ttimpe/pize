@@ -44,7 +44,6 @@ function writeTextToTerminal(line: number, text: string, mode: number = 2) {
 
 
 function onPressLinieKurs() {
-  clearScreen()
   writeTextToTerminal(0,'LINIE-KURS:     ', 3)
   currentDisplayMode = DisplayMode.LinieKurs
 }
