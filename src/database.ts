@@ -16,7 +16,7 @@ export class DatabaseManager {
 
 
 
-async getLine(lineString: string): Promise<Line> {
+async getLine(lineString: string): Promise<Line | null> {
    const sql =  'SELECT * FROM lines WHERE id = ?'
 console.log('trying to get line', lineString)
 try {
@@ -36,6 +36,7 @@ try {
             id: row.id,
             name: row.name
         };
+        console.log(line)
         return line;
     } else {
         return null;
@@ -45,7 +46,7 @@ try {
 }
   
 }
-async getRoute(line: Line, routeId: string) {
+async getRoute(line: Line, routeId: string): Promise<Route | null> {
     // SELECT * FROM route WHERE line_id = line AND route = route
 
     const sql =  'SELECT * FROM routes WHERE line_id = ? AND route_id = ?'
@@ -77,7 +78,7 @@ async getRoute(line: Line, routeId: string) {
         throw error
     }
 }
-async getStops(route: Route) {
+async getStops(route: Route): Promise<Stop[]> {
         // SELECT route_stops.stop_id, stop_info.short_name, stop_info.number, stop_info.announcement_id, route_stops.sequence_number, stops.longitude, stops.latitude FROM route_stops INNER JOIN stops ON route_stops.id = stops.id INNER JOIN stop_info ON route_stops.stop_id = stop_info.stop_id
     
         const sql =  'SELECT route_stops.stop_id, stop_info.number, stop_info.short_name, stop_info.announcement_id FROM route_stops INNER JOIN stop_info ON stop_info.stop_id = route_stops.stop_id WHERE line_id = ? AND route_id = ? ORDER BY sequence_number'
