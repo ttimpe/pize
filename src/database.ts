@@ -18,18 +18,20 @@ export class DatabaseManager {
 
 async getLine(lineString: string): Promise<Line> {
    const sql =  'SELECT * FROM lines WHERE id = ?'
-
+console.log('trying to get line', lineString)
 try {
     const row = await new Promise<any>((resolve, reject) => {
         this.db.get(sql, [lineString], (err, data) => {
             if (err) {
                 reject(err)
             } else {
+                console.log('got line')
                 resolve(data)
             }
         })
     })
     if (row) {
+        console.log('got line row')
         const line: Line = {
             id: row.id,
             name: row.name
