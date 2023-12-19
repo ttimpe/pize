@@ -8,27 +8,36 @@ import { Button } from './enums/buttons'
 import { DisplayMode } from './enums/displayMode'
 import { Richtung } from './models/Richtung';
 import { DatabaseManager } from './database'
+import { Line } from './models/Line';
 const IBIS_SEND_INTERVAL = 10
 const IBIS_TERMINAL_RECEIVE_INTERVAL = 0.5
 
 let currentDisplayMode :DisplayMode = DisplayMode.None
-let line = ''
+let line: Line
 let course = ''
-let route = ''
+let route: Route
 let ziel = ''
 let richtung = 'Z'
-let haltestellen = ['SIEKER', 'SIEKER DEPOT', 'SIEKER WEICHE', 'SIEKER MITTE']
+let stopIndex = 0
 
 const db = new DatabaseManager()
 
-function setLinie(linie: string) {
-  line = linie
+async function setLinie(linie: string) {
+  try {
+  line = await db.getLine(linie)
+  } catch (err) {
+    console.log(err)
+  }
 }
 function setKurs(kurs: string) {
   course = kurs
 }
-function setRoute(r: string) {
-  route = route
+async function setRoute(r: string) {
+  try {
+    route = await db.getRoute(line, r)
+  } catch (err) {
+    console.log(err)
+  }
 }
 function setZiel(z: string) {
   ziel = z
@@ -68,7 +77,7 @@ function writeSecondLine() {
       directionLetter = 'R'
       break;
   }
-  writeTextToTerminal(1, line.padStart(3) + course.padStart(2) + ziel.padStart(3) + directionLetter)
+  writeTextToTerminal(1, line.id.padStart(3) + course.padStart(2) + ziel.padStart(3) + directionLetter)
 }
 
 
@@ -182,7 +191,11 @@ function setDisplayMode(displayMode: DisplayMode) {
       writeTextToTerminal(0, '   ** INNEN **  ')
       break;
     case DisplayMode.Haltestelle:
-      writeTextToTerminal(0, haltestellen[0])
+      if (route.stops.length > 0) {
+        writeTextToTerminal(0, route.stops[stopIndex].name)
+      } else {
+        writeTextToTerminal(0, 'KEINE HALTEST.')
+      }
       break;
   }
 }
@@ -206,7 +219,7 @@ function onPressUhrzeitDatum() {
 }
 
 function onPressNaechsteHaltestelle() {
-
+  stopIndex++
   setDisplayMode(DisplayMode.Haltestelle)
 }
 
@@ -346,7 +359,6 @@ function signTelegram(message: string): string {
 function main() {
   const parser = port.pipe(new ReadlineParser({ delimiter: '\r' }))
   parser.on('data', onReceiveTelegram)
-  playSound('1', 1)
   onPressLinieKurs()
   setInterval(() => {
     console.log('currentDisplayMode', currentDisplayMode)
