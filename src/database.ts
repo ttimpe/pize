@@ -50,7 +50,7 @@ async getRoute(line: Line, routeId: string) {
 
     try {
         const row = await new Promise<any>((resolve, reject) => {
-            this.db.get(sql, [line.id, routeId], (err, data) => {
+            this.db.get(sql, [line.id, parseInt(routeId)], (err, data) => {
                 if (err) {
                     reject(err)
                 } else {
