@@ -49,13 +49,14 @@ async getRoute(line: Line, routeId: string) {
     // SELECT * FROM route WHERE line_id = line AND route = route
 
     const sql =  'SELECT * FROM routes WHERE line_id = ? AND route_id = ?'
-
+    console.log('trying to get route', routeId, ' for line ', line.id)
     try {
         const row = await new Promise<any>((resolve, reject) => {
-            this.db.get(sql, [line.id, parseInt(routeId)], (err, data) => {
+            this.db.get(sql, [parseInt(line.id), parseInt(routeId)], (err, data) => {
                 if (err) {
                     reject(err)
                 } else {
+                    console.log('Got route')
                     resolve(data)
                 }
             })
