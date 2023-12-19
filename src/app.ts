@@ -38,7 +38,7 @@ function sendTelegram(telegram: string) {
 
 function writeTextToTerminal(line: number, text: string, mode: number = 2) {
   // char code 48 is 0
-
+  text = text.padEnd(16)
   let telegram = 'mC' + mode + String.fromCharCode(47 + text.length) + line.toString() + '0' + text
   sendTelegram(telegram)
 }
