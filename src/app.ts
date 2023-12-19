@@ -20,7 +20,6 @@ let route = ''
 let ziel = ''
 let richtung = 'Z'
 let haltestellen = ['SIEKER', 'SIEKER DEPOT', 'SIEKER WEICHE', 'SIEKER MITTE']
-let telegramQueue = []
 const port = new SerialPort({
   path: process.argv[2],
   baudRate: 1200,
@@ -204,7 +203,7 @@ function onReceiveTelegram(telegram: string) {
   // Check if terminal input
 
   if (telegram.startsWith('m')) {
-    if (currentDisplayMode == DisplayMode.None || currentDisplayMode == DisplayMode.DatumUhrzeit || currentDisplayMode == DisplayMode.WeicheLinks || currentDisplayMode == DisplayMode.WeicheGerade || currentDisplayMode == DisplayMode.WeicheRechts || currentDisplayMode == DisplayMode.AnsageAussen || currentDisplayMode == DisplayMode.Unfall || currentDisplayMode == DisplayMode.AnsageInnen) {
+    if (currentDisplayMode == DisplayMode.None || currentDisplayMode == DisplayMode.Haltestelle || currentDisplayMode == DisplayMode.DatumUhrzeit || currentDisplayMode == DisplayMode.WeicheLinks || currentDisplayMode == DisplayMode.WeicheGerade || currentDisplayMode == DisplayMode.WeicheRechts || currentDisplayMode == DisplayMode.AnsageAussen || currentDisplayMode == DisplayMode.Unfall || currentDisplayMode == DisplayMode.AnsageInnen) {
     switch (telegram[1]) {
       case Button.None:
         break;
