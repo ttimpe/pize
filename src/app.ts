@@ -147,7 +147,6 @@ function onPressHstWiederholen() {
 
 function setDisplayMode(displayMode: DisplayMode) {
   currentDisplayMode = displayMode
-  clearScreen()
   switch (currentDisplayMode) {
     case DisplayMode.Besetzung:
       writeTextToTerminal(0, 'BESETZUNG    :  ', 3)
@@ -166,11 +165,11 @@ function setDisplayMode(displayMode: DisplayMode) {
       writeTextToTerminal(0,'LINIE-KURS:     ', 3)
       break;
     case DisplayMode.Route:
-      writeTextToTerminal(0,'ROUTE        :  ', 3)
+      writeTextToTerminal(0,'ROUTE       :   ', 3)
       break;
     case DisplayMode.Sonderzeichen:
     case DisplayMode.Ziel:
-      writeTextToTerminal(0, 'ZIEL        :', 3)
+      writeTextToTerminal(0, 'ZIEL        :   ', 3)
       break;
     case DisplayMode.DatumUhrzeit:
       let d = new Date()
