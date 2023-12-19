@@ -25,6 +25,7 @@ const db = new DatabaseManager()
 async function setLinie(linie: string) {
   try {
   line = await db.getLine(linie)
+  console.log('line set to ', line)
   } catch (err) {
     console.log(err)
   }
@@ -35,6 +36,7 @@ function setKurs(kurs: string) {
 async function setRoute(r: string) {
   try {
     route = await db.getRoute(line, r)
+    console.log('route set to', route)
   } catch (err) {
     console.log(err)
   }
