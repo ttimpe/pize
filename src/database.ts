@@ -22,7 +22,7 @@ console.log('trying to get line', lineString)
 try {
     const row = await this.db.get(sql, [parseInt(lineString)])
     if (row) {
-        console.log('got line row')
+        console.log('got line row', row)
         const line: Line = {
             id: row.id,
             name: row.name
