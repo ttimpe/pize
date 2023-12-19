@@ -23,10 +23,10 @@ try {
     const row = await new Promise<any>((resolve, reject) => {
         this.db.get(sql, [parseInt(lineString)], (err, data) => {
             if (err) {
-                console.log(err)
+                console.log('ERROR', err)
                 reject(err)
             } else {
-                console.log('got line')
+                console.log('got line', data)
                 resolve(data)
             }
         })
