@@ -77,7 +77,9 @@ function writeSecondLine() {
       directionLetter = 'R'
       break;
   }
-  writeTextToTerminal(1, line.id.padStart(3) + course.padStart(2) + ziel.padStart(3) + directionLetter)
+  if (line) {
+    writeTextToTerminal(1, line.id.padStart(3) + course.padStart(2) + ziel.padStart(3) + directionLetter)
+  }
 }
 
 
