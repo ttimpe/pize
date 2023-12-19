@@ -21,8 +21,9 @@ async getLine(lineString: string): Promise<Line | null> {
 console.log('trying to get line', lineString)
 try {
     const row = await new Promise<any>((resolve, reject) => {
-        this.db.get(sql, [lineString], (err, data) => {
+        this.db.get(sql, [parseInt(lineString)], (err, data) => {
             if (err) {
+                console.log(err)
                 reject(err)
             } else {
                 console.log('got line')
