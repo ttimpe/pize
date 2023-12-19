@@ -17,5 +17,6 @@ export enum DisplayMode {
     AnsageAussen = 15,
     LStAnFG = 16,
     Unfall = 17,
-    AnsageInnen = 18    
+    AnsageInnen = 18,
+    Haltestelle = 19    
 }

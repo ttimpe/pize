@@ -19,6 +19,7 @@ let course = ''
 let route = ''
 let ziel = ''
 let richtung = 'Z'
+let haltestellen = ['SIEKER', 'SIEKER DEPOT', 'SIEKER WEICHE', 'SIEKER MITTE']
 let telegramQueue = []
 const port = new SerialPort({
   path: process.argv[2],
@@ -59,41 +60,27 @@ function writeSecondLine() {
 
 
 function onPressLinieKurs() {
-  writeTextToTerminal(0,'LINIE-KURS:     ', 3)
-  currentDisplayMode = DisplayMode.LinieKurs
+  setDisplayMode(DisplayMode.LinieKurs)
 }
 
 function onPressRoute() {
-  clearScreen()
-  writeTextToTerminal(0,'ROUTE        :  ', 3)
-  currentDisplayMode = DisplayMode.Route
+  setDisplayMode(DisplayMode.Route)
 
 }
 function onPressMeldung() {
-  clearScreen()
-  writeTextToTerminal(0,'MELDUNG    :   ', 3)
-  currentDisplayMode = DisplayMode.Meldung
-
+  setDisplayMode(DisplayMode.Meldung)
 }
 
 function onPressZielSonderzeichen() {
-  clearScreen()
-  currentDisplayMode = DisplayMode.Ziel
-
-  writeTextToTerminal(0, 'ZIEL        :', 3)
-
+  setDisplayMode(DisplayMode.Ziel)
 }
 
 function onPressRichtung() {
-  clearScreen()
-  currentDisplayMode = DisplayMode.Richtung
-  writeTextToTerminal(0,'RICHTUNG     :  ', 3)
+  setDisplayMode(DisplayMode.Richtung)
 }
 
 function onPressHstNr() {
-  clearScreen()
-  currentDisplayMode = DisplayMode.HstNr
-  writeTextToTerminal(0,'HALTEST.NR.: ', 3)
+  setDisplayMode(DisplayMode.HstNr)
 }
 function onPressWeicheLinks() {
 
@@ -110,12 +97,9 @@ function onPressAnsageStumm() {
 function onPressAnsageAussen() {
   console.log('onPressAnsageInnen')
   if (currentDisplayMode != DisplayMode.AnsageAussen) {
-    currentDisplayMode = DisplayMode.AnsageAussen
-    clearScreen()
-    writeTextToTerminal(0, '  ** AUSSEN **  ')
+    setDisplayMode(DisplayMode.AnsageAussen)
   } else {
-    clearScreen()
-    currentDisplayMode = DisplayMode.None
+    setDisplayMode(DisplayMode.Haltestelle)
   }
 }
 function onPressSprechwunsch() {
@@ -123,11 +107,9 @@ function onPressSprechwunsch() {
 }
 function onPressLStAnFG() {
   if (currentDisplayMode != DisplayMode.LStAnFG) {
-    currentDisplayMode = DisplayMode.LStAnFG
-    writeTextToTerminal(0, '* LS-FAHRGAST * ')
+    setDisplayMode(DisplayMode.LStAnFG)
   } else {
-    clearScreen()
-    currentDisplayMode = DisplayMode.None
+    setDisplayMode(DisplayMode.Haltestelle)
   }
 }
 function onPressUnfall() {
@@ -136,28 +118,76 @@ function onPressUnfall() {
 function onPressHstWiederholen() {
 
 }
+
+function setDisplayMode(displayMode: DisplayMode) {
+  currentDisplayMode = displayMode
+  switch (currentDisplayMode) {
+    case DisplayMode.Besetzung:
+      writeTextToTerminal(0, 'BESETZUNG    :  ', 3)
+      break;
+    case DisplayMode.NaechsteHaltestelle:
+    case DisplayMode.HstNr:
+      writeTextToTerminal(0,'HALTEST.NR.: ', 3)
+      break;
+    case DisplayMode.Richtung:
+      writeTextToTerminal(0,'RICHTUNG     :  ', 3)
+      break;
+    case DisplayMode.Meldung:
+      writeTextToTerminal(0,'MELDUNG    :   ', 3)
+      break;
+    case DisplayMode.LinieKurs:
+      writeTextToTerminal(0,'LINIE-KURS:     ', 3)
+      break;
+    case DisplayMode.Route:
+      writeTextToTerminal(0,'ROUTE        :  ', 3)
+      break;
+    case DisplayMode.Sonderzeichen:
+    case DisplayMode.Ziel:
+      writeTextToTerminal(0, 'ZIEL        :', 3)
+      break;
+    case DisplayMode.DatumUhrzeit:
+      let d = new Date()
+      let outputString = d.toLocaleDateString('de', { dateStyle: "short" }) + '   ' + d.toLocaleTimeString('de', { timeStyle: "short" })
+      writeTextToTerminal(0, outputString)
+      break;
+    case DisplayMode.None:
+      clearScreen()
+      break;
+    case DisplayMode.WeicheLinks:
+    case DisplayMode.WeicheGerade:
+    case DisplayMode.WeicheRechts:
+    case DisplayMode.AnsageStumm:
+    case DisplayMode.AnsageAussen:
+      writeTextToTerminal(0, '  ** AUSSEN **  ')
+      break;
+    case DisplayMode.LStAnFG:
+      writeTextToTerminal(0, '* LS-FAHRGAST * ')
+      break;
+    case DisplayMode.Unfall:
+    case DisplayMode.AnsageInnen:
+      writeTextToTerminal(0, '   ** INNEN **  ')
+      break;
+    case DisplayMode.Haltestelle:
+      writeTextToTerminal(0, haltestellen[0])
+      break;
+  }
+}
+
 function onPressAnsageInnen() {
   console.log('onPressAnsageInnen')
   if (currentDisplayMode != DisplayMode.AnsageInnen) {
-    currentDisplayMode = DisplayMode.AnsageInnen
-    clearScreen()
-    writeTextToTerminal(0, '   ** INNEN **  ')
+    setDisplayMode(DisplayMode.AnsageInnen)
   } else {
-    clearScreen()
-    currentDisplayMode = DisplayMode.None
+    setDisplayMode(DisplayMode.Haltestelle)
   }
 } 
 
 
 function onPressUhrzeitDatum() {
   if (currentDisplayMode != DisplayMode.DatumUhrzeit) {
-    currentDisplayMode = DisplayMode.DatumUhrzeit
-    let d = new Date()
-    let outputString = d.toLocaleDateString('de', { dateStyle: "short" }) + '   ' + d.toLocaleTimeString('de', { timeStyle: "short" })
-    writeTextToTerminal(0, outputString)
+    setDisplayMode(DisplayMode.DatumUhrzeit)   
   } else {
-    clearScreen()
-    currentDisplayMode = DisplayMode.None
+    setDisplayMode(DisplayMode.Haltestelle)
   }
 }
 
@@ -251,8 +281,7 @@ function onReceiveTelegram(telegram: string) {
     if (telegram.startsWith('m?')) {
       route = telegram.substring(2, 5)
       sendTelegram('r' + route)
-      currentDisplayMode = DisplayMode.None
-      clearScreen()
+      setDisplayMode(DisplayMode.Haltestelle)
       return
     }
   }
@@ -260,16 +289,14 @@ function onReceiveTelegram(telegram: string) {
     if (telegram.startsWith('m?')) {
       richtung = telegram.substring(2, 5)
       writeSecondLine()
-      currentDisplayMode = DisplayMode.None
-      clearScreen()
+      setDisplayMode(DisplayMode.Haltestelle)
       return
     }
   }
   if (currentDisplayMode == DisplayMode.Meldung) {
     if (telegram.startsWith('m?')) {
       // TODO: Implement Meldung
-      currentDisplayMode = DisplayMode.None
-      clearScreen()
+      setDisplayMode(DisplayMode.Haltestelle)
       return
     }
   }
@@ -278,8 +305,7 @@ function onReceiveTelegram(telegram: string) {
       ziel = telegram.substring(2, 5)
       sendTelegram('z' + ziel)
       writeSecondLine()
-      currentDisplayMode = DisplayMode.None
-      clearScreen()
+      setDisplayMode(DisplayMode.Haltestelle)
       return
     }
   }
