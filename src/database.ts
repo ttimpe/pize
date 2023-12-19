@@ -17,20 +17,10 @@ export class DatabaseManager {
 
 
 async getLine(lineString: string): Promise<Line | null> {
-   const sql =  'SELECT * FROM lines WHERE id = ?'
+   const sql =  `SELECT * FROM lines WHERE id = ?`
 console.log('trying to get line', lineString)
 try {
-    const row = await new Promise<any>((resolve, reject) => {
-        this.db.get(sql, [parseInt(lineString)], (err, data) => {
-            if (err) {
-                console.log('ERROR', err)
-                reject(err)
-            } else {
-                console.log('got line', data)
-                resolve(data)
-            }
-        })
-    })
+    const row = await this.db.get(sql, [parseInt(lineString)])
     if (row) {
         console.log('got line row')
         const line: Line = {
@@ -50,20 +40,14 @@ try {
 async getRoute(line: Line, routeId: string): Promise<Route | null> {
     // SELECT * FROM route WHERE line_id = line AND route = route
 
-    const sql =  'SELECT * FROM routes WHERE line_id = ? AND route_id = ?'
+    const sql =  `SELECT * FROM routes WHERE line_id = ? AND route_id = ?`
     console.log('trying to get route', routeId, ' for line ', line.id)
     try {
-        const row = await new Promise<any>((resolve, reject) => {
-            this.db.get(sql, [parseInt(line.id), parseInt(routeId)], (err, data) => {
-                if (err) {
-                    console.log(err)
-                    reject(err)
-                } else {
-                    console.log('Got route')
-                    resolve(data)
-                }
-            })
-        })
+
+
+
+        const row = await this.db.get(sql, [parseInt(line.id), parseInt(routeId)])
+
         if (row) {
             const route: Route = {
                 route_id: row.route_id,
@@ -82,18 +66,10 @@ async getRoute(line: Line, routeId: string): Promise<Route | null> {
 async getStops(route: Route): Promise<Stop[]> {
         // SELECT route_stops.stop_id, stop_info.short_name, stop_info.number, stop_info.announcement_id, route_stops.sequence_number, stops.longitude, stops.latitude FROM route_stops INNER JOIN stops ON route_stops.id = stops.id INNER JOIN stop_info ON route_stops.stop_id = stop_info.stop_id
     
-        const sql =  'SELECT route_stops.stop_id, stop_info.number, stop_info.short_name, stop_info.announcement_id FROM route_stops INNER JOIN stop_info ON stop_info.stop_id = route_stops.stop_id WHERE line_id = ? AND route_id = ? ORDER BY sequence_number'
+        const sql =  `SELECT route_stops.stop_id, stop_info.number, stop_info.short_name, stop_info.announcement_id FROM route_stops INNER JOIN stop_info ON stop_info.stop_id = route_stops.stop_id WHERE line_id = ? AND route_id = ? ORDER BY sequence_number`
 
         try {
-            const rows = await new Promise<any>((resolve, reject) => {
-                this.db.all(sql, [route.line_id, route.route_id], (err, data) => {
-                    if (err) {
-                        reject(err)
-                    } else {
-                        resolve(data)
-                    }
-                })
-            })
+            const rows = await this.db.all(sql, [route.line_id, route.route_id])
             if (rows) {
                 const stops: Stop[] = rows.map(row => ({
                     id: row.stop_id,
