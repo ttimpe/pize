@@ -1,6 +1,4 @@
 import { Stop } from './models/Stop';
-import { Trip } from './models/Trip';
-import { sequelize } from './sequelize';
 
 import { Route } from './models/Route';
 
@@ -9,7 +7,7 @@ import { ReadlineParser } from '@serialport/parser-readline'
 import { Button } from './enums/buttons'
 import { DisplayMode } from './enums/displayMode'
 import { Richtung } from './models/Richtung';
-
+import { DatabaseManager } from './database'
 const IBIS_SEND_INTERVAL = 10
 const IBIS_TERMINAL_RECEIVE_INTERVAL = 0.5
 
@@ -20,6 +18,22 @@ let route = ''
 let ziel = ''
 let richtung = 'Z'
 let haltestellen = ['SIEKER', 'SIEKER DEPOT', 'SIEKER WEICHE', 'SIEKER MITTE']
+
+const db = new DatabaseManager()
+
+function setLinie(linie: string) {
+  line = linie
+}
+function setKurs(kurs: string) {
+  course = kurs
+}
+function setRoute(r: string) {
+  route = route
+}
+function setZiel(z: string) {
+  ziel = z
+}
+
 const port = new SerialPort({
   path: process.argv[2],
   baudRate: 1200,
@@ -191,7 +205,10 @@ function onPressUhrzeitDatum() {
   }
 }
 
+function onPressNaechsteHaltestelle() {
 
+  setDisplayMode(DisplayMode.Haltestelle)
+}
 
 
 function clearScreen() {
@@ -218,6 +235,7 @@ function onReceiveTelegram(telegram: string) {
         onPressUhrzeitDatum()
         break;
       case Button.NaechsteHaltestelle:
+        onPressNaechsteHaltestelle()
         break;
       case Button.HstNr:
         onPressHstNr()
@@ -268,10 +286,8 @@ function onReceiveTelegram(telegram: string) {
   }
   if (currentDisplayMode == DisplayMode.LinieKurs) {
     if (telegram.startsWith('m?')) {
-      line = telegram.substring(2, 5)
-      course = telegram.substring(5,7)
-      sendTelegram('l' + line)
-      sendTelegram('k' + course)
+      setLinie(telegram.substring(2, 5))
+      setKurs(telegram.substring(5,7)) 
       writeSecondLine()
       onPressRoute()
       return
@@ -279,8 +295,7 @@ function onReceiveTelegram(telegram: string) {
   }
   if (currentDisplayMode == DisplayMode.Route) {
     if (telegram.startsWith('m?')) {
-      route = telegram.substring(2, 5)
-      sendTelegram('r' + route)
+      setRoute(telegram.substring(2, 5))
       setDisplayMode(DisplayMode.Haltestelle)
       return
     }
@@ -331,8 +346,8 @@ function signTelegram(message: string): string {
 function main() {
   const parser = port.pipe(new ReadlineParser({ delimiter: '\r' }))
   parser.on('data', onReceiveTelegram)
-  onPressLinieKurs()
   playSound('1', 1)
+  onPressLinieKurs()
   setInterval(() => {
     console.log('currentDisplayMode', currentDisplayMode)
     if (currentDisplayMode == DisplayMode.None || currentDisplayMode == DisplayMode.DatumUhrzeit || currentDisplayMode == DisplayMode.WeicheLinks || currentDisplayMode == DisplayMode.WeicheGerade || currentDisplayMode == DisplayMode.WeicheRechts || currentDisplayMode == DisplayMode.AnsageAussen || currentDisplayMode == DisplayMode.Unfall || currentDisplayMode == DisplayMode.AnsageInnen || currentDisplayMode == DisplayMode.Haltestelle) {
@@ -341,5 +356,8 @@ function main() {
       sendTelegram('mS3')
     }
   },IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
+
+  // Connect to database
+  db.connect()
 }
 main()
