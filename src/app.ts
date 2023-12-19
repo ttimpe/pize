@@ -11,7 +11,7 @@ import { DisplayMode } from './enums/displayMode'
 import { Richtung } from './models/Richtung';
 
 const IBIS_SEND_INTERVAL = 10
-const IBIS_TERMINAL_RECEIVE_INTERVAL = 2
+const IBIS_TERMINAL_RECEIVE_INTERVAL = 0.5
 
 let currentDisplayMode :DisplayMode = DisplayMode.None
 let line = ''
