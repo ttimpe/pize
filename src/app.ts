@@ -120,6 +120,7 @@ function onPressHstWiederholen() {
 
 function setDisplayMode(displayMode: DisplayMode) {
   currentDisplayMode = displayMode
+  clearScreen()
   switch (currentDisplayMode) {
     case DisplayMode.Besetzung:
       writeTextToTerminal(0, 'BESETZUNG    :  ', 3)
