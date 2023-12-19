@@ -1,17 +1,16 @@
 import sqlite3 from "sqlite3";
+import { open } from 'sqlite'
 import { Line } from "./models/Line";
 import { Route } from "./models/Route";
 import { Stop } from "./models/Stop";
 export class DatabaseManager {
     db: any
 
-     connect() {
-     this.db = new sqlite3.Database('./timetable.sqlite3', (err) => {
-        if (err) {
-            return console.log('could not load database')
-        }
-        console.log('connected')
-    })
+     async connect() {
+        this.db = await open({
+            filename: './timetable.sql',
+            driver: sqlite3.Database
+        })
     }
 
 
