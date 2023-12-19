@@ -193,11 +193,14 @@ function setDisplayMode(displayMode: DisplayMode) {
       writeTextToTerminal(0, '   ** INNEN **  ')
       break;
     case DisplayMode.Haltestelle:
+      if (route) {
       if (route.stops.length > 0) {
         writeTextToTerminal(0, route.stops[stopIndex].name)
       } else {
         writeTextToTerminal(0, 'KEINE HALTEST.')
       }
+      writeTextToTerminal(0, 'KEINE ROUTE')
+    }
       break;
   }
 }
