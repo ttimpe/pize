@@ -8,7 +8,7 @@ export class DatabaseManager {
 
      async connect() {
         this.db = await open({
-            filename: './timetable.sql',
+            filename: './timetable.sqlite3',
             driver: sqlite3.Database
         })
     }
