@@ -57,6 +57,10 @@ async function loadStops() {
   }
 }
 
+function replaceAll(str: string, search: string, replace: string) {
+  return str.split(search).join(replace)
+}
+
 const port = new SerialPort({
   path: process.argv[2],
   baudRate: 1200,
@@ -66,6 +70,15 @@ const port = new SerialPort({
 })
 
 function sendTelegram(telegram: string) {
+
+  telegram = replaceAll(telegram, "ä", "{")
+  telegram = replaceAll(telegram, "ö", "|")
+  telegram = replaceAll(telegram,"ü", "}")
+  telegram = replaceAll(telegram,"ß", "~")
+  telegram = replaceAll(telegram, "Ä", "[")
+  telegram = replaceAll(telegram, "Ö", "\\")
+  telegram = replaceAll(telegram, "Ü", "]")
+
   const signedTelegram = signTelegram(telegram + '\r')
   port.write(signedTelegram)
   console.log('out > ' + signedTelegram.replace('\r', '<CR>'))
