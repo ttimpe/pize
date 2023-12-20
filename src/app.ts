@@ -91,7 +91,7 @@ function writeSecondLine() {
       break;
   }
   if (line) {
-    writeTextToTerminal(1, line.id.padStart(3) + course.padStart(2) + ziel.padStart(3) + directionLetter)
+    writeTextToTerminal(1, line.id.toString().padStart(3) + course.padStart(2) + ziel.padStart(3) + directionLetter)
   }
 }
 
@@ -163,6 +163,7 @@ function setDisplayMode(displayMode: DisplayMode) {
       writeTextToTerminal(0, 'BESETZUNG    :  ', 3)
       break;
     case DisplayMode.NaechsteHaltestelle:
+      break;
     case DisplayMode.HstNr:
       writeTextToTerminal(0,'HALTEST.NR.: ', 3)
       break;
@@ -207,7 +208,7 @@ function setDisplayMode(displayMode: DisplayMode) {
     case DisplayMode.Haltestelle:
       if (route) {
       if (route.stops.length > 0) {
-        writeTextToTerminal(0, route.stops[stopIndex].name)
+        writeTextToTerminal(0, route.stops[stopIndex].name.toUpperCase())
       } else {
         writeTextToTerminal(0, 'KEINE HALTEST.')
       }
