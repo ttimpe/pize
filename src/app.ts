@@ -202,13 +202,16 @@ function setDisplayMode(displayMode: DisplayMode) {
     case DisplayMode.WeicheRechts:
     case DisplayMode.AnsageStumm:
     case DisplayMode.AnsageAussen:
+      clearScreen()
       writeTextToTerminal(0, '  ** AUSSEN **  ')
       break;
     case DisplayMode.LStAnFG:
+      clearScreen()
       writeTextToTerminal(0, '* LS-FAHRGAST * ')
       break;
     case DisplayMode.Unfall:
     case DisplayMode.AnsageInnen:
+      clearScreen()
       writeTextToTerminal(0, '   ** INNEN **  ')
       break;
     case DisplayMode.Haltestelle:
