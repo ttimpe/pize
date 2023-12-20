@@ -65,7 +65,7 @@ async getRoute(line: Line, routeId: string): Promise<Route | null> {
 async getStops(route: Route): Promise<Stop[]> {
         // SELECT route_stops.stop_id, stop_info.short_name, stop_info.number, stop_info.announcement_id, route_stops.sequence_number, stops.longitude, stops.latitude FROM route_stops INNER JOIN stops ON route_stops.id = stops.id INNER JOIN stop_info ON route_stops.stop_id = stop_info.stop_id
     
-        const sql =  `SELECT route_stops.stop_id, stop_info.number, stop_info.short_name, stop_info.announcement_id FROM route_stops INNER JOIN stop_info ON stop_info.stop_id = route_stops.stop_id WHERE line_id = ? AND route_id = ? ORDER BY sequence_number`
+        const sql =  `SELECT route_stops.stop_id, stop_info.number, stop_info.short_name, stop_info.announcement_id FROM route_stops INNER JOIN stop_info ON stop_info.id = route_stops.stop_id WHERE line_id = ? AND route_id = ? ORDER BY sequence_number`
 
         try {
             const rows = await this.db.all(sql, [route.line_id, route.route_id])
