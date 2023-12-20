@@ -41,6 +41,7 @@ async function setRoute(r: string) {
   } catch (err) {
     console.log(err)
   }
+  setDisplayMode(DisplayMode.Haltestelle)
 }
 function setZiel(z: string) {
   ziel = z
