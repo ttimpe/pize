@@ -91,7 +91,13 @@ function writeSecondLine() {
       break;
   }
   if (line) {
-    writeTextToTerminal(1, line.id.toString().padStart(3) + course.padStart(2) + ziel.padStart(3) + directionLetter)
+    let output = line.id.toString().padStart(3) + course.padStart(2) + ziel.padStart(3) + directionLetter
+    if (route) {
+      if (route.stops[stopIndex]) {
+        output = output + route.stops[stopIndex].number
+      }
+    }
+    writeTextToTerminal(1, output)
   }
 }
 
@@ -210,6 +216,7 @@ function setDisplayMode(displayMode: DisplayMode) {
       if (route.stops.length > 0) {
         clearScreen()
         writeTextToTerminal(0, route.stops[stopIndex].name.toUpperCase())
+        writeSecondLine()
       } else {
         writeTextToTerminal(0, 'KEINE HALTEST.')
       }
