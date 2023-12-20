@@ -91,7 +91,7 @@ function writeSecondLine() {
       break;
   }
   if (line) {
-    let output = line.id.toString().padStart(3, '0') + course.padStart(2) + ziel.padStart(3) + directionLetter
+    let output = line.id.toString().padStart(3, '0') + course.padStart(2) + route.destination_id.toString().padStart(3, '0') + directionLetter
     if (route) {
       if (route.stops[stopIndex]) {
         output = output + route.stops[stopIndex].number
