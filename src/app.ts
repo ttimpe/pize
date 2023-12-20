@@ -208,6 +208,7 @@ function setDisplayMode(displayMode: DisplayMode) {
     case DisplayMode.Haltestelle:
       if (route) {
       if (route.stops.length > 0) {
+        clearScreen()
         writeTextToTerminal(0, route.stops[stopIndex].name.toUpperCase())
       } else {
         writeTextToTerminal(0, 'KEINE HALTEST.')
