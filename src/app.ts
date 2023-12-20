@@ -37,12 +37,22 @@ async function setRoute(r: string) {
   try {
     route = await db.getRoute(line, r)
     console.log('route set to', route)
+    await loadStops()
   } catch (err) {
     console.log(err)
   }
 }
 function setZiel(z: string) {
   ziel = z
+}
+
+async function loadStops() {
+  try {
+    route.stops = await db.getStops(route)
+    console.log('got stops', route.stops)
+  } catch(err) {
+    console.log(err)
+  }
 }
 
 const port = new SerialPort({
@@ -200,8 +210,9 @@ function setDisplayMode(displayMode: DisplayMode) {
       } else {
         writeTextToTerminal(0, 'KEINE HALTEST.')
       }
-      writeTextToTerminal(0, 'KEINE ROUTE')
-    }
+     } else {
+        writeTextToTerminal(0, 'KEINE ROUTE')
+      }
       break;
   }
 }
