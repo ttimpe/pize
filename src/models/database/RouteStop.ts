@@ -1,0 +1,31 @@
+import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from "sequelize-typescript";
+import { Stop } from "./Stop";
+import { Route } from "./Route";
+import { Line } from "./Line";
+import { Announcement } from "./Announcement";
+
+@Table({ 
+  timestamps: false,
+  tableName: 'route_stops'
+})
+export class RouteStop extends Model {
+  @Column(DataType.STRING)
+  stop_id!: string;
+  @Column(DataType.INTEGER)
+  sequence_number!: number
+  @Column(DataType.BOOLEAN)
+  hasHighPlatform: boolean = false
+  @Column(DataType.INTEGER)
+  doorSide!: number
+  @BelongsTo(() => Stop, { foreignKey: 'stop_id', targetKey: 'id' })
+  stop!: Stop
+  @ForeignKey(() => Route)
+  @Column(DataType.INTEGER)
+  route_id!: number
+  @ForeignKey(() => Announcement)
+  @Column(DataType.INTEGER)
+  announcement_id?: number;
+  @BelongsTo(() => Announcement, { foreignKey: 'announcement_id', targetKey: 'id' })
+  announcement?: Announcement
+}
+

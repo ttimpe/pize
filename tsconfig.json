@@ -2,11 +2,11 @@
     "compilerOptions": {
       "module": "commonjs",
       "esModuleInterop": true,
-      "types": ["node", "sequelize"],
-      "target": "es6",
+      "target": "es2019",
       "moduleResolution": "node",
       "sourceMap": true,
-      "outDir": "dist"
+      "outDir": "dist",
+      "experimentalDecorators": true,
     },
     "include": [
       "src/**/*"

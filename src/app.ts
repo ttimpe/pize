@@ -1,172 +1,50 @@
-import { Stop } from './models/Stop';
 
-import { Route } from './models/Route';
+import { TerminalDisplayMode } from './enums/IBISTerminalDisplayMode'
 
-import { SerialPort } from 'serialport';
-import { ReadlineParser } from '@serialport/parser-readline'
-import { Button } from './enums/buttons'
-import { DisplayMode } from './enums/displayMode'
-import { Richtung } from './models/Richtung';
-import { DatabaseManager } from './database'
-import { Line } from './models/Line';
-const IBIS_SEND_INTERVAL = 10
-const IBIS_TERMINAL_RECEIVE_INTERVAL = 0.5
-
-let currentDisplayMode :DisplayMode = DisplayMode.None
-let line: Line
-let course = ''
-let route: Route
-let ziel = ''
-let richtung = 'Z'
-let stopIndex = 0
-
-const db = new DatabaseManager()
-
-async function setLinie(linie: string) {
-  try {
-  line = await db.getLine(linie)
-  console.log('line set to ', line)
-  } catch (err) {
-    console.log(err)
-  }
-}
-function setKurs(kurs: string) {
-  course = kurs
-}
-async function setRoute(r: string) {
-  try {
-    route = await db.getRoute(line, r)
-    console.log('route set to', route)
-    stopIndex = 0
-    await loadStops()
-  } catch (err) {
-    console.log(err)
-  }
-  setDisplayMode(DisplayMode.Haltestelle)
-}
-function setZiel(z: string) {
-  ziel = z
-}
-
-async function loadStops() {
-  try {
-    route.stops = await db.getStops(route)
-    console.log('got stops', route.stops)
-  } catch(err) {
-    console.log(err)
-  }
-}
-
-function replaceAll(str: string, search: string, replace: string) {
-  return str.split(search).join(replace)
-}
-
-const port = new SerialPort({
-  path: process.argv[2],
-  baudRate: 1200,
-  dataBits: 7,
-  stopBits: 2,
-  parity: 'even'
-})
-
-function sendTelegram(telegram: string) {
-
-  telegram = replaceAll(telegram, "ä", "{")
-  telegram = replaceAll(telegram, "ö", "|")
-  telegram = replaceAll(telegram,"ü", "}")
-  telegram = replaceAll(telegram,"ß", "~")
-  telegram = replaceAll(telegram, "Ä", "[")
-  telegram = replaceAll(telegram, "Ö", "\\")
-  telegram = replaceAll(telegram, "Ü", "]")
-
-  const signedTelegram = signTelegram(telegram + '\r')
-  port.write(signedTelegram)
-  console.log('out > ' + signedTelegram.replace('\r', '<CR>'))
-}
-
-
-function writeTextToTerminal(line: number, text: string, mode: number = 2) {
-  // char code 48 is 0
-  text = text.padEnd(16).substring(0,16)
-  let telegram = 'mC' + mode + String.fromCharCode(47 + text.length) + line.toString() + '0' + text
-  sendTelegram(telegram)
-}
+import { IBISTerminal } from './models/devices/Terminal/IBISTerminal';
+import { Sequelize } from 'sequelize-typescript';
+import { Destination } from './models/database/Destination';
+import { Route } from './models/database/Route';
+import { Stop } from './models/database/Stop';
+import { RouteStop } from './models/database/RouteStop';
+import { StopInformation } from './models/database/StopInformation';
+import { Announcement } from './models/database/Announcement';
+import { Line } from './models/database/Line';
+import { IBISController } from './controllers/IBISController';
+import { Vehicle } from './Vehicle';
 
 
 
-function writeSecondLine() {
-  let directionLetter = 'Z'
-  switch (richtung) {
-    case '01':
-      directionLetter = 'H'
-      break;
-    case '02':
-      directionLetter = 'R'
-      break;
-  }
-  if (line) {
-    let output = line.id.toString().padStart(3, '0') + course.padStart(2) + route.destination_id.toString().padStart(3, '0') + directionLetter
-    if (route) {
-      if (route.stops[stopIndex]) {
-        output = output + route.stops[stopIndex].number
-      }
-    }
-    writeTextToTerminal(1, output)
-  }
-}
+
+let ibisController: IBISController
+let portString: string
 
 
-function onPressLinieKurs() {
-  setDisplayMode(DisplayMode.LinieKurs)
-}
-
-function onPressRoute() {
-  setDisplayMode(DisplayMode.Route)
-
-}
-function onPressMeldung() {
-  setDisplayMode(DisplayMode.Meldung)
-}
-
-function onPressZielSonderzeichen() {
-  setDisplayMode(DisplayMode.Ziel)
-}
-
+/*
 function onPressRichtung() {
-  setDisplayMode(DisplayMode.Richtung)
+  setDisplayMode(TerminalDisplayMode.Richtung)
 }
 
 function onPressHstNr() {
-  setDisplayMode(DisplayMode.HstNr)
+  setDisplayMode(TerminalDisplayMode.HstNr)
 }
-function onPressWeicheLinks() {
 
-}
-function onPressWeicheGerade() {
-
-}
-function onPressWeicheRechts() {
-
-}
-function onPressAnsageStumm() {
-
-}
 function onPressAnsageAussen() {
   console.log('onPressAnsageInnen')
-  if (currentDisplayMode != DisplayMode.AnsageAussen) {
-    setDisplayMode(DisplayMode.AnsageAussen)
+  if (currentDisplayMode != TerminalDisplayMode.AnsageAussen) {
+    setDisplayMode(TerminalDisplayMode.AnsageAussen)
   } else {
-    setDisplayMode(DisplayMode.Haltestelle)
+    setDisplayMode(TerminalDisplayMode.Haltestelle)
   }
 }
 function onPressSprechwunsch() {
 
 }
 function onPressLStAnFG() {
-  if (currentDisplayMode != DisplayMode.LStAnFG) {
-    setDisplayMode(DisplayMode.LStAnFG)
+  if (currentDisplayMode != TerminalDisplayMode.LStAnFG) {
+    setDisplayMode(TerminalDisplayMode.LStAnFG)
   } else {
-    setDisplayMode(DisplayMode.Haltestelle)
+    setDisplayMode(TerminalDisplayMode.Haltestelle)
   }
 }
 function onPressUnfall() {
@@ -175,60 +53,60 @@ function onPressUnfall() {
 function onPressHstWiederholen() {
 
 }
-
-function setDisplayMode(displayMode: DisplayMode) {
+/*
+function setDisplayMode(displayMode: TerminalDisplayMode) {
   currentDisplayMode = displayMode
   switch (currentDisplayMode) {
-    case DisplayMode.Besetzung:
-      writeTextToTerminal(0, 'BESETZUNG    :  ', 3)
+    case TerminalDisplayMode.Besetzung:
+     // writeTextToTerminal(0, 'BESETZUNG    :  ', 3)
       break;
-    case DisplayMode.NaechsteHaltestelle:
+    case TerminalDisplayMode.NaechsteHaltestelle:
       break;
-    case DisplayMode.HstNr:
+    case TerminalDisplayMode.HstNr:
       writeTextToTerminal(0,'HALTEST.NR.: ', 3)
       break;
-    case DisplayMode.Richtung:
+    case TerminalDisplayMode.Richtung:
       writeTextToTerminal(0,'RICHTUNG     :  ', 3)
       break;
-    case DisplayMode.Meldung:
+    case TerminalDisplayMode.Meldung:
       writeTextToTerminal(0,'MELDUNG    :   ', 3)
       break;
-    case DisplayMode.LinieKurs:
+    case TerminalDisplayMode.LinieKurs:
       writeTextToTerminal(0,'LINIE-KURS:     ', 3)
       break;
-    case DisplayMode.Route:
+    case TerminalDisplayMode.Route:
       writeTextToTerminal(0,'ROUTE       :   ', 3)
       break;
-    case DisplayMode.Sonderzeichen:
-    case DisplayMode.Ziel:
+    case TerminalDisplayMode.Sonderzeichen:
+    case TerminalDisplayMode.Ziel:
       writeTextToTerminal(0, 'ZIEL        :   ', 3)
       break;
-    case DisplayMode.DatumUhrzeit:
+    case TerminalDisplayMode.DatumUhrzeit:
       let d = new Date()
       let outputString = d.toLocaleDateString('de', { dateStyle: "short" }) + '   ' + d.toLocaleTimeString('de', { timeStyle: "short" })
       writeTextToTerminal(0, outputString)
       break;
-    case DisplayMode.None:
+    case TerminalDisplayMode.None:
       clearScreen()
       break;
-    case DisplayMode.WeicheLinks:
-    case DisplayMode.WeicheGerade:
-    case DisplayMode.WeicheRechts:
-    case DisplayMode.AnsageStumm:
-    case DisplayMode.AnsageAussen:
+    case TerminalDisplayMode.WeicheLinks:
+    case TerminalDisplayMode.WeicheGerade:
+    case TerminalDisplayMode.WeicheRechts:
+    case TerminalDisplayMode.AnsageStumm:
+    case TerminalDisplayMode.AnsageAussen:
       clearScreen()
       writeTextToTerminal(0, '  ** AUSSEN **  ')
       break;
-    case DisplayMode.LStAnFG:
+    case TerminalDisplayMode.LStAnFG:
       clearScreen()
       writeTextToTerminal(0, '* LS-FAHRGAST * ')
       break;
-    case DisplayMode.Unfall:
-    case DisplayMode.AnsageInnen:
+    case TerminalDisplayMode.Unfall:
+    case TerminalDisplayMode.AnsageInnen:
       clearScreen()
       writeTextToTerminal(0, '   ** INNEN **  ')
       break;
-    case DisplayMode.Haltestelle:
+    case TerminalDisplayMode.Haltestelle:
       if (route) {
       if (route.stops.length > 0) {
         clearScreen()
@@ -246,25 +124,25 @@ function setDisplayMode(displayMode: DisplayMode) {
 
 function onPressAnsageInnen() {
   console.log('onPressAnsageInnen')
-  if (currentDisplayMode != DisplayMode.AnsageInnen) {
-    setDisplayMode(DisplayMode.AnsageInnen)
+  if (currentDisplayMode != TerminalDisplayMode.AnsageInnen) {
+    setDisplayMode(TerminalDisplayMode.AnsageInnen)
   } else {
-    setDisplayMode(DisplayMode.Haltestelle)
+    setDisplayMode(TerminalDisplayMode.Haltestelle)
   }
 } 
 
 
 function onPressUhrzeitDatum() {
-  if (currentDisplayMode != DisplayMode.DatumUhrzeit) {
-    setDisplayMode(DisplayMode.DatumUhrzeit)   
+  if (currentDisplayMode != TerminalDisplayMode.DatumUhrzeit) {
+    setDisplayMode(TerminalDisplayMode.DatumUhrzeit)   
   } else {
-    setDisplayMode(DisplayMode.Haltestelle)
+    setDisplayMode(TerminalDisplayMode.Haltestelle)
   }
 }
 
 function onPressNaechsteHaltestelle() {
   stopIndex++
-  setDisplayMode(DisplayMode.Haltestelle)
+  setDisplayMode(TerminalDisplayMode.Haltestelle)
 }
 
 
@@ -278,7 +156,7 @@ function onReceiveTelegram(telegram: string) {
   // Check if terminal input
 
   if (telegram.startsWith('m')) {
-    if (currentDisplayMode == DisplayMode.None || currentDisplayMode == DisplayMode.Haltestelle || currentDisplayMode == DisplayMode.DatumUhrzeit || currentDisplayMode == DisplayMode.WeicheLinks || currentDisplayMode == DisplayMode.WeicheGerade || currentDisplayMode == DisplayMode.WeicheRechts || currentDisplayMode == DisplayMode.AnsageAussen || currentDisplayMode == DisplayMode.Unfall || currentDisplayMode == DisplayMode.AnsageInnen || currentDisplayMode == DisplayMode.LStAnFG) {
+    if (currentDisplayMode == TerminalDisplayMode.None || currentDisplayMode == TerminalDisplayMode.Haltestelle || currentDisplayMode == TerminalDisplayMode.DatumUhrzeit || currentDisplayMode == TerminalDisplayMode.WeicheLinks || currentDisplayMode == TerminalDisplayMode.WeicheGerade || currentDisplayMode == TerminalDisplayMode.WeicheRechts || currentDisplayMode == TerminalDisplayMode.AnsageAussen || currentDisplayMode == TerminalDisplayMode.Unfall || currentDisplayMode == TerminalDisplayMode.AnsageInnen || currentDisplayMode == TerminalDisplayMode.LStAnFG) {
     switch (telegram[1]) {
       case Button.None:
         break;
@@ -341,7 +219,7 @@ function onReceiveTelegram(telegram: string) {
         break;
     }
   }
-  if (currentDisplayMode == DisplayMode.LinieKurs) {
+  if (currentDisplayMode == TerminalDisplayMode.LinieKurs) {
     if (telegram.startsWith('m?')) {
       setLinie(telegram.substring(2, 5))
       setKurs(telegram.substring(5,7)) 
@@ -350,34 +228,34 @@ function onReceiveTelegram(telegram: string) {
       return
     }
   }
-  if (currentDisplayMode == DisplayMode.Route) {
+  if (currentDisplayMode == TerminalDisplayMode.Route) {
     if (telegram.startsWith('m?')) {
       setRoute(telegram.substring(2, 5))
-      setDisplayMode(DisplayMode.Haltestelle)
+      setDisplayMode(TerminalDisplayMode.Haltestelle)
       return
     }
   }
-  if (currentDisplayMode == DisplayMode.Richtung) {
+  if (currentDisplayMode == TerminalDisplayMode.Richtung) {
     if (telegram.startsWith('m?')) {
       richtung = telegram.substring(2, 5)
       writeSecondLine()
-      setDisplayMode(DisplayMode.Haltestelle)
+      setDisplayMode(TerminalDisplayMode.Haltestelle)
       return
     }
   }
-  if (currentDisplayMode == DisplayMode.Meldung) {
+  if (currentDisplayMode == TerminalDisplayMode.Meldung) {
     if (telegram.startsWith('m?')) {
       // TODO: Implement Meldung
-      setDisplayMode(DisplayMode.Haltestelle)
+      setDisplayMode(TerminalDisplayMode.Haltestelle)
       return
     }
   }
-  if (currentDisplayMode == DisplayMode.Ziel) {
+  if (currentDisplayMode == TerminalDisplayMode.Ziel) {
     if (telegram.startsWith('m?')) {
       ziel = telegram.substring(2, 5)
       sendTelegram('z' + ziel)
       writeSecondLine()
-      setDisplayMode(DisplayMode.Haltestelle)
+      setDisplayMode(TerminalDisplayMode.Haltestelle)
       return
     }
   }
@@ -385,35 +263,38 @@ function onReceiveTelegram(telegram: string) {
 
 }
 
-function playSound(id: string, repeat: number) {
-  sendTelegram('mK' + id + repeat)
-}
+*/
 
-function signTelegram(message: string): string {
-
-  let checkByte = 0x7F;
-  for (const char of message) {
-      const byte = char.charCodeAt(0);
-      checkByte = checkByte ^ byte;
-  }
-  message += String.fromCharCode(checkByte);
-  return message;
-}
 
 function main() {
-  const parser = port.pipe(new ReadlineParser({ delimiter: '\r' }))
-  parser.on('data', onReceiveTelegram)
-  onPressLinieKurs()
-  setInterval(() => {
-    console.log('currentDisplayMode', currentDisplayMode)
-    if (currentDisplayMode == DisplayMode.None || currentDisplayMode == DisplayMode.DatumUhrzeit || currentDisplayMode == DisplayMode.WeicheLinks || currentDisplayMode == DisplayMode.WeicheGerade || currentDisplayMode == DisplayMode.WeicheRechts || currentDisplayMode == DisplayMode.AnsageAussen || currentDisplayMode == DisplayMode.Unfall || currentDisplayMode == DisplayMode.AnsageInnen || currentDisplayMode == DisplayMode.Haltestelle) {
-      sendTelegram('mS2')
-    } else {
-      sendTelegram('mS3')
-    }
-  },IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
 
-  // Connect to database
-  db.connect()
+  if (process.argv.length === 3) {
+
+    portString = process.argv[2]
+  // read config
+  // load DB from Sequelize
+  const sequelize = new Sequelize({
+    storage: './test.sqlite3',
+    dialect:'sqlite'
+  })
+  sequelize.addModels([
+    Destination,
+    Line,
+    Route,
+    Stop,
+    RouteStop,
+    StopInformation,
+    Announcement
+  ])
+  sequelize.sync();
+  // Init terminal(s)
+    ibisController = new IBISController(portString, 10)
+  
+
+  } else {
+    console.error('ERROR: Please specify serial port')
+  }
+  
+
 }
 main()

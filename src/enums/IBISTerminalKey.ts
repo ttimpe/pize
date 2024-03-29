@@ -1,4 +1,4 @@
-export enum Button {
+/*export enum Button {
     IFISStop = '0',
     Besetzung = '1',
     UhrzeitDatum = '2',
@@ -20,4 +20,6 @@ export enum Button {
     HstWiederholen = '-',
     AnsageInnen = '.',
     Sprechwunsch = '*'
-}
+}*/
+
+export type IBISTerminalKey = 'Q' | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | ':' | ';' | '<' | '=' | '>' | '+' | ',' | '-' | '.' | '*' 

@@ -1,4 +1,4 @@
-export enum DisplayMode {
+export enum TerminalDisplayMode {
     Besetzung = 0,
     NaechsteHaltestelle = 1,
     HstNr = 2,

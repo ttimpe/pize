@@ -1,0 +1,12 @@
+enum IBISTerminalMode {
+    FUNCTION_NO_RECEIVE = '0',
+    DIGITS_NO_RECEIVE = '1',
+    FUNCTION = '2',
+    DIGITS = '3',
+    BLINKING_FUNCTION_NO_RECEIVE = '4',
+    BLINKING_DIGITS_NO_RECEIVE = '5',
+    BLINKING_FUNCTION = '6',
+    BLINKING_DIGITS = '7',
+    KEYEVENT_SECONDARY = '8'
+}
+export { IBISTerminalMode }
