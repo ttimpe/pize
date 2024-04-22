@@ -28,7 +28,8 @@ export class Stop extends Model {
         if (this.information != null && this.information.number) {
           return this.information.number
         } else {
-          return parseInt(this.id.substring(this.id.length - 4, this.id.length))
+            const part = this.id.split(':')[2]
+            return parseInt(part.slice(-3))
         }
       }
       

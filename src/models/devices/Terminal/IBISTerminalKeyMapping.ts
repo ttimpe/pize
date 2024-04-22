@@ -6,7 +6,7 @@ class IBISTerminalKeyMapping {
     textLine2: string = ""
     isPrompt: boolean = false
     isBlinking: boolean = false
-    action?: IBISTerminalKeyAction
     key: IBISTerminalKey
+    action: IBISTerminalKeyAction
 }
 export { IBISTerminalKeyMapping }

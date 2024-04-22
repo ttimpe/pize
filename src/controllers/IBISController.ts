@@ -1,3 +1,5 @@
+import { Destination } from './../models/database/Destination';
+import { SpecialCharacter } from './../models/database/SpecialCharacter';
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline'
 import { TelegramGenerator } from '../TelegramGenerator';
@@ -9,9 +11,16 @@ import { IBISValidator } from '../models/devices/IBISValidator';
 import { AudioController } from './AudioController';
 import { IBISTelegram } from '../extensions/IBISTelegram';
 import { TerminalDisplayMode } from '../enums/IBISTerminalDisplayMode';
+import deviceConfig from '../../device_config.json'
+import { UestraLVA } from '../models/devices/Signs/UestraLVA';
+import { Stop } from '../models/database/Stop';
+import { Route } from '../models/database/Route';
+import { Line } from '../models/database/Line'
+import { RouteStop } from '../models/database/RouteStop';
+import { StopInformation } from '../models/database/StopInformation.js';
 class IBISController {
     private IBIS_SEND_INTERVAL = 5
-    private IBIS_QUEUE_SEND_INTERVAL_MS = 10
+    private IBIS_QUEUE_SEND_INTERVAL_MS = 2
     private IBIS_TERMINAL_RECEIVE_INTERVAL = 1
     private serialPort: SerialPort
 
@@ -21,29 +30,49 @@ class IBISController {
     private signs: IBISSign[] = []
     private validators: IBISValidator[] = []
 
+
+    private uestraLVAs: UestraLVA[] = []
     private terminalStatusTimer: any
     private deviceStatusTimer: any
     private queueSendTimer: any
-    private deviceConfig: DeviceConfig = require('../../device_config.json')
+    private timer: any
+
+    private audioController: AudioController = new AudioController()
+
+    public linie?: Line
+    public kurs: number = 0
+    public sonderzeichen?: SpecialCharacter
+    get upcomingStop(): RouteStop {
+        if (this.route && this.route.stops.length > 0) {
+        return this.route.stops[this.stopIndex]
+        } else {
+            return null
+        }
+    }
+    public route?: Route
+    public ziel?: Destination
+    public stopIndex: number = 0
+    public richtung: number = 0
 
     private telegramSendQueue:IBISTelegram[] = []
 
+
+    
+
     private get stopName(): string {
         let length = 32
-        if (Vehicle.getInstance().line != undefined && Vehicle.getInstance().route != undefined) {
-            let lineString = Vehicle.getInstance().line.number
+        if (this.linie != undefined && this.route != undefined) {
+            let lineString = this.linie.number
+            if (this.sonderzeichen) {
+                lineString = this.sonderzeichen.stringValue
+            }
 
-            let stopName = Vehicle.getInstance().route.stops[Vehicle.getInstance().stopIndex].stop.name.substring(0,16)
+            let stopName = this.route.stops[this.stopIndex].stop.information.shortName.substring(0,16)
     
             const leftPad = Math.floor((length - lineString.length - stopName.length) / 2);
-    
-            // Leerzeichen rechts von der Haltestelle berechnen
-            const rightPad = length - lineString.length - stopName.length - leftPad;
+            const formatierterString = lineString + " ".repeat(leftPad) + stopName + " ".repeat(leftPad);
             
-            // Konstruiere den formatierten String
-            const formatierterString = lineString + " ".repeat(leftPad) + stopName + " ".repeat(rightPad);
-            
-            return formatierterString + '\0x01';
+            return formatierterString + '\n';
         }
         return ''
     }
@@ -60,38 +89,33 @@ class IBISController {
 
         const parser = this.serialPort.pipe(new ReadlineParser({ delimiter: '\r' }))
 
-        if (this.deviceConfig.TERMINAL_A) {
-            this.aTerminal = new IBISTerminal(this, true, this.deviceConfig.terminal_config)
+        if (deviceConfig.TERMINAL_A) {
+            this.aTerminal = new IBISTerminal(this, true, deviceConfig.terminal_config)
         }
-        if (this.deviceConfig.TERMINAL_B) {
-            this.bTerminal = new IBISTerminal(this, false, this.deviceConfig.terminal_config)    
+        if (deviceConfig.TERMINAL_B) {
+            this.bTerminal = new IBISTerminal(this, false, deviceConfig.terminal_config)    
         } 
 
         this.registerSigns()
         this.registerValidators()
 
-        // TODO: Run timer every second, but only send certain command every n seconds:
-        // send time at 0 second
-       setInterval(() => {
-        this.sendAllTelegrams()
-       }, this.IBIS_SEND_INTERVAL * 1000) 
+        this.tick10Seconds()
+        this.tick60Seconds()
+        this.timer = setInterval(() => {
+            this.tick1Second()
+            let d = new Date()
+            if (d.getSeconds() % 10 == 0) {
+                this.tick10Seconds()
+            }
+            if (d.getSeconds() % 30 == 0) {
+                this.tick30Seconds()
+            }
+            if (d.getSeconds() % 60 == 0) {
+                this.tick60Seconds()
+            }
+        }, 1000)
 
-       // Need to query terminals more often than sending commands
-       this.terminalStatusTimer = setInterval(() => {
-        if (this.aTerminal) {
-            this.aTerminal.queryStatus()
-        }
-        if (this.bTerminal) {
-            this.bTerminal.queryStatus()
-        }
-        
-       }, this.IBIS_TERMINAL_RECEIVE_INTERVAL * 1000)
 
-       // Query Sign and Validator status every minute
-       this.deviceStatusTimer = setInterval( () => {
-        this.queryStatusOfAllSigns()
-        this.queryStatusOfAllValidators()
-       }, 60000)
 
 
        // Delay sending of different telegrams by a couple of ms
@@ -105,14 +129,13 @@ class IBISController {
        parser.on('data', (data) => {
         this.onReceiveTelegram(data)
        })
-       this.refreshTerminals()
 
     }
 
     // Aktivierte Anzeigen loopen und registrieren
     private registerSigns() {
-        for (let i=0; i < this.deviceConfig.signs.length; i++) {
-            if (this.deviceConfig.signs[i] == true) {
+        for (let i=0; i < deviceConfig.signs.length; i++) {
+            if (deviceConfig.signs[i] == true) {
                 this.signs.push(new IBISSign(this, i as IBISAddress))
             }
         }
@@ -120,11 +143,15 @@ class IBISController {
 
     // Aktivierte Entwerter loopen und registrieren
     private registerValidators() {
-        for (let i=0; i < this.deviceConfig.validators.length; i++) {
-            if (this.deviceConfig.validators[i] == true) {
+        for (let i=0; i < deviceConfig.validators.length; i++) {
+            if (deviceConfig.validators[i] == true) {
                 this.validators.push(new IBISValidator(this, i as IBISAddress))
             }
         }
+    }
+
+    private throwError(errorText: string) {
+
     }
 
     private queryStatusOfAllSigns() {
@@ -159,11 +186,9 @@ class IBISController {
 
         console.log('in >', telegram.substring(1))
         if (this.aTerminal) {
-       //     console.log('got A Terminal, forwarding')
             this.aTerminal.onReceiveTelegram(telegram.substring(1))
         }
         if (this.bTerminal) {
-       //     console.log('got B Terminal, forwarding')
             this.bTerminal.onReceiveTelegram(telegram.substring(1))
         }
         this.signs.forEach((sign) => {
@@ -207,63 +232,196 @@ class IBISController {
     }
 
 
-    
-    
-    sendAllTelegrams() {
+
+      tick10Seconds() {
+
+        // Kursnummer
+        this.sendTelegram(TelegramGenerator.DS002(this.kurs))
+          // Liniennummer
         
-        // Liniennummer
-
-
-        if (Vehicle.getInstance().line) {
-            this.sendTelegram(TelegramGenerator.DS001(parseInt(Vehicle.getInstance().line.number)))
+        if (this.linie) {
+            this.sendTelegram(TelegramGenerator.DS001(parseInt(this.linie.number)))
+            // Sonderzeichen
+            if (this.sonderzeichen) {
+                this.sendTelegram(TelegramGenerator.DS001a(this.sonderzeichen.number))
+            } else {
+                this.sendTelegram(TelegramGenerator.DS001a(0))
+            }
+            // Funkkennung
+            this.sendTelegram(TelegramGenerator.DS001b(parseInt(this.linie.number), this.kurs))
         }
-        // Linie Kurs für Funk
-        if (Vehicle.getInstance().line) {
-            this.sendTelegram(TelegramGenerator.DS001b(parseInt(Vehicle.getInstance().line.number), Vehicle.getInstance().courseNumber))
-            // Kursnummer
-            this.sendTelegram(TelegramGenerator.DS002(Vehicle.getInstance().courseNumber))
+        if (this.linie != undefined && this.route != undefined) {
+            this.sendStopData()
+            // Routennummer für ZUB
+            this.sendTelegram(TelegramGenerator.DS003d(parseInt(this.route.route_id)))
         }
-        if (Vehicle.getInstance().line != undefined && Vehicle.getInstance().destination != undefined) {
+    
+        if (this.linie != undefined && this.ziel != undefined) {
             // Zielnummer 
-            this.sendTelegram(TelegramGenerator.DS003(Vehicle.getInstance().destination.number))
+            this.sendTelegram(TelegramGenerator.DS003(this.ziel.number))
             // Zieltext
-            this.sendTelegram(TelegramGenerator.DS003a(Vehicle.getInstance().destination.name))
+            this.sendTelegram(TelegramGenerator.DS003a(this.ziel.name))
             // Ziel für ZUB
-            this.sendTelegram(TelegramGenerator.DS003b(Vehicle.getInstance().destination.number))
+            this.sendTelegram(TelegramGenerator.DS003b(this.ziel.number))
         }
-        if (Vehicle.getInstance().line != undefined && Vehicle.getInstance().route != undefined) {
-        // Haltestellenname
-            this.sendTelegram(TelegramGenerator.DS003c(Vehicle.getInstance().route.stops[Vehicle.getInstance().stopIndex].stop.name))
-        // Routennummer für ZUB
-            this.sendTelegram(TelegramGenerator.DS003d(parseInt(Vehicle.getInstance().route.route_id)))
+    
+         // Zuglänge
+         this.sendTelegram(TelegramGenerator.DS007(1))
+         if (this.linie != undefined && this.route != undefined) {
+          
         }
 
+        // Entwerter
+        if (this.linie && this.route && this.richtung) {
 
-        // Fahrweg Seitentext
-        // Entwertermerkmale
+        }
+      
+      }
+
+      tick30Seconds() {
+
+      }
+
+      tick60Seconds() {
         // Uhrzeit
         this.sendTelegram(TelegramGenerator.DS005(new Date()))
         // Datum 6 stellig
         this.sendTelegram(TelegramGenerator.DS006a(new Date()))
-        // Zuglänge
-        this.sendTelegram(TelegramGenerator.DS007(1))
-        if (Vehicle.getInstance().line != undefined && Vehicle.getInstance().route != undefined) {
-            // Haltestellenname
-            this.sendTelegram(TelegramGenerator.DS009c(this.stopName))
-            // Haltestellennummer 4 stellig
-            this.sendTelegram(TelegramGenerator.DS010(Vehicle.getInstance().upcomingStop.stop.number))
-            // Haltestellennummer Perlenschnur        
-            this.sendTelegram(TelegramGenerator.DS010a(Vehicle.getInstance().upcomingStop.stop.number))
-            // Haltestellenindex
-            this.sendTelegram(TelegramGenerator.DS010b(Vehicle.getInstance().stopIndex))
-            // Haltestellenindex Endhaltestelle
-            this.sendTelegram(TelegramGenerator.DS010c(Vehicle.getInstance().route.stops.length - 1))
-        }
         // Jahreszahl 4 stellig
         this.sendTelegram(TelegramGenerator.DS010d(new Date()))
 
-
+        this.queryStatusOfAllSigns()
+        this.queryStatusOfAllValidators()
       }
+
+      tick1Second() {
+        if (this.aTerminal) {
+            this.aTerminal.queryStatus()
+        }
+        if (this.bTerminal) {
+            this.bTerminal.queryStatus()
+        }
+      }
+
+    
+    async setLine(lineNumber: string): Promise<boolean> {
+        const line = await Line.findOne({
+            where: {
+                number: lineNumber
+            }
+        })
+        if (line) {
+            this.linie = line
+            return true
+        }
+        return false
+    }
+
+    async setRoute(routeNumber: number): Promise<boolean> {
+        if (this.linie) {
+            const route = await Route.findOne({
+                where: {
+                    line_id: this.linie.id,
+                    route_id: routeNumber.toString()
+                },
+                include: [RouteStop, Destination, {
+                    model: RouteStop,
+                    include: [Stop, {
+                        model: Stop,
+                        include: [StopInformation], // Include the associated Stop model
+                      },], // Include the associated Stop model
+                  }]
+            })
+            if (route) {
+                console.log(route)
+                console.log(route.destination)
+                this.route = route
+                this.ziel = route.destination
+                return true
+            } else {
+                return false
+            }
+        }
+        return false
+    }
+    
+    setRichtung(direction: number) {
+        this.richtung = direction
+    }
+
+    async setZiel(destinationNumber: number): Promise<boolean> {
+        const destination = await Destination.findOne({
+            where: {
+                number: destinationNumber
+            }
+        })
+        if (destination) {
+            this.ziel = destination
+            return true
+        } else {
+            return false
+        }
+    }
+    setCourseNumber(courseNumber: number) {
+        this.kurs = courseNumber
+        if (this.aTerminal) {
+            this.aTerminal.onSetKurs()
+        }
+        if (this.bTerminal) {
+            this.bTerminal.onSetKurs()
+        }
+        // If we also have a line, let's go find a valid schedule
+    }
+
+    skipStop() {
+        if (this.route && this.stopIndex < this.route.stops.length) {
+            this.stopIndex = this.stopIndex + 1
+            this.setHaltestelle(this.route.stops[this.stopIndex])
+        }
+    }
+
+    setHaltestelle(stop: RouteStop) {
+        
+        this.sendStopData()
+        this.audioController.playAnnouncement(stop.announcement);
+        if (this.aTerminal) {
+            this.aTerminal.onSetHaltestelle()
+        }
+        if (this.bTerminal) {
+            this.bTerminal.onSetHaltestelle()
+        }
+    }
+
+
+
+    private sendStopData() {
+            // Haltestellenname
+            this.sendTelegram(TelegramGenerator.DS003c(this.route.stops[this.stopIndex].stop.name))
+          // Haltestellenname
+          this.sendTelegram(TelegramGenerator.DS009c(this.stopName))
+          // Haltestellennummer 4 stellig
+          this.sendTelegram(TelegramGenerator.DS010(this.upcomingStop.stop.number))
+          // Haltestellennummer Perlenschnur        
+          this.sendTelegram(TelegramGenerator.DS010a(this.upcomingStop.stop.number))
+          // Haltestellenindex
+          this.sendTelegram(TelegramGenerator.DS010b(this.stopIndex))
+          // Haltestellenindex Endhaltestelle
+          this.sendTelegram(TelegramGenerator.DS010c(this.route.stops.length - 1))
+    }
+
+    async setSpecialCharacter(characterNumber: number): Promise<boolean> {
+        const specialCharacter = await SpecialCharacter.findOne({
+            where: {
+                number: characterNumber
+            }
+        })
+        if (specialCharacter) {
+            this.sonderzeichen = specialCharacter
+            return true
+        } else {
+            return false
+        }
+    }
 
 
 }

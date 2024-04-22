@@ -1,7 +1,8 @@
-import { Destination } from './Destination';
+import * as SpecialCharacter from './SpecialCharacter';
+import * as Destination from './Destination';
  import { BelongsTo, Column, DataType, ForeignKey, HasMany, HasOne, Model, PrimaryKey, Table } from "sequelize-typescript";
-import { RouteStop } from "./RouteStop";
-import { Line } from './Line';
+import * as RouteStop from "./RouteStop";
+import * as Line from './Line';
 
 
 @Table({
@@ -9,18 +10,19 @@ import { Line } from './Line';
   tableName: 'routes'
 })
 export class Route extends Model {
-  @ForeignKey(() => Line)
+  @ForeignKey(() => Line.Line)
   @Column(DataType.STRING)
   line_id!: string;
   @Column(DataType.STRING)
   route_id!: string;
   @Column(DataType.INTEGER)
   direction!: number;
-  @ForeignKey(() => Destination)
   @Column(DataType.INTEGER)
-  destination_id!: number
-  @BelongsTo(() => Destination, { foreignKey: 'destination_id', targetKey: 'id' , as: 'routeDestination' })
-  routeDestination!: Destination
-  @HasMany(() => RouteStop) // 'route_id' is the foreign key in RouteStop model
-  stops!: RouteStop[];
+  @BelongsTo(() => Destination.Destination, { foreignKey: 'destination_id', targetKey: 'id' , as: 'routeDestination' })
+  destination!: Destination.Destination
+  @HasMany(() => RouteStop.RouteStop) // 'route_id' is the foreign key in RouteStop model
+  stops!: RouteStop.RouteStop[];
+  @Column(DataType.INTEGER)
+  @BelongsTo(() => SpecialCharacter.SpecialCharacter, { foreignKey: 'special_character', targetKey: 'id' , as: 'routeSpecialCharacter' })
+  specialCharacter!: SpecialCharacter.SpecialCharacter
 }

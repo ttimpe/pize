@@ -1,22 +1,23 @@
-import { TelegramGenerator } from "../../TelegramGenerator"
-import { IBISController } from "../../controllers/IBISController"
-import { IBISTelegram } from "../../extensions/IBISTelegram"
+import * as TelegramGenerator from "../../TelegramGenerator"
+import * as IBISController from "../../controllers/IBISController"
+import * as IBISTelegram from "../../extensions/IBISTelegram"
 
 class IBISSign {
     address: IBISAddress
+    ibisController: IBISController
     status: number
     lastStatusQueriedTime?: Date
     lastStatusReceivedTime?: Date
-    constructor(private ibisController: IBISController, address: IBISAddress) {
+    constructor(ibisController: IBISController.IBISController, address: IBISAddress) {
         this.address = address
         this.ibisController = ibisController
     }
     
     queryStatus() {
         this.lastStatusQueriedTime = new Date()
-        this.ibisController.sendTelegram(TelegramGenerator.DS020(this.address))
+        this.ibisController.sendTelegram(TelegramGenerator.TelegramGenerator.DS020(this.address))
     }
-    onReceiveTelegram(telegram: IBISTelegram) {
+    onReceiveTelegram(telegram: IBISTelegram.IBISTelegram) {
         this.lastStatusReceivedTime = new Date()
     }
 }

@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
-      "module": "commonjs",
+      "module": "NodeNext",
       "esModuleInterop": true,
-      "target": "es2019",
-      "moduleResolution": "node",
+      "moduleResolution": "NodeNext",
       "sourceMap": true,
       "outDir": "dist",
       "experimentalDecorators": true,
-    },
+      "useDefineForClassFields": false,
+  },
     "include": [
       "src/**/*"
     ],

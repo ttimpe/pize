@@ -99,7 +99,7 @@ class TelegramGenerator {
 
     // DS004 - Entwertermerkmale
     static DS004(zone: number, richtung: number) {
-
+        
     }
 
     // DS004a - Entwertermerkmale erweitert
@@ -174,7 +174,7 @@ class TelegramGenerator {
     }
     // DS009b - Haltestellenname 32 Zeichen
     static DS009c(name: string): IBISTelegram {
-        return 'v' + name.toUpperCase().padEnd(32, ' ').substring(0, 32)
+        return 'v' + name.toUpperCase()
     }
 
 
@@ -513,6 +513,7 @@ class TelegramGenerator {
     // DS571 - Fehlertext abfragen
 
     // DS060 - Ortung - Status
+
 
 
 

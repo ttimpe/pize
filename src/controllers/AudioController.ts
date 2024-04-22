@@ -1,10 +1,13 @@
 import { Announcement } from './../models/database/Announcement';
+import PlaySound from 'play-sound';
 
 class AudioController {
-    private player = require('play-sound')()
 
     async playAnnouncement(announcement: Announcement) {
-        this.player.play('hello.mp3')
+
+       console.log('PLAY ANNOUNCEMENT', announcement);
+       PlaySound().play('')
+
     }
 
 }
