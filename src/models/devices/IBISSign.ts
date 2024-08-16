@@ -1,6 +1,6 @@
-import * as TelegramGenerator from "../../TelegramGenerator"
-import * as IBISController from "../../controllers/IBISController"
-import * as IBISTelegram from "../../extensions/IBISTelegram"
+import { TelegramGenerator } from "../../TelegramGenerator"
+import { IBISController } from "../../controllers/IBISController"
+import { IBISTelegram } from "../../extensions/IBISTelegram"
 
 class IBISSign {
     address: IBISAddress
@@ -8,16 +8,16 @@ class IBISSign {
     status: number
     lastStatusQueriedTime?: Date
     lastStatusReceivedTime?: Date
-    constructor(ibisController: IBISController.IBISController, address: IBISAddress) {
+    constructor(ibisController: IBISController, address: IBISAddress) {
         this.address = address
         this.ibisController = ibisController
     }
     
     queryStatus() {
         this.lastStatusQueriedTime = new Date()
-        this.ibisController.sendTelegram(TelegramGenerator.TelegramGenerator.DS020(this.address))
+        this.ibisController.sendTelegram(TelegramGenerator.DS020(this.address))
     }
-    onReceiveTelegram(telegram: IBISTelegram.IBISTelegram) {
+    onReceiveTelegram(telegram: IBISTelegram) {
         this.lastStatusReceivedTime = new Date()
     }
 }

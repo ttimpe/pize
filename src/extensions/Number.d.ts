@@ -1,0 +1,4 @@
+
+    interface Number {
+        toIBISHexString(): string
+    }

@@ -1,4 +1,4 @@
-import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from "sequelize-typescript";
+import { BelongsTo, Column, DataType, ForeignKey, HasMany, HasOne, Model, Table } from "sequelize-typescript";
 import { Stop } from "./Stop";
 import { Route } from "./Route";
 import { Line } from "./Line";
@@ -22,10 +22,15 @@ export class RouteStop extends Model {
   @ForeignKey(() => Route)
   @Column(DataType.INTEGER)
   route_id!: number
+/*  @HasMany(() => StopTime, {
+    foreignKey: 'route_stop_id', // Ensure the foreign key is correctly defined
+    sourceKey: 'id'
+  })
+  stopTimes?: StopTime[]*/
   @ForeignKey(() => Announcement)
   @Column(DataType.INTEGER)
   announcement_id?: number;
-  @BelongsTo(() => Announcement, { foreignKey: 'announcement_id', targetKey: 'id' })
-  announcement?: Announcement
+  @BelongsTo(() => Announcement, { foreignKey: 'announcement_id' })
+  announcement?: Announcement;
 }
 

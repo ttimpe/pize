@@ -1,4 +1,4 @@
-import { BelongsTo, Column, DataType, Model, Table } from "sequelize-typescript";
+import { BelongsTo, Column, DataType, Model, Table, ForeignKey } from "sequelize-typescript";
 import { Stop } from "./Stop";
 
 @Table({ 

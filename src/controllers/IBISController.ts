@@ -11,13 +11,13 @@ import { IBISValidator } from '../models/devices/IBISValidator';
 import { AudioController } from './AudioController';
 import { IBISTelegram } from '../extensions/IBISTelegram';
 import { TerminalDisplayMode } from '../enums/IBISTerminalDisplayMode';
-import deviceConfig from '../../device_config.json'
 import { UestraLVA } from '../models/devices/Signs/UestraLVA';
 import { Stop } from '../models/database/Stop';
 import { Route } from '../models/database/Route';
 import { Line } from '../models/database/Line'
 import { RouteStop } from '../models/database/RouteStop';
 import { StopInformation } from '../models/database/StopInformation.js';
+import { Announcement } from '../models/database/Announcement';
 class IBISController {
     private IBIS_SEND_INTERVAL = 5
     private IBIS_QUEUE_SEND_INTERVAL_MS = 2
@@ -36,7 +36,7 @@ class IBISController {
     private deviceStatusTimer: any
     private queueSendTimer: any
     private timer: any
-
+    private deviceConfig: DeviceConfig = require('../../device_config.json')
     private audioController: AudioController = new AudioController()
 
     public linie?: Line
@@ -70,9 +70,9 @@ class IBISController {
             let stopName = this.route.stops[this.stopIndex].stop.information.shortName.substring(0,16)
     
             const leftPad = Math.floor((length - lineString.length - stopName.length) / 2);
-            const formatierterString = lineString + " ".repeat(leftPad) + stopName + " ".repeat(leftPad);
+            const formatierterString = (lineString + " ".repeat(leftPad) + stopName + " ".repeat(leftPad).substring(0, 31));
             
-            return formatierterString + '\n';
+            return formatierterString + '\x02';
         }
         return ''
     }
@@ -89,11 +89,11 @@ class IBISController {
 
         const parser = this.serialPort.pipe(new ReadlineParser({ delimiter: '\r' }))
 
-        if (deviceConfig.TERMINAL_A) {
-            this.aTerminal = new IBISTerminal(this, true, deviceConfig.terminal_config)
+        if (this.deviceConfig.TERMINAL_A) {
+            this.aTerminal = new IBISTerminal(this, true, this.deviceConfig.terminal_config)
         }
-        if (deviceConfig.TERMINAL_B) {
-            this.bTerminal = new IBISTerminal(this, false, deviceConfig.terminal_config)    
+        if (this.deviceConfig.TERMINAL_B) {
+            this.bTerminal = new IBISTerminal(this, false, this.deviceConfig.terminal_config)    
         } 
 
         this.registerSigns()
@@ -134,8 +134,8 @@ class IBISController {
 
     // Aktivierte Anzeigen loopen und registrieren
     private registerSigns() {
-        for (let i=0; i < deviceConfig.signs.length; i++) {
-            if (deviceConfig.signs[i] == true) {
+        for (let i=0; i < this.deviceConfig.signs.length; i++) {
+            if (this.deviceConfig.signs[i] == true) {
                 this.signs.push(new IBISSign(this, i as IBISAddress))
             }
         }
@@ -143,8 +143,8 @@ class IBISController {
 
     // Aktivierte Entwerter loopen und registrieren
     private registerValidators() {
-        for (let i=0; i < deviceConfig.validators.length; i++) {
-            if (deviceConfig.validators[i] == true) {
+        for (let i=0; i < this.deviceConfig.validators.length; i++) {
+            if (this.deviceConfig.validators[i] == true) {
                 this.validators.push(new IBISValidator(this, i as IBISAddress))
             }
         }
@@ -169,13 +169,13 @@ class IBISController {
         if (this.aTerminal) {
             this.aTerminal.updateSecondLine()
             if (this.aTerminal.currentDisplayMode == TerminalDisplayMode.None) {
-                this.aTerminal.refreshText()
+             //   this.aTerminal.refreshText()
             }
         }
         if (this.bTerminal) {
             this.bTerminal.updateSecondLine()
             if (this.bTerminal.currentDisplayMode == TerminalDisplayMode.None) {
-                this.bTerminal.refreshText()
+                // this.bTerminal.refreshText()
             }
         }
     }
@@ -326,10 +326,10 @@ class IBISController {
                 },
                 include: [RouteStop, Destination, {
                     model: RouteStop,
-                    include: [Stop, {
+                    include: [{
                         model: Stop,
                         include: [StopInformation], // Include the associated Stop model
-                      },], // Include the associated Stop model
+                      },Announcement], // Include the associated Stop model
                   }]
             })
             if (route) {
@@ -377,13 +377,16 @@ class IBISController {
         if (this.route && this.stopIndex < this.route.stops.length) {
             this.stopIndex = this.stopIndex + 1
             this.setHaltestelle(this.route.stops[this.stopIndex])
+
         }
     }
 
     setHaltestelle(stop: RouteStop) {
-        
+        console.log('setting stop to', stop);
         this.sendStopData()
+        if (stop.announcement) {
         this.audioController.playAnnouncement(stop.announcement);
+        }
         if (this.aTerminal) {
             this.aTerminal.onSetHaltestelle()
         }

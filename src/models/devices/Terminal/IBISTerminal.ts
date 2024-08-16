@@ -1,15 +1,15 @@
-import { IBISTerminalKey } from '../../../enums/IBISTerminalKey.js';
-import { TerminalDisplayMode } from '../../../enums/IBISTerminalDisplayMode.js';
+import { IBISTerminalKey } from '../../../enums/IBISTerminalKey';
+import { TerminalDisplayMode } from '../../../enums/IBISTerminalDisplayMode';
 import { Vehicle } from "../../../Vehicle.js"
-import * as IBISTerminalKeyMapping from './IBISTerminalKeyMapping.js';
-import * as IBISTerminalKeyAction from './IBISTerminalKeyAction.js';
+import { IBISTerminalKeyMapping } from './IBISTerminalKeyMapping';
+import { IBISTerminalKeyAction } from './IBISTerminalKeyAction';
 
-import { Line } from '../../database/Line.js';
-import * as IBISController from '../../../controllers/IBISController.js';
-import * as TelegramGenerator from '../../../TelegramGenerator.js';
-import * as IBISTerminalMode from './IBISTerminalMode.js';
-import * as IBISTerminalConfiguration from './IBISTerminalConfiguration.js';
-import * as IBISTelegram from '../../../extensions/IBISTelegram.js';
+import { Line } from '../../database/Line';
+import { IBISController } from '../../../controllers/IBISController';
+import {TelegramGenerator } from '../../../TelegramGenerator';
+import {IBISTerminalMode } from './IBISTerminalMode';
+import {IBISTerminalConfiguration } from './IBISTerminalConfiguration';
+import {IBISTelegram } from '../../../extensions/IBISTelegram';
 
 class IBISTerminal {
     private isPrimary: boolean = true
@@ -18,7 +18,7 @@ class IBISTerminal {
     private currentLine: number = 0
     private lastReceiveTimestamp: Date
     private lastTextSentTimestamp: Date
-    mode: IBISTerminalMode.IBISTerminalMode = IBISTerminalMode.IBISTerminalMode.FUNCTION
+    mode: IBISTerminalMode = IBISTerminalMode.FUNCTION
 
      // active function definition
     currentDisplayMode :TerminalDisplayMode = TerminalDisplayMode.None
@@ -33,19 +33,19 @@ class IBISTerminal {
         }
     }
 
-    private get statusQueryTelegram(): IBISTelegram.IBISTelegram {
+    private get statusQueryTelegram(): IBISTelegram {
             if (this.isPrimary) {
-                return TelegramGenerator.TelegramGenerator.DS040a(this.mode)
+                return TelegramGenerator.DS040a(this.mode)
             } else {
-                return TelegramGenerator.TelegramGenerator.DS040b(this.mode)
+                return TelegramGenerator.DS040b(this.mode)
             }
     }
 
-    private getActionForKey(key: IBISTerminalKey): IBISTerminalKeyMapping.IBISTerminalKeyMapping {
+    private getActionForKey(key: IBISTerminalKey): IBISTerminalKeyMapping {
         return this.terminalConfig.actions.find((mapping) => key == mapping.key)
     }
     
-    private getAction(action: IBISTerminalKeyAction.IBISTerminalKeyAction): IBISTerminalKeyMapping.IBISTerminalKeyMapping {
+    private getAction(action: IBISTerminalKeyAction): IBISTerminalKeyMapping {
         return this.terminalConfig.actions.find((mapping) => action == mapping.action)
     }
     
@@ -54,7 +54,7 @@ class IBISTerminal {
             this.ibisController.sendTelegram(this.statusQueryTelegram)
     }
 
-    onReceiveTelegram(telegram: IBISTelegram.IBISTelegram) {
+    onReceiveTelegram(telegram:IBISTelegram) {
         // Number returned from the terminal
         console.log('received')
         if (telegram.startsWith(this.terminalLetter + '?')) {
@@ -77,7 +77,7 @@ class IBISTerminal {
    
     
 
-    constructor(private ibisController: IBISController.IBISController, isPrimary: boolean = true, private terminalConfig: IBISTerminalConfiguration.IBISTerminalConfiguration) {
+    constructor(private ibisController: IBISController, isPrimary: boolean = true, private terminalConfig: IBISTerminalConfiguration) {
         this.ibisController = ibisController
         this.isPrimary = isPrimary
         this.terminalConfig = terminalConfig
@@ -108,61 +108,61 @@ class IBISTerminal {
                     // we have a config
                     if (keyConfig.action) {
                         switch (keyConfig.action) {
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.BESETZGRAD:
+                            case IBISTerminalKeyAction.BESETZGRAD:
                                 this.onPressBesetzgrad()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.UHRZEIT_DATUM:
+                            case IBISTerminalKeyAction.UHRZEIT_DATUM:
                                 this.onPressDatumUhrzeit()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.NAECHSTE_HST:
+                            case IBISTerminalKeyAction.NAECHSTE_HST:
                                 this.onPressNaechsteHaltestelle()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.HALTESTELLE:
+                            case IBISTerminalKeyAction.HALTESTELLE:
                                 this.onPressHaltestelle()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.RICHTUNG:
+                            case IBISTerminalKeyAction.RICHTUNG:
                                 this.onPressRichtung()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.MELDUNG:
+                            case IBISTerminalKeyAction.MELDUNG:
                                 this.onPressMeldung()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.LINIE_KURS:
+                            case IBISTerminalKeyAction.LINIE_KURS:
                                 this.onPressLinieKurs()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.ROUTE:
+                            case IBISTerminalKeyAction.ROUTE:
                                 this.onPressRoute()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.ZIEL:
+                            case IBISTerminalKeyAction.ZIEL:
                                 this.onPressZiel()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.WEICHE_LINKS:
+                            case IBISTerminalKeyAction.WEICHE_LINKS:
                                 this.onPressWeicheLinks()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.WEICHE_GERADE:
+                            case IBISTerminalKeyAction.WEICHE_GERADE:
                                 this.onPressWeicheGerade()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.WEICHE_RECHTS:
+                            case IBISTerminalKeyAction.WEICHE_RECHTS:
                                 this.onPressWeicheRechts()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.ANSAGE_STUMM:
+                            case IBISTerminalKeyAction.ANSAGE_STUMM:
                                 this.onPressAnsageStumm()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.ANSAGE_AUSSEN:
+                            case IBISTerminalKeyAction.ANSAGE_AUSSEN:
                                 this.onPressAnsageInnen()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.LST_AN_FG:
+                            case IBISTerminalKeyAction.LST_AN_FG:
                                 this.onPressLstAnFG()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.UNFALL:
+                            case IBISTerminalKeyAction.UNFALL:
                                 this.onPressUnfall()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.HST_WIEDERHOLEN:
+                            case IBISTerminalKeyAction.HST_WIEDERHOLEN:
                                 this.onPressHstWiederholen()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.ANSAGE_INNEN:
+                            case IBISTerminalKeyAction.ANSAGE_INNEN:
                                 this.onPressAnsageInnen()
                                 break
-                            case IBISTerminalKeyAction.IBISTerminalKeyAction.SPRECHWUNSCH:
+                            case IBISTerminalKeyAction.SPRECHWUNSCH:
                                 this.onPressSprechwunsch()
                                 break
                         }
@@ -288,16 +288,16 @@ class IBISTerminal {
         this.lines[lineNumber] = text
         let mode = this.mode
         if (lineNumber == 1) {
-            mode = IBISTerminalMode.IBISTerminalMode.FUNCTION_NO_RECEIVE
+            mode = IBISTerminalMode.FUNCTION_NO_RECEIVE
         }
         this.currentLine = lineNumber
         this.textBuffer = text
-        let telegram: IBISTelegram.IBISTelegram
+        let telegram: IBISTelegram
         if (this.isPrimary) {
             
-            telegram = TelegramGenerator.TelegramGenerator.DS044a(this.mode, 0, lineNumber, text) 
+            telegram = TelegramGenerator.DS044a(this.mode, 0, lineNumber, text) 
         } else {
-            telegram = TelegramGenerator.TelegramGenerator.DS044b(this.mode, 0, lineNumber, text) 
+            telegram = TelegramGenerator.DS044b(this.mode, 0, lineNumber, text) 
         }
         this.ibisController.sendTelegram(telegram)
         this.lastTextSentTimestamp = new Date()
@@ -307,7 +307,7 @@ class IBISTerminal {
 
     
    clearFirstLine() {
-    this.mode = IBISTerminalMode.IBISTerminalMode.FUNCTION
+    this.mode = IBISTerminalMode.FUNCTION
     this.setText(0, " ".repeat(16))
    }
     updateSecondLine() {
@@ -369,34 +369,34 @@ private setHaltestelle(number: string) {
 }
 
 promptForLinieKurs() {
-    let action = this.getAction(IBISTerminalKeyAction.IBISTerminalKeyAction.LINIE_KURS)
-    this.mode = IBISTerminalMode.IBISTerminalMode.DIGITS
+    let action = this.getAction(IBISTerminalKeyAction.LINIE_KURS)
+    this.mode = IBISTerminalMode.DIGITS
     this.setText(0, action.textLine1)
 }
 promptForBesetzgrad() {
-    let action = this.getAction(IBISTerminalKeyAction.IBISTerminalKeyAction.BESETZGRAD)
-    this.mode = IBISTerminalMode.IBISTerminalMode.DIGITS
+    let action = this.getAction(IBISTerminalKeyAction.BESETZGRAD)
+    this.mode = IBISTerminalMode.DIGITS
     this.setText(0, action.textLine1)
 }
 promptForStopNumber() {
-    let action = this.getAction(IBISTerminalKeyAction.IBISTerminalKeyAction.HALTESTELLE)
-    this.mode = IBISTerminalMode.IBISTerminalMode.DIGITS
+    let action = this.getAction(IBISTerminalKeyAction.HALTESTELLE)
+    this.mode = IBISTerminalMode.DIGITS
     this.setText(0, action.textLine1)
 }
 
 promptForDirection() {
-    let action = this.getAction(IBISTerminalKeyAction.IBISTerminalKeyAction.RICHTUNG)
-    this.mode = IBISTerminalMode.IBISTerminalMode.DIGITS
+    let action = this.getAction(IBISTerminalKeyAction.RICHTUNG)
+    this.mode = IBISTerminalMode.DIGITS
     this.setText(0, action.textLine1)
 }
 promptForRoute() {
-    let action = this.getAction(IBISTerminalKeyAction.IBISTerminalKeyAction.ROUTE)
-    this.mode = IBISTerminalMode.IBISTerminalMode.DIGITS
+    let action = this.getAction(IBISTerminalKeyAction.ROUTE)
+    this.mode = IBISTerminalMode.DIGITS
     this.setText(0, action.textLine1)
 }
 promptForDestination() {
-    let action = this.getAction(IBISTerminalKeyAction.IBISTerminalKeyAction.ZIEL)
-    this.mode = IBISTerminalMode.IBISTerminalMode.DIGITS
+    let action = this.getAction(IBISTerminalKeyAction.ZIEL)
+    this.mode = IBISTerminalMode.DIGITS
     this.setText(0, action.textLine1)
 }
 setWeicheLinks() {
@@ -427,8 +427,8 @@ setUnfall() {
 }
 
 promptForMessage() {
-    let action = this.getAction(IBISTerminalKeyAction.IBISTerminalKeyAction.MELDUNG)
-    this.mode = IBISTerminalMode.IBISTerminalMode.DIGITS
+    let action = this.getAction(IBISTerminalKeyAction.MELDUNG)
+    this.mode = IBISTerminalMode.DIGITS
     this.setText(0, action.textLine1)
 }
 skipStop() {
@@ -532,7 +532,7 @@ private setMeldung(number: string) {
  private async setRoute(number: string) {
     let route = parseInt(number)
     const didSet = await this.ibisController.setRoute(route)
-    this.mode = IBISTerminalMode.IBISTerminalMode.FUNCTION
+    this.mode = IBISTerminalMode.FUNCTION
 
     if (!didSet) {
         console.log('Could not find route')
@@ -549,8 +549,8 @@ private setMeldung(number: string) {
 }
 
 private promptForSpecialCharacter() {
-    let action = this.getAction(IBISTerminalKeyAction.IBISTerminalKeyAction.SONDERZEICHEN)
-    this.mode = IBISTerminalMode.IBISTerminalMode.DIGITS
+    let action = this.getAction(IBISTerminalKeyAction.SONDERZEICHEN)
+    this.mode = IBISTerminalMode.DIGITS
     this.setText(0, action.textLine1)
 }
 
@@ -566,7 +566,7 @@ private promptForSpecialCharacter() {
 }
 
     private showNormalMode() {
-        this.mode = IBISTerminalMode.IBISTerminalMode.FUNCTION
+        this.mode = IBISTerminalMode.FUNCTION
         if (this.ibisController.upcomingStop != null) {
             this.setText(0, this.ibisController.upcomingStop.stop.information.shortName.toUpperCase())
         } else {

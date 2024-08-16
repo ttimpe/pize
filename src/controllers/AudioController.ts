@@ -6,7 +6,7 @@ class AudioController {
     async playAnnouncement(announcement: Announcement) {
 
        console.log('PLAY ANNOUNCEMENT', announcement);
-       PlaySound().play('')
+       PlaySound().play('./announcements/' + announcement.fileName);
 
     }
 
