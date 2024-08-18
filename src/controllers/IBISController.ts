@@ -165,6 +165,16 @@ class IBISController {
         })
     }
 
+    repeatStopAnnouncement() {
+        this.audioController.playStopAnnouncement(this.upcomingStop, () => {
+            if (this.stopIndex == (this.route.stops.length - 1)) {
+                // Is end
+                this.audioController.playEndAnnouncement();
+            }
+        });
+        this.sendStopData();
+
+    }
     private refreshTerminals() {
         if (this.aTerminal) {
             this.aTerminal.updateSecondLine()

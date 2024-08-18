@@ -213,6 +213,7 @@ class IBISTerminal {
         this.setDisplayMode(TerminalDisplayMode.Unfall)
     }
     private onPressHstWiederholen() {
+        this.ibisController.repeatStopAnnouncement();
         console.log('Repeat playback of current stop')
     }
     private onPressAnsageInnen() {
