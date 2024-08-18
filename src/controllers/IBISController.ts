@@ -384,14 +384,17 @@ class IBISController {
     setHaltestelle(stop: RouteStop) {
         console.log('setting stop to', stop);
         this.sendStopData()
-        if (stop.announcement) {
-        this.audioController.playAnnouncement(stop.announcement);
-        }
+        
         if (this.aTerminal) {
             this.aTerminal.onSetHaltestelle()
         }
         if (this.bTerminal) {
             this.bTerminal.onSetHaltestelle()
+        }
+        this.audioController.playStopAnnouncement(stop);
+        if (this.stopIndex == (this.route.stops.length - 1)) {
+            // Is end
+            this.audioController.playEndAnnouncement();
         }
     }
 
