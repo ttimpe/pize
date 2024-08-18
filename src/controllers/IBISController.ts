@@ -70,7 +70,7 @@ class IBISController {
             let stopName = this.route.stops[this.stopIndex].stop.information.shortName.substring(0,16)
     
             const leftPad = Math.floor((length - lineString.length - stopName.length) / 2);
-            const formatierterString = (lineString + " ".repeat(leftPad) + stopName + " ".repeat(leftPad).substring(0, 30));
+            const formatierterString = (lineString + " ".repeat(leftPad) + stopName + " ".repeat(leftPad).substring(0, 31));
             
             return formatierterString + '\n';
         }
@@ -391,11 +391,13 @@ class IBISController {
         if (this.bTerminal) {
             this.bTerminal.onSetHaltestelle()
         }
-        this.audioController.playStopAnnouncement(stop);
-        if (this.stopIndex == (this.route.stops.length - 1)) {
-            // Is end
-            this.audioController.playEndAnnouncement();
-        }
+        this.audioController.playStopAnnouncement(stop, () => {
+            if (this.stopIndex == (this.route.stops.length - 1)) {
+                // Is end
+                this.audioController.playEndAnnouncement();
+            }
+        });
+        
     }
 
 
