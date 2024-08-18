@@ -175,6 +175,10 @@ class IBISController {
         this.sendStopData();
 
     }
+    toggleAnnouncementsMuted() {
+        this.audioController.announcementsMuted = !(this.audioController.announcementsMuted)
+    }
+
     private refreshTerminals() {
         if (this.aTerminal) {
             this.aTerminal.updateSecondLine()

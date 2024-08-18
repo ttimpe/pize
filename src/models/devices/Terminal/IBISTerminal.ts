@@ -204,6 +204,7 @@ class IBISTerminal {
         this.setDisplayMode(TerminalDisplayMode.WeicheRechts)
     }
     private onPressAnsageStumm() {
+        this.ibisController.toggleAnnouncementsMuted();
         this.setDisplayMode(TerminalDisplayMode.AnsageStumm)
     }
     private onPressLstAnFG() {

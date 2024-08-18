@@ -4,7 +4,9 @@ import PlaySound from 'play-sound';
 
 class AudioController {
 
+    announcementsMuted: boolean = false;
     async playAnnouncement(announcement: Announcement, callback: Function) {
+        if (this.announcementsMuted == false) {
 
         console.log('PLAY ANNOUNCEMENT', announcement);
         PlaySound().play('./announcements/' + announcement.fileName, (err) => {
@@ -12,9 +14,10 @@ class AudioController {
         })
 
     }
+    }
 
     async playStopAnnouncement(routeStop: RouteStop, callback: Function) {
-
+        if (this.announcementsMuted == false) {
 
         if (routeStop.announcement) {
             PlaySound().play('./announcements/Gong.wav', (err) => {
@@ -45,10 +48,12 @@ class AudioController {
 
         }
 
-
+    }
     }
     async playEndAnnouncement() {
+        if (this.announcementsMuted == false) {
         PlaySound().play('./announcements/Ende.wav');
+        }
     }
 
 }
