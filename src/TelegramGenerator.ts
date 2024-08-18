@@ -1,6 +1,7 @@
 import { Line } from "./models/database/Line";
-import './extensions/String'
-import './extensions/Integer'
+import  './extensions/String'
+import './extensions/Number'
+
 import { IBISTerminalMode } from "./models/devices/Terminal/IBISTerminalMode";
 import { IBISTelegram } from "./extensions/IBISTelegram";
 class TelegramGenerator {
@@ -98,8 +99,8 @@ class TelegramGenerator {
     }
 
     // DS004 - Entwertermerkmale
-    static DS004(zone: number, richtung: number) {
-        
+    static DS004(zone: number, kurzstrecke: number, richtung: number) {
+        return 'e' + zone + kurzstrecke + richtung;
     }
 
     // DS004a - Entwertermerkmale erweitert

@@ -283,7 +283,7 @@ class IBISController {
 
         // Entwerter
         if (this.linie && this.route && this.richtung) {
-
+            this.sendTelegram(TelegramGenerator.DS004(this.upcomingStop.stop.number, 0, this.richtung));
         }
       
       }
