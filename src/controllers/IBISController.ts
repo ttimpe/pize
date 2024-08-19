@@ -70,7 +70,7 @@ class IBISController {
             let stopName = this.route.stops[this.stopIndex].stop.information.shortName.substring(0,16)
     
             const leftPad = Math.floor((length - lineString.length - stopName.length) / 2);
-            const formatierterString = (lineString + " ".repeat(leftPad) + stopName + " ".repeat(leftPad).substring(0, 31));
+            const formatierterString = ((lineString + " ".repeat(leftPad) + stopName).substring(0, 31));
             
             return formatierterString + '\n';
         }
