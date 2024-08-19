@@ -302,6 +302,10 @@ class IBISTerminal {
             telegram = TelegramGenerator.DS044b(this.mode, 0, lineNumber, text) 
         }
         this.ibisController.sendTelegram(telegram)
+        this.ibisController.sendTelegram(telegram)
+        this.ibisController.sendTelegram(telegram)
+        this.ibisController.sendTelegram(telegram)
+
         this.lastTextSentTimestamp = new Date()
     }
 
