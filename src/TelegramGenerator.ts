@@ -118,6 +118,10 @@ class TelegramGenerator {
 
     }
 
+    static DS070(addresse: IBISAddress) {
+        return 'g' + addresse;
+    }
+
     // DS005 - Uhrzeit 4 stellig
     static DS005(uhrzeit: Date): IBISTelegram {
         let hour = uhrzeit.getHours().toString().padStart(2, '0')

@@ -1,5 +1,6 @@
 import { IBISController } from "../../controllers/IBISController";
 import { IBISTelegram } from "../../extensions/IBISTelegram";
+import { TelegramGenerator } from "../../TelegramGenerator";
 
 class IBISValidator {
     address: IBISAddress
@@ -9,7 +10,7 @@ class IBISValidator {
     }
 
     queryStatus() {
-        
+        this.ibisController.sendTelegram(TelegramGenerator.DS070(this.address));
     }
     onReceiveTelegram(telegram: IBISTelegram) {
         
