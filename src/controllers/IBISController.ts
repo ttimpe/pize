@@ -75,7 +75,7 @@ class IBISController {
 
             let output = lineString + " ".repeat(whitespacePaddingOnLeftLength) + stopName;
             output = output.padEnd(length - 1, " ");
-            output = output + '\x01';
+            output = output + '\x00';
 
 
 
