@@ -74,7 +74,7 @@ class IBISController {
             const whitespacePaddingOnLeftLength = Math.floor(length - lineString.length - stopName.length) / 2;
 
             let output = lineString + " ".repeat(whitespacePaddingOnLeftLength) + stopName;
-            output = output.padEnd(length - 1, " ");
+            output = output.padEnd(length, " ");
             output = output + '\x00';
 
 
