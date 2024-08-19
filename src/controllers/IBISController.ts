@@ -104,7 +104,12 @@ class IBISController {
         }
         if (this.deviceConfig.TERMINAL_B) {
             this.bTerminal = new IBISTerminal(this, false, this.deviceConfig.terminal_config)    
-        } 
+        }
+
+    
+        
+        
+
 
         this.registerSigns()
         this.registerValidators()

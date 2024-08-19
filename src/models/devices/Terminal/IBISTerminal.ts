@@ -88,6 +88,16 @@ class IBISTerminal {
         // clear screen, ignore inputs before this
         this.setText(0,'')
         this.setText(1,'')
+
+        this.mode = IBISTerminalMode.BLINKING_FUNCTION;
+        this.setText(0, 'IBISPLUSPLUS');
+        this.setText(1, "VERSION 1.0");
+
+        setTimeout(() => {
+            this.mode = IBISTerminalMode.FUNCTION;
+            this.setText(0,'')
+            this.setText(1,'')
+        }, 5000);
     }
     
 
