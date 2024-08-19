@@ -67,12 +67,22 @@ class IBISController {
                 lineString = this.sonderzeichen.stringValue
             }
 
-            let stopName = this.route.stops[this.stopIndex].stop.information.shortName.substring(0,16)
-    
-            const leftPad = Math.floor((length - lineString.length - stopName.length) / 2);
-            const formatierterString = ((lineString + " ".repeat(leftPad) + stopName).substring(0, 31));
+            let stopName = this.route.stops[this.stopIndex].stop.information.shortName;
+
+            // cut off stop name based on sign length
+            stopName = stopName.substring(0, length - lineString.length);
+            const whitespacePaddingOnLeftLength = Math.floor(length - lineString.length - stopName.length) / 2;
+
+            const whitespacePaddingOnRightLength = length - (lineString.length + whitespacePaddingOnLeftLength + stopName.length);
+            let output = lineString + " ".repeat(whitespacePaddingOnLeftLength) + stopName + " ".repeat(whitespacePaddingOnRightLength)
+            output = output.substring(0, 32) + '\0';
+
+
+
+
             
-            return formatierterString + '\n';
+            
+            return output;
         }
         return ''
     }
