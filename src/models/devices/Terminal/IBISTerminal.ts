@@ -269,7 +269,7 @@ class IBISTerminal {
             case TerminalDisplayMode.Besetzung:
                 this.setBesetzgrad(numberString)
                 break;
-            case TerminalDisplayMode.HstNr:
+            case TerminalDisplayMode.Haltestelle:
                 this.setHaltestelle(numberString)
                 break;
             case TerminalDisplayMode.Richtung:
