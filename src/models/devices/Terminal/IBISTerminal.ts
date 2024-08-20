@@ -375,11 +375,13 @@ private setHaltestelle(number: string) {
     let wasFound = false
     for (let i=0; i<this.ibisController.route.stops.length; i++) {
         if (this.ibisController.route.stops[i].stop.number == stopNumber) {
+            console.log('Found stop');
             wasFound = true
             this.ibisController.stopIndex = i
         }
     }
     if (!wasFound) {
+        console.log('Did not find stop')
         this.throwError('FALSCHE HST.')
     }
 }
