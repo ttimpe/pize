@@ -18,6 +18,7 @@ import { Line } from '../models/database/Line'
 import { RouteStop } from '../models/database/RouteStop';
 import { StopInformation } from '../models/database/StopInformation.js';
 import { Announcement } from '../models/database/Announcement';
+import { Util } from '../util';
 class IBISController {
     private IBIS_SEND_INTERVAL = 5
     private IBIS_QUEUE_SEND_INTERVAL_MS = 2
@@ -60,7 +61,7 @@ class IBISController {
     
 
     private get stopName(): string {
-        let length = 32
+        let length = 24
         if (this.linie != undefined && this.route != undefined) {
             let lineString = this.linie.number
             if (this.sonderzeichen) {
@@ -175,7 +176,7 @@ class IBISController {
         })
     }
     private queryStatusOfAllValidators() {
-        console.log('Querying validators')
+        Util.log('Querying validators')
         this.validators.forEach((validator) => {
             validator.queryStatus()
         })
@@ -214,7 +215,7 @@ class IBISController {
         // Switch status telegram per device / terminal
         // Pass terminal keys to each terminal, change terminal state
 
-        console.log('in >', telegram.substring(1))
+        Util.log('in >', telegram.substring(1))
         if (this.aTerminal) {
             this.aTerminal.onReceiveTelegram(telegram.substring(1))
         }
@@ -247,7 +248,7 @@ class IBISController {
 
     private actuallySendTelegram(telegram: IBISTelegram) {
         this.serialPort.write(telegram)
-        console.log('out > ' + telegram.replace('\r', '<CR>'))
+        Util.log('out > ' + telegram.replace('\r', '<CR>'))
     }
     
     // IBIS Telegrammsignierung
@@ -363,8 +364,8 @@ class IBISController {
                   }]
             })
             if (route) {
-                console.log(route)
-                console.log(route.destination)
+                Util.log(route)
+                Util.log(route.destination)
                 this.stopIndex = 0;
                 this.route = route
                 this.ziel = route.destination
@@ -413,7 +414,7 @@ class IBISController {
     }
 
     setHaltestelle(stop: RouteStop) {
-        console.log('setting stop to', stop);
+        Util.log('setting stop to', stop);
         this.sendStopData()
         
         if (this.aTerminal) {

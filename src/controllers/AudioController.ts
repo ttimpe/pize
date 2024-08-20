@@ -1,14 +1,14 @@
 import { RouteStop } from '../models/database/RouteStop';
 import { Announcement } from './../models/database/Announcement';
 import PlaySound from 'play-sound';
+import { Util } from "../util"
 
 class AudioController {
 
     announcementsMuted: boolean = false;
     async playAnnouncement(announcement: Announcement, callback: Function) {
         if (this.announcementsMuted == false) {
-
-        console.log('PLAY ANNOUNCEMENT', announcement);
+            Util.log('PLAY ANNOUNCEMENT', announcement);
         PlaySound().play('./announcements/' + announcement.fileName, (err) => {
             callback();
         })

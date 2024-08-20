@@ -10,6 +10,7 @@ import {TelegramGenerator } from '../../../TelegramGenerator';
 import {IBISTerminalMode } from './IBISTerminalMode';
 import {IBISTerminalConfiguration } from './IBISTerminalConfiguration';
 import {IBISTelegram } from '../../../extensions/IBISTelegram';
+import { Util } from '../../../util';
 
 class IBISTerminal {
     private isPrimary: boolean = true
@@ -56,9 +57,9 @@ class IBISTerminal {
 
     onReceiveTelegram(telegram:IBISTelegram) {
         // Number returned from the terminal
-        console.log('received')
+        Util.log('received')
         if (telegram.startsWith(this.terminalLetter + '?')) {
-            console.log('got number')
+            Util.log('got number')
             this.onNumber(telegram.substring(2))
         } else if (telegram.startsWith(this.terminalLetter + 'Q')) {
             // status reply
@@ -69,7 +70,7 @@ class IBISTerminal {
             this.onKeyPress(telegram[1] as IBISTerminalKey)
 
         } else {
-            console.log('cannot handle', telegram)
+            Util.log('cannot handle', telegram)
         }
     }
 
@@ -225,13 +226,13 @@ class IBISTerminal {
     }
     private onPressHstWiederholen() {
         this.ibisController.repeatStopAnnouncement();
-        console.log('Repeat playback of current stop')
+        Util.log('Repeat playback of current stop')
     }
     private onPressAnsageInnen() {
         this.setDisplayMode(TerminalDisplayMode.AnsageInnen)
     }
     private onPressSprechwunsch() {
-        console.log('Method not implemented.');
+        Util.log('Method not implemented.');
     }
     private onPressMeldung() {
         this.setDisplayMode(TerminalDisplayMode.Meldung)
@@ -243,7 +244,7 @@ class IBISTerminal {
         this.setDisplayMode(TerminalDisplayMode.Haltestelle)
     }
     private onPressNaechsteHaltestelle() {
-        console.log('forward stops')
+        Util.log('forward stops')
         this.ibisController.skipStop()
     }
 
@@ -365,7 +366,7 @@ class IBISTerminal {
 
 
  private setBesetzgrad(number: string) {
-    console.log('set besetzgrad')
+    Util.log('set besetzgrad')
 
     this.setDisplayMode(TerminalDisplayMode.None)
 
@@ -375,14 +376,14 @@ private setHaltestelle(number: string) {
     let wasFound = false
     for (let i=0; i<this.ibisController.route.stops.length; i++) {
         if (this.ibisController.route.stops[i].stop.number == stopNumber) {
-            console.log('Found stop');
+            Util.log('Found stop');
             wasFound = true
             this.ibisController.stopIndex = i
             this.setDisplayMode(TerminalDisplayMode.None)
         }
     }
     if (!wasFound) {
-        console.log('Did not find stop')
+        Util.log('Did not find stop')
         this.throwError('FALSCHE HST.')
     }
 }
@@ -526,14 +527,14 @@ private setRichtung(number: string) {
 }
 
 private setMeldung(number: string) {
-    console.log('Sending message')
+    Util.log('Sending message')
     this.setDisplayMode(TerminalDisplayMode.None)
 }
 
  private async setLinieKurs(number: string) {
     let linie: string
     let kurs: number
-    console.log('Set Linie/Kurs', number)
+    Util.log('Set Linie/Kurs', number)
     // TODO: Logik für kurze Linien/Kurse
     if (number.length == 5) {
         linie = parseInt(number.substring(0, 3)).toString()
@@ -542,7 +543,7 @@ private setMeldung(number: string) {
         linie = parseInt(number.substring(0,2)).toString()
         kurs = parseInt(number.substring(2, 4))
     }
-    console.log('Kurs', kurs)
+    Util.log('Kurs', kurs)
     await this.ibisController.setLine(linie)
     this.ibisController.setCourseNumber(kurs)
     this.setDisplayMode(TerminalDisplayMode.None)
@@ -554,7 +555,7 @@ private setMeldung(number: string) {
     this.mode = IBISTerminalMode.FUNCTION
 
     if (!didSet) {
-        console.log('Could not find route')
+        Util.log('Could not find route')
         this.throwError('FALSCHE ROUTE')
     } else {
       
@@ -563,7 +564,7 @@ private setMeldung(number: string) {
 }
 
  private setSonderzeichen(number: string) {
-    console.log('set character')
+    Util.log('set character')
     this.setDisplayMode(TerminalDisplayMode.None)
 }
 
