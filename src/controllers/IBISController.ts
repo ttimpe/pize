@@ -364,6 +364,7 @@ class IBISController {
             if (route) {
                 console.log(route)
                 console.log(route.destination)
+                this.stopIndex = 0;
                 this.route = route
                 this.ziel = route.destination
                 return true
@@ -403,7 +404,7 @@ class IBISController {
     }
 
     skipStop() {
-        if (this.route && this.stopIndex < this.route.stops.length) {
+        if (this.route && this.stopIndex < (this.route.stops.length) - 1) {
             this.stopIndex = this.stopIndex + 1
             this.setHaltestelle(this.route.stops[this.stopIndex])
 
