@@ -175,6 +175,7 @@ class IBISController {
         })
     }
     private queryStatusOfAllValidators() {
+        console.log('Querying validators')
         this.validators.forEach((validator) => {
             validator.queryStatus()
         })
