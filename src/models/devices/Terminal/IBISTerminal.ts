@@ -378,6 +378,7 @@ private setHaltestelle(number: string) {
             console.log('Found stop');
             wasFound = true
             this.ibisController.stopIndex = i
+            this.setDisplayMode(TerminalDisplayMode.None)
         }
     }
     if (!wasFound) {
