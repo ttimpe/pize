@@ -264,7 +264,8 @@ class IBISController {
 
 
       tick10Seconds() {
-
+        this.queryStatusOfAllSigns()
+        this.queryStatusOfAllValidators()
         // Kursnummer
         this.sendTelegram(TelegramGenerator.DS002(this.kurs))
           // Liniennummer
@@ -320,8 +321,7 @@ class IBISController {
         // Jahreszahl 4 stellig
         this.sendTelegram(TelegramGenerator.DS010d(new Date()))
 
-        this.queryStatusOfAllSigns()
-        this.queryStatusOfAllValidators()
+      
       }
 
       tick1Second() {
