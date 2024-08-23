@@ -35,13 +35,13 @@ function setTripData(tripData) {
         setStopData(upcomingStop2, tripData.route.stops[tripData.stopIndex + 2]);
         setStopData(upcomingStop3, tripData.route.stops[tripData.stopIndex + 3]);
 
-        document.getElementById('next-stop-label').innerHTML = tripData.route.stops[tripData.route.stopIndex].information.name
+        document.getElementById('next-stop-label').innerHTML = tripData.route.stops[tripData.route.stopIndex].information.shortName
     }
 
 }
 
 function setStopData(div, routestop) {
-    div.getElementsByClassName('stop-label')[0].innerHTML = routestop.stop.information.name;
+    div.getElementsByClassName('stop-label')[0].innerHTML = routestop.stop.information.shortName;
     div.getElementsByClassName('relative-time-label')[0].innerHTML = "";
 }
 
