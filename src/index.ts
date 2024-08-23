@@ -24,7 +24,7 @@ let portString: string
 let rl: any
 
 
-
+/*
 async function askForInput() {
   readline.cursorTo(process.stdout, 0, process.stdout.rows - 1);
   readline.clearLine(process.stdout, 0);
@@ -34,7 +34,7 @@ async function askForInput() {
     ibisController.sendTelegram(line);
 
   }
-}
+}*/
 
 
 
@@ -45,11 +45,11 @@ function main() {
   if (process.argv.length === 3) {
 
     portString = process.argv[2]
-    rl = readline.createInterface({
+ /*   rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout
     })
-    askForInput();
+    askForInput();*/
   // read config
   // load DB from Sequelize
   const sequelize = new Sequelize({
