@@ -16,6 +16,7 @@ import { SpecialCharacter } from './models/database/SpecialCharacter';
 
 import readline from 'readline';
 import { IBISTelegram } from './extensions/IBISTelegram';
+import { MFDController } from './controllers/MFDController';
 
 
 let ibisController: IBISController
@@ -70,7 +71,7 @@ function main() {
   
   
   ibisController = new IBISController(portString, 10)
-
+  let mfdController = new MFDController(ibisController);
     
   } else {
     console.error('ERROR: Please specify serial port')

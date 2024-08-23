@@ -18,5 +18,6 @@ export enum TerminalDisplayMode {
     LStAnFG = 16,
     Unfall = 17,
     AnsageInnen = 18,
-    Haltestelle = 19    
+    Haltestelle = 19,
+    Fehler = 20    
 }

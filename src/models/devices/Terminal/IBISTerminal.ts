@@ -19,6 +19,7 @@ class IBISTerminal {
     private currentLine: number = 0
     private lastReceiveTimestamp: Date
     private lastTextSentTimestamp: Date
+    private previousDisplayMode?: TerminalDisplayMode
     mode: IBISTerminalMode = IBISTerminalMode.FUNCTION
 
      // active function definition
@@ -193,7 +194,17 @@ class IBISTerminal {
     }
 
     private onPressDelete() {
-        this.setDisplayMode(TerminalDisplayMode.None)
+        if (this.currentDisplayMode == TerminalDisplayMode.Fehler) {
+            this.errors.pop()
+            if (this.errors.length > 0) {
+                this.showError();
+            } else {
+                this.setDisplayMode(TerminalDisplayMode.None)
+
+            }
+        } else {
+            this.setDisplayMode(TerminalDisplayMode.None)
+        }
     }
     private onPressWeicheLinks() {
         // Set Weiche Links on vehicle
@@ -518,6 +529,9 @@ private setDisplayMode(displayMode: TerminalDisplayMode) {
         case TerminalDisplayMode.Haltestelle:
             this.promptForStopNumber()
             break
+        case TerminalDisplayMode.Fehler:
+            this.showError();
+            break
     }
 }
 
@@ -563,8 +577,16 @@ private setMeldung(number: string) {
     this.setDisplayMode(TerminalDisplayMode.None)
 }
 
- private setSonderzeichen(number: string) {
+ private async setSonderzeichen(number: string) {
     Util.log('set character')
+    let sonderzeichen = parseInt(number)
+    const res = await this.ibisController.setSpecialCharacter(sonderzeichen)
+    if (!res) {
+        this.throwError('FALSCHES SONDERZ')
+        
+    } else {
+        this.setDisplayMode(TerminalDisplayMode.Sonderzeichen)
+    }
     this.setDisplayMode(TerminalDisplayMode.None)
 }
 
@@ -597,7 +619,11 @@ private promptForSpecialCharacter() {
 
     throwError(errorText: string) {
         this.errors.push(errorText)
+        this.setDisplayMode(TerminalDisplayMode.Fehler)
 
+    }
+    showError() {
+        this.setText(0, this.errors[this.errors.length - 1])
     }
 
     onSetHaltestelle() {
@@ -618,5 +644,6 @@ private promptForSpecialCharacter() {
     onSetKurs() {
         this.updateSecondLine()
     }
+
 }
 export { IBISTerminal }
