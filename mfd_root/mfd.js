@@ -7,9 +7,13 @@ var upcomingStop3 = document.getElementById('upcoming-stop-3');
 var upcomingStop2 = document.getElementById('upcoming-stop-2');
 var upcomingStop1 = document.getElementById('upcoming-stop-1');
 var nextStopRow = document.getElementById("next-stop-row");
-
+var clock = document.getElementById('clock');
 
 setInterval(async () => {
+    clock.innerHTML = (new Date()).toLocaleString('de-DE', { hour: 'numeric', minute: 'numeric'});
+
+
+
     const response = await fetch("/api/tripData")
     if (!response.ok) {
         console.log('Error connecting to backend')
@@ -19,7 +23,9 @@ setInterval(async () => {
         setTripData(tripData);
         console.log(tripData);
     }
-}, 10000);
+}, 1000);
+
+
 
 function setTripData(tripData) {
     if (tripData.line) {
