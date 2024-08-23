@@ -2,7 +2,7 @@ var tripData;
 var destinationLabel = document.getElementById('destination-label')
 var lineNumberLabel = document.getElementById('line-number-label');
 var nextStopLabel = document.getElementById('next-stop-label');
-
+var mfdtable = document.getElementById('mfdtable');
 var upcomingStop3 = document.getElementById('upcoming-stop-3');
 var upcomingStop2 = document.getElementById('upcoming-stop-2');
 var upcomingStop1 = document.getElementById('upcoming-stop-1');
@@ -14,7 +14,7 @@ setInterval(async () => {
 
 
 
-    const response = await fetch("/api/tripData")
+    const response = await fetch("http://192.168.2.222:2000/api/tripData")
     if (!response.ok) {
         console.log('Error connecting to backend')
     } else {
@@ -36,9 +36,18 @@ function setTripData(tripData) {
     if (tripData.route) {
         destinationLabel.innerHTML = tripData.route.stops[tripData.route.stops.length - 1].stop.information.shortName;
 
+
+        // Check length of route
+
+        mfdtable.setAttribute('data-remaining-stop-count', tripData.route.stops.length - tripData.stopIndex);
+
+        
         setStopData(upcomingStop1, tripData.route.stops[tripData.stopIndex + 1]);
         setStopData(upcomingStop2, tripData.route.stops[tripData.stopIndex + 2]);
         setStopData(upcomingStop3, tripData.route.stops[tripData.stopIndex + 3]);
+
+
+
 
         document.getElementById('next-stop-label').innerHTML = tripData.route.stops[tripData.stopIndex].stop.information.shortName
     }
@@ -46,8 +55,14 @@ function setTripData(tripData) {
 }
 
 function setStopData(div, routestop) {
-    div.getElementsByClassName('stop-label')[0].innerHTML = routestop.stop.information.shortName;
+    if (routestop) {
+        div.getElementsByClassName('stop-label')[0].innerHTML = routestop.stop.information.shortName;
+    } else {
+        div.getElementsByClassName('stop-label')[0].innerHTML = "";
+   
+    }
     div.getElementsByClassName('relative-time-label')[0].innerHTML = "";
+
 }
 
 

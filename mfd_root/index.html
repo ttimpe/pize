@@ -9,12 +9,23 @@
 </head>
 <body>
     <div class="screen">
-    <div class="mfdtable">
+    <div id="mfdtable">
         <header class="destination-row">
-            <div class="column left-column"><span class="line round" id="line-number-label">2</span></div>
-            <div class="column destination stop-name-column" id="destination-label">Sieker</div>
-            <div class="column relative-time-column" id="clock">13:00</div>
+            <div class="column left-column"><span class="line" id="line-number-label"></span></div>
+            <div class="column destination stop-name-column" id="destination-label"></div>
+            <div class="column relative-time-column" id="clock">00:00</div>
         </header>
+            <div class="terminus-info">
+                <p>
+                    <h2>Endhaltestelle</h2>
+                    Wir bitten alle Fahrgäste auszusteigen.
+                </p>
+                <p>
+                    <h2>Terminus</h2>
+                    We kindly request all passengers to alight.
+                </p>
+            </div>
+
             <div class="row stop-row upcoming-stop-3" id="upcoming-stop-3">
                 <div class="column left-column">
                     <span class="triangle-up">▲</span>
@@ -22,28 +33,28 @@
                     <span class="trackdot"></span>
                 </div>
                 <div class="column stop-name-column">
-                    <span class="stop-label">Baumheide</span>
+                    <span class="stop-label"></span>
                 </div>
                 <div class="column relative-time-column">
-                    <span class="relative-time-label">7 min</span>
+                    <span class="relative-time-label"></span>
                     </div>
             </div>
             <div class="row stop-row" id="upcoming-stop-2">
                 <div class="column left-column"><span class="track"></span><span class="trackdot"></span></div>
                 <div class="column stop-name-column">
-                    <span class="stop-label">Schelpmilser Weg</span>
+                    <span class="stop-label"></span>
                 </div>
                 <div class="column relative-time-column">
-                    <span class="relative-time-label">5 min</span>
+                    <span class="relative-time-label"></span>
                     </div>
             </div>
             <div class="row stop-row" id="upcoming-stop-1">
                 <div class="column left-column"><span class="track"></span><span class="trackdot"></span></div> 
                 <div class="column stop-name-column">
-                    <span class="stop-label">Milse</span>
+                    <span class="stop-label"></span>
                 </div>             
                 <div class="column relative-time-column">
-                    <span class="relative-time-label">3 min</span>
+                    <span class="relative-time-label"></span>
                     </div>
             </div>
            
@@ -53,11 +64,11 @@
                 <div class="column left-column"><span class="track"></span><span class="trackdot"></span></div>
                 <div class="column stop-name-column">
                     <span class="next-stop-text">Nächste Haltestelle / next stop:</span>
-                    <span class="stop-label" id="next-stop-label">Babenhausen Süd</span>
+                    <span class="stop-label" id="next-stop-label"></span>
                 </div>
                 <div class="column relative-time-column">
-                    <div class="door-side-triangle">
-                    <div class="triangle"></div>
+                    <!--<div class="door-side-triangle">
+                    <div class="triangle"></div>-->
                 </div>
                 </div>
             </div>
@@ -65,84 +76,5 @@
     </div>
 </div>
 <script src="mfd.js"></script>
-
-<!--
-<div class="screen">
-    <div class="mfdtable">
-        <header class="destination-row">
-            <div class="left-column"><span class="line">992</span></div>
-            <div class="destination stop-name-column">Dornberg Vulksiekhof</div>
-            <div class="clock">13:00</div>
-        </header>
-        <div>
-            <div class="stop-row upcoming-stop-3">
-                <div class="left-column">
-                    <span class="triangle-up">▲</span>
-                    <span class="track"></span>
-                    <span class="trackdot"></span>
-                </div>
-                <div class="stop-name-column">
-                    <span class="stop-label">Kunsthalle</span>
-                </div>
-                <div class="relative-time-column">
-                    <span class="relative-time-label">3 min</span>
-                    </div>
-            </div>
-            <div class="stop-row">
-                <div class="left-column"><span class="track"></span><span class="trackdot"></span></div>
-                <div class="stop-name-column">
-                    <span class="stop-label">Klostersdiv.</span>
-                </div>
-                <div class="relative-time-column">
-                    <span class="relative-time-label">2 min</span>
-                    </div>
-            </div>
-            <footer style="height: 45%;">
-            <div class="stop-row next-stop-row" >
-                <div class="left-column"><span class="track"></span><span class="trackdot"></span></div>
-                <div class="stop-name-column">
-                    <span class="next-stop-text">Nächste Haltestelle / next stop:</span>
-                    <span class="stop-label">Jahnplatz</span>
-                    <div class="connections">
-                        <span class="line round" style="background-color: blue;">1</span>
-                        <span class="line round" style="background-color: lime;">2</span>
-                        <span class="line round" style="background-color: yellow; color: black;">3</span>
-                        <span class="line round" style="background-color: red;">4</span>
-                        <span class="line" style="background-color: #d65162;">21</span>
-                        <span class="line" style="background-color: #d65162;">22</span>
-                        <span class="line" style="background-color: #e75b97;">23</span>
-                        <span class="line" style="background-color: #96be3d;">25</span>
-                        <span class="line" style="background-color: #96be3d;">26</span>
-                        <span class="line" style="background-color: #f09fc0;">27</span>
-                        <span class="line" style="background-color: #184377;">28</span>
-                        <span class="line" style="background-color: #f19320;">29</span>
-                        <span class="line" style="background-color: #38a9da;">48</span>
-                        <span class="line" style="background-color: #38a9da;">61</span>
-                        <span class="line" style="background-color: #38a9da;">62</span>
-                        <span class="line" style="background-color: #e01f26;">80.2</span>
-                        <span class="line" style="background-color: #e01f26;">83</span>
-                        <span class="line" style="background-color: #014f2c;">87</span>
-                        <span class="line" style="background-color: #e75b97;">88</span>
-                        <span class="line" style="background-color: #039046;">95</span>
-                        <span class="line" style="background-color: #d65162;">142</span>
-                        <span class="line" style="background-color: #42a748;">228</span>
-                        <span class="line" style="background-color: #014f2c;">350</span>
-                        <span class="line">351</span>
-                        <span class="line">369</span>
-                        <span class="line">S15</span>
-
-
-                    </div>
-                </div>
-                <div class="relative-time-column">
-                    <div class="stop-indicator">STOP</div>
-                </div>
-                </div>
-            </div>
-            </footer>
-        </main>
-    </div>
-</div>
--->
 </body>
 </html>

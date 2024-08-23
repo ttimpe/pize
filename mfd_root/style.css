@@ -17,13 +17,14 @@ body {
     --font-size-destination-large: 8vw;
     --font-size-upcoming-stop-1: 5vw;
     --font-size-upcoming-stop-2: 9vw;
+    --font-size-info-message: 3vw;
 } 
 .screen {
     width: 100vw;
     height: 100vh;
 }
 
-.mfdtable {
+#mfdtable {
     height: 100vh;
     width: 100vw;
     display:grid;
@@ -32,22 +33,22 @@ body {
     grid-template-rows: 15vh 20vh 20vh 20vh 25vh;
   
 }
-.mfdtable .row {
+#mfdtable .row {
     display: grid;
     grid-template-columns: 15vw auto 20vw;
 }
-.mfdtable .left-column {
+#mfdtable .left-column {
     grid-column: 1;
 }
 
-.mfdtable .column {
+#mfdtable .column {
     height: 100%;
 
 
 }
-.mfdtable .line {
+#mfdtable .line {
     font-weight: bold;
-    background-color: #d65162;
+    
     width: 16vh;
     height: 10vh;
     border-radius: 0.2em;
@@ -57,7 +58,7 @@ body {
     text-align: center;
     color: white;
 }
-.mfdtable header .line {
+#mfdtable header .line {
     height: 7vw;
     line-height: 7vw;
     width: 14vh;
@@ -65,10 +66,10 @@ body {
     margin-left: 3vh;
     margin-right: 3vh;
 }
-.mfdtable header .line.round {
+#mfdtable header .line.round {
     width: 7vw;
 }
-.mfdtable .line.round {
+#mfdtable .line.round {
     border-radius: 10vh;
     font-weight: normal;
     background-color: lime;
@@ -76,14 +77,14 @@ body {
 
 }
 
-.mfdtable footer {
+#mfdtable footer {
    
     width: 100vw;
     grid-row-start: 5;
     background-color: var(--lightgray);
     position: relative;
 }
-.mfdtable header {
+#mfdtable header {
     display: grid;
     line-height: 15vh;
 
@@ -94,14 +95,14 @@ body {
     line-height: var(--font-size-destination-small);
     background-color: var(--blue);
 }
-.mfdtable .stop-row {
+#mfdtable .stop-row {
     height: 20vh;
     line-height: 20vh;;
 }
-.mfdtable footer .stop-row {
+#mfdtable footer .stop-row {
     height: 25vh;
 }
-.mfdtable .left-column {
+#mfdtable .left-column {
     grid-column: 1;
     display: flex;
     position: relative;
@@ -109,19 +110,19 @@ body {
     flex-direction: column;
     justify-content: center;
 }
-.mfdtable .destination-row .column {
+#mfdtable .destination-row .column {
     line-height: 15vh;
 }
-.mfdtable .destination {
+#mfdtable .destination {
     text-align: left;
     line-height: 15vh;
 
     font-family: "sequel_sansbold_disp";
 }
-.mfdtable .next-stop-row .stop-label {
+#mfdtable .next-stop-row .stop-label {
     line-height: 25vh;
 }
-.mfdtable .track {
+#mfdtable .track {
     display: block;
     background-color: var(--orange);
     width: 2vw;
@@ -131,7 +132,7 @@ body {
     left: 50%;
     margin-left: -1vw;
 }
-.mfdtable .trackdot {
+#mfdtable .trackdot {
     position: absolute;
     background-color: var(--orange);
     display: block;
@@ -146,17 +147,17 @@ body {
 }
 
 
-.mfdtable .stop-label {
+#mfdtable .stop-label {
     font-size: var(--font-size-upcoming-stop-1);
     left:0;
     vertical-align: middle;
 }
-.mfdtable .stop-name-column {
+#mfdtable .stop-name-column {
     grid-column: 2;
     position: relative;
  
 }
-.mfdtable footer .next-stop-text {
+#mfdtable footer .next-stop-text {
     left: 0;
     font-size: 4vh;
     font-style: italic;
@@ -167,16 +168,16 @@ body {
 
 }
 
-.mfdtable footer .stop-name-column .stop-label {
+#mfdtable footer .stop-name-column .stop-label {
     height: 100%;
     font-family: "sequel_sansbold_disp";
 
     font-size: var(--font-size-next-stop-small);
 }
-.mfdtable .relative-time-column {
+#mfdtable .relative-time-column {
     grid-column: 3;
 }
-.mfdtable .relative-time-label {
+#mfdtable .relative-time-label {
     text-align: right;
     font-size: var(--font-size-upcoming-stop-1)
 }
@@ -215,11 +216,11 @@ body {
 }
 .upcoming-stop-3 .triangle-up {
     position: absolute;
-    font-size: 2.2em;
+    font-size: 6vh;
     text-align: center;
     height: 100%;
     width: 100%;
-    top: 0;
+    top: -7vh;
     z-index: 999;
     color: var(--orange);
 }
@@ -243,4 +244,53 @@ body {
     vertical-align: middle;
     line-height: 12vw;
     border-radius: 10%;
+}
+#mfdtable[data-remaining-stop-count="4"] .upcoming-stop-3 .track {
+    height: 12vh;
+    top: 8.5vh;
+    border-top-left-radius: 0.4vw;
+}
+#mfdtable[data-remaining-stop-count="4"] .upcoming-stop-3 .triangle-up{
+    display: none;
+}
+#mfdtable[data-remaining-stop-count="3"] .upcoming-stop-3 {
+    visibility: hidden;
+
+}
+#mfdtable[data-remaining-stop-count="3"] #upcoming-stop-2 .track {
+    height: 12vh;
+    top: 8.5vh;
+    border-top-left-radius: 0.4vw;
+}
+
+#mfdtable[data-remaining-stop-count="2"] .upcoming-stop-3 {
+    visibility: hidden;
+
+}
+#mfdtable[data-remaining-stop-count="2"] #upcoming-stop-2 {
+    visibility: hidden;
+
+}
+#mfdtable[data-remaining-stop-count="2"] #upcoming-stop-1 .track {
+    height: 12vh;
+    top: 8.5vh;
+    border-top-left-radius: 0.4vw;
+}
+#mfdtable .terminus-info {
+    font-size: var(--font-size-info-message);
+    grid-row-start: 2;
+    grid-row-end: 5;
+    padding-left: 15vw;
+    display: none;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+#mfdtable[data-remaining-stop-count="1"] .terminus-info {
+    display: flex;
+}
+#mfdtable[data-remaining-stop-count="1"] #next-stop-row .track {
+    height: 14.5vh;
+    top: 11vh;
+    border-top-left-radius: 0.4vw;
 }
