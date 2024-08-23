@@ -10,6 +10,8 @@ ibisController: IBISController
 constructor(ibisController: IBISController) {
     // MFD static data
     this.ibisController = ibisController
+    var cors = require('cors');
+    this.app.use(cors());
     this.app.use('/mfd', express.static('mfd_root'));
     this.app.get('/api/tripData', (req: Request, res: Response) => {
         res.json( {

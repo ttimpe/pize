@@ -90,8 +90,8 @@ body {
     grid-template-columns: 15vw auto 20vw;
     width: 100vw;
     color: white;
-    font-size: var(--font-size-destination-large);
-    line-height: var(--font-size-destination-large);
+    font-size: var(--font-size-destination-small);
+    line-height: var(--font-size-destination-small);
     background-color: var(--blue);
 }
 .mfdtable .stop-row {

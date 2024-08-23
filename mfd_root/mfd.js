@@ -27,10 +27,9 @@ function setTripData(tripData) {
         lineNumberLabel.classList.toggle('round', tripData.line.type == 0)
         lineNumberLabel.style.backgroundColor = tripData.line.color;
     }
-    if (tripData.destination) {
-        destinationLabel.innerHTML = tripData.destination.name;
-    }
     if (tripData.route) {
+        destinationLabel.innerHTML = tripData.route.stops[tripData.stops.length - 1].stop.information.shortName;
+        
         setStopData(upcomingStop1, tripData.route.stops[tripData.stopIndex + 1]);
         setStopData(upcomingStop2, tripData.route.stops[tripData.stopIndex + 2]);
         setStopData(upcomingStop3, tripData.route.stops[tripData.stopIndex + 3]);
