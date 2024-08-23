@@ -13,11 +13,11 @@ constructor(ibisController: IBISController) {
     this.app.use('/mfd', express.static('mfd_root'));
     this.app.get('/api/tripData', (req: Request, res: Response) => {
         return {
-            "line": this.ibisController.linie || null,
-            "route": this.ibisController.route || null,
-            "kurs": this.ibisController.kurs || null,
-            "destination": this.ibisController.ziel || null,
-            "stopIndex": this.ibisController.stopIndex || null
+            "line": this.ibisController?.linie,
+            "route": this.ibisController?.route,
+            "kurs": this.ibisController?.kurs,
+            "destination": this.ibisController?.ziel,
+            "stopIndex": this.ibisController?.stopIndex
         }
     })
     this.app.listen(2000, () => {
