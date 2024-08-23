@@ -35,7 +35,7 @@ function setTripData(tripData) {
         setStopData(upcomingStop2, tripData.route.stops[tripData.stopIndex + 2]);
         setStopData(upcomingStop3, tripData.route.stops[tripData.stopIndex + 3]);
 
-        document.getElementById('next-stop-label').innerHTML = tripData.route.stops[tripData.stopIndex].information.shortName
+        document.getElementById('next-stop-label').innerHTML = tripData.route.stops[tripData.stopIndex].stop.information.shortName
     }
 
 }
