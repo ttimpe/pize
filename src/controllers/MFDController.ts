@@ -12,10 +12,12 @@ constructor(ibisController: IBISController) {
     this.ibisController = ibisController
     this.app.use('/mfd', express.static('mfd_root'));
     this.app.get('/api/tripData', (req: Request, res: Response) => {
-        if (this.ibisController.route) {
-        return res.json(this.ibisController.route);
-        } else {
-            return res.json( {})
+        return {
+            "line": this.ibisController.linie || null,
+            "route": this.ibisController.route || null,
+            "kurs": this.ibisController.kurs || null,
+            "destination": this.ibisController.ziel || null,
+            "stopIndex": this.ibisController.stopIndex || null
         }
     })
     this.app.listen(2000, () => {
