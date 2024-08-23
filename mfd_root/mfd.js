@@ -23,12 +23,12 @@ setInterval(async () => {
 
 function setTripData(tripData) {
     if (tripData.line) {
-        this.lineNumberLabel.innerHTML = tripData.line.number;
-        this.lineNumberLabel.classList.toggle('round', tripData.line.type == 0)
-        this.lineNumberLabel.style.backgroundColor = tripData.line.color;
+        lineNumberLabel.innerHTML = tripData.line.number;
+        lineNumberLabel.classList.toggle('round', tripData.line.type == 0)
+        lineNumberLabel.style.backgroundColor = tripData.line.color;
     }
     if (tripData.destination) {
-        this.destinationLabel.innerHTML = tripData.destination.name;
+        destinationLabel.innerHTML = tripData.destination.name;
     }
     if (tripData.route) {
         setStopData(upcomingStop1, tripData.route.stops[tripData.stopIndex + 1]);
