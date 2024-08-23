@@ -28,8 +28,8 @@ function setTripData(tripData) {
         lineNumberLabel.style.backgroundColor = tripData.line.color;
     }
     if (tripData.route) {
-        destinationLabel.innerHTML = tripData.route.stops[tripData.stops.length - 1].stop.information.shortName;
-        
+        destinationLabel.innerHTML = tripData.route.stops[tripData.route.stops.length - 1].stop.information.shortName;
+
         setStopData(upcomingStop1, tripData.route.stops[tripData.stopIndex + 1]);
         setStopData(upcomingStop2, tripData.route.stops[tripData.stopIndex + 2]);
         setStopData(upcomingStop3, tripData.route.stops[tripData.stopIndex + 3]);
