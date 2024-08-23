@@ -41,7 +41,7 @@ function setTripData(tripData) {
 }
 
 function setStopData(div, routestop) {
-    div.getElementsByClassName('stop-name-label')[0].innerHTML = routestop.stop.information.name;
+    div.getElementsByClassName('stop-label')[0].innerHTML = routestop.stop.information.name;
     div.getElementsByClassName('relative-time-label')[0].innerHTML = "";
 }
 
