@@ -12,13 +12,13 @@ constructor(ibisController: IBISController) {
     this.ibisController = ibisController
     this.app.use('/mfd', express.static('mfd_root'));
     this.app.get('/api/tripData', (req: Request, res: Response) => {
-        return {
+        res.json( {
             "line": this.ibisController?.linie,
             "route": this.ibisController?.route,
             "kurs": this.ibisController?.kurs,
             "destination": this.ibisController?.ziel,
             "stopIndex": this.ibisController?.stopIndex
-        }
+        })
     })
     this.app.listen(2000, () => {
         Util.log('Listening for clients on port 2000');
