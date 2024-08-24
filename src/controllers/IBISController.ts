@@ -465,9 +465,9 @@ class IBISController {
           // Haltestellennummer 4 stellig
           this.sendTelegram(TelegramGenerator.DS010(this.upcomingStop.stop.number))
           // Haltestellennummer Perlenschnur        
-          this.sendTelegram(TelegramGenerator.DS010a(this.upcomingStop.stop.number))
+          // this.sendTelegram(TelegramGenerator.DS010a(this.upcomingStop.stop.number))
           // Haltestellenindex
-          this.sendTelegram(TelegramGenerator.DS010b(this.stopIndex))
+        //  this.sendTelegram(TelegramGenerator.DS010b(this.stopIndex))
           // Haltestellenindex Endhaltestelle
           this.sendTelegram(TelegramGenerator.DS010c(this.route.stops.length - 1))
     }
