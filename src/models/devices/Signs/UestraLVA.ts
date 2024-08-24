@@ -7,7 +7,7 @@ class UestraLVA extends IBISSign {
 
     onSetRoute(line: Line, route: Route) {
         if (route) {
-            let telegrams: IBISTelegram[] = []
+            console.log('UESTRA LVA detected')
 
             let departureStopTelegram = "aX" + this.address + "000310004" + route.stops[0].stop.name.toUpperCase().substring(0, 16)
             this.ibisController.sendTelegram(departureStopTelegram)
