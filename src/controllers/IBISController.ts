@@ -463,11 +463,11 @@ class IBISController {
           // Haltestellenname
           this.sendTelegram(TelegramGenerator.DS009c(this.stopName))
           // Haltestellennummer 4 stellig
-          this.sendTelegram(TelegramGenerator.DS010(this.upcomingStop.stop.number))
+         // this.sendTelegram(TelegramGenerator.DS010(this.upcomingStop.stop.number))
           // Haltestellennummer Perlenschnur        
           // this.sendTelegram(TelegramGenerator.DS010a(this.upcomingStop.stop.number))
           // Haltestellenindex
-          this.sendTelegram(TelegramGenerator.DS010b(this.stopIndex + 1))
+          this.sendTelegram("x2" + (this.stopIndex + 1).toString().padStart(3, "0"))
           // Haltestellenindex Endhaltestelle
           this.sendTelegram(TelegramGenerator.DS010c(this.route.stops.length - 1))
     }
