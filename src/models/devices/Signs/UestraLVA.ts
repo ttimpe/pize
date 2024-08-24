@@ -9,12 +9,12 @@ class UestraLVA extends IBISSign {
         if (route) {
             console.log('UESTRA LVA detected')
 
-            let guteFahrtTelegram = "aX" + this.address + "0\x03100\x040GUTE FAHRT";
+            //let guteFahrtTelegram = "aX" + this.address + "0\x03100\x040GUTE FAHRT";
             // this.ibisController.sendTelegram(guteFahrtTelegram);
            
             let destinationTelegram = "aX" + this.address + "1" + "\x03" + "101" + "\x04" + "ZIELNAME".toUpperCase().substring(0,16)
             this.ibisController.sendTelegram(destinationTelegram)
-            let lineNameTelegram = "aX" + this.address + "1" + "\x03" + "102" + "\x04" + line.number.padStart(3, "0");
+            let lineNameTelegram = "aX" + this.address + "1" + "\x03" + "102" + "\x04" + line.number;
             this.ibisController.sendTelegram(lineNameTelegram)
             let refreshTelegram = "x2001";
             this.ibisController.sendTelegram(refreshTelegram)
