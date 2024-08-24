@@ -9,12 +9,12 @@ class UestraLVA extends IBISSign {
         if (route) {
             console.log('UESTRA LVA detected')
 
-            let guteFahrtTelegram = "aX" + this.address + "0100GUTE FAHRT";
+            let guteFahrtTelegram = "aX" + this.address + "0\x03100\x040GUTE FAHRT";
             this.ibisController.sendTelegram(guteFahrtTelegram);
            
-            let destinationTelegram = "aX" + this.address + "1101" + "ZIELNAME".toUpperCase().substring(0,16)
+            let destinationTelegram = "aX" + this.address + "1" + "\x03" + "101" + "\x04" + "ZIELNAME".toUpperCase().substring(0,16)
             this.ibisController.sendTelegram(destinationTelegram)
-            let lineNameTelegram = "aX" + this.address + "1102" + line.number.padStart(3, "0");
+            let lineNameTelegram = "aX" + this.address + "1" + "\x03" + "102" + "\x04" + line.number.padStart(3, "0");
             this.ibisController.sendTelegram(lineNameTelegram)
             let refreshTelegram = "x2001";
             this.ibisController.sendTelegram(refreshTelegram)
@@ -27,10 +27,11 @@ class UestraLVA extends IBISSign {
                 if (i == (route.stops.length - 1)) {
                     character = "2"
                 }
-                telegram = telegram + character
+                telegram = telegram + character + "\x03";
                 // 001-999
                 let indexNumberString = (i+1).toString().padStart(3, "0")
                 telegram += indexNumberString
+                telegram += "\x04"
                 telegram += route.stops[i].stop.information.shortName.toUpperCase().padEnd(16).substring(0, 16)
                 this.ibisController.sendTelegram(telegram)
             }
