@@ -24,7 +24,7 @@ class UestraLVA extends IBISSign {
                 let telegram = "aX" + this.address
                 let character = "1"
 
-                if (i == route.stops.length) {
+                if (i == (route.stops.length - 1)) {
                     character = "2"
                 }
                 telegram = telegram + character
