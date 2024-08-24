@@ -10,7 +10,7 @@ class UestraLVA extends IBISSign {
             console.log('UESTRA LVA detected')
 
             let guteFahrtTelegram = "aX" + this.address + "0\x03100\x040GUTE FAHRT";
-            this.ibisController.sendTelegram(guteFahrtTelegram);
+            // this.ibisController.sendTelegram(guteFahrtTelegram);
            
             let destinationTelegram = "aX" + this.address + "1" + "\x03" + "101" + "\x04" + "ZIELNAME".toUpperCase().substring(0,16)
             this.ibisController.sendTelegram(destinationTelegram)
