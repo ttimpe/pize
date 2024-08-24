@@ -157,6 +157,15 @@ class IBISController {
         }
     }
 
+    private registerUestraLVAs() {
+        for (let i=0; i < this.deviceConfig.uestraLVA.length; i++) {
+
+            
+                this.uestraLVAs.push(new UestraLVA(this, this.deviceConfig.uestraLVA[i] as IBISAddress));
+    
+        } 
+    }
+
     // Aktivierte Entwerter loopen und registrieren
     private registerValidators() {
         for (let i=0; i < this.deviceConfig.validators.length; i++) {
@@ -369,6 +378,9 @@ class IBISController {
                 this.stopIndex = 0;
                 this.route = route
                 this.ziel = route.destination
+                for (var i=0; i<this.uestraLVAs.length; i++) {
+                    this.uestraLVAs[i].onSetRoute(this.linie, this.route)
+                }
                 return true
             } else {
                 return false
