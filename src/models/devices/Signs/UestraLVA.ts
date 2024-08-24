@@ -11,7 +11,7 @@ class UestraLVA extends IBISSign {
 
             let departureStopTelegram = "aX" + this.address + "000310004" + route.stops[0].stop.name.toUpperCase().substring(0, 16)
             this.ibisController.sendTelegram(departureStopTelegram)
-            let destinationTelegram = "aX" + this.address + "00310104" + route.destination.name.toUpperCase().substring(0,16)
+            let destinationTelegram = "aX" + this.address + "00310104" + "ZIELNAME".toUpperCase().substring(0,16)
             this.ibisController.sendTelegram(destinationTelegram)
             let lineNameTelegram = "aX" + this.address + "10310204" + line.number
             this.ibisController.sendTelegram(lineNameTelegram)
