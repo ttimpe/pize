@@ -36,7 +36,6 @@ class UestraLVA extends IBISSign {
                 this.ibisController.sendTelegram(telegram)
             }
           
-            this.ibisController.sendTelegram(refreshTelegram)
 
         }
     }
