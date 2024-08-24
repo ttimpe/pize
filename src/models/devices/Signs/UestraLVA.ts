@@ -14,11 +14,11 @@ class UestraLVA extends IBISSign {
            
             let destinationTelegram = "aX" + this.address + "1101" + "ZIELNAME".toUpperCase().substring(0,16)
             this.ibisController.sendTelegram(destinationTelegram)
-            let lineNameTelegram = "aX" + this.address + "1102" + line.number
+            let lineNameTelegram = "aX" + this.address + "1102" + line.number.padStart(3, "0");
             this.ibisController.sendTelegram(lineNameTelegram)
             let refreshTelegram = "x2001";
             this.ibisController.sendTelegram(refreshTelegram)
-            
+
             // Loop through all stops and make telegrams
             for (var i=0; i<route.stops.length; i++) {
                 let telegram = "aX" + this.address
