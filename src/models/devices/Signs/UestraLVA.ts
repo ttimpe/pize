@@ -17,18 +17,18 @@ class UestraLVA extends IBISSign {
             this.ibisController.sendTelegram(lineNameTelegram)
 
             // Loop through all stops and make telegrams
-            for (var i=1; i<=route.stops.length; i++) {
+            for (var i=0; i<route.stops.length; i++) {
                 let telegram = "aX" + this.address
                 let character = "1"
 
-                if (i ==route.stops.length) {
+                if (i == route.stops.length) {
                     character = "2"
                 }
                 telegram = telegram + character
                 // 001-999
-                let indexNumberString = i.toString().padStart(3, "0")
+                let indexNumberString = (i+1).toString().padStart(3, "0")
                 telegram += indexNumberString
-                telegram += route.stops[i].stop.name.toUpperCase().substring(0, 16)
+                telegram += route.stops[i].stop.information.shortName.toUpperCase().substring(0, 16)
                 this.ibisController.sendTelegram(telegram)
             }
           
