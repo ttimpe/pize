@@ -256,9 +256,15 @@ class IBISController {
         this.telegramSendQueue.push(signedTelegram)
     }
 
+    sanatizeOutputForLog(telegram: IBISTelegram) {
+        return telegram.replace(/[\x00-\x1F\x7F]/g, (char) => {
+            return `<${char.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase()}>`;
+        });
+    }
+
     private actuallySendTelegram(telegram: IBISTelegram) {
         this.serialPort.write(telegram)
-        Util.log('out > ' + telegram.replace('\r', '<CR>'))
+        Util.log('out > ' + this.sanatizeOutputForLog(telegram))
     }
     
     // IBIS Telegrammsignierung
