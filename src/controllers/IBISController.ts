@@ -286,7 +286,9 @@ class IBISController {
         // Kursnummer
         this.sendTelegram(TelegramGenerator.DS002(this.kurs))
           // Liniennummer
-        this.sendTelegram("x2" + this.stopIndex.toString().padStart(3, "0"));
+
+
+
         if (this.linie) {
             this.sendTelegram(TelegramGenerator.DS001(parseInt(this.linie.number)))
             // Sonderzeichen
@@ -300,6 +302,8 @@ class IBISController {
         }
         if (this.linie != undefined && this.route != undefined) {
             this.sendStopData()
+            this.sendTelegram("x2" + (this.stopIndex + 1).toString().padStart(3, "0"));
+
             // Routennummer für ZUB
             this.sendTelegram(TelegramGenerator.DS003d(parseInt(this.route.route_id)))
         }
