@@ -302,7 +302,7 @@ class IBISController {
         }
         if (this.linie != undefined && this.route != undefined) {
             this.sendStopData()
-            this.sendTelegram("x2" + (this.stopIndex + 1).toString().padStart(3, "0"));
+            // this.sendTelegram("x2" + (this.stopIndex + 1).toString().padStart(3, "0"));
 
             // Routennummer für ZUB
             this.sendTelegram(TelegramGenerator.DS003d(parseInt(this.route.route_id)))
