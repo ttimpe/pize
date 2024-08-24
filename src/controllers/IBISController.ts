@@ -286,7 +286,7 @@ class IBISController {
         // Kursnummer
         this.sendTelegram(TelegramGenerator.DS002(this.kurs))
           // Liniennummer
-        
+        this.sendTelegram("x2" + this.stopIndex.toString().padStart(3, "0"));
         if (this.linie) {
             this.sendTelegram(TelegramGenerator.DS001(parseInt(this.linie.number)))
             // Sonderzeichen
