@@ -113,6 +113,7 @@ class IBISController {
 
 
         this.registerSigns()
+        this.registerUestraLVAs()
         this.registerValidators()
 
         this.tick10Seconds()
