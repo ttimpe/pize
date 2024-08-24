@@ -159,10 +159,10 @@ class IBISController {
     }
 
     private registerUestraLVAs() {
-        for (let i=0; i < this.deviceConfig.uestraLVA.length; i++) {
+        for (let i=0; i < this.deviceConfig.UESTRA_LVA.length; i++) {
 
             
-                this.uestraLVAs.push(new UestraLVA(this, this.deviceConfig.uestraLVA[i] as IBISAddress));
+                this.uestraLVAs.push(new UestraLVA(this, this.deviceConfig.UESTRA_LVA[i] as IBISAddress));
     
         } 
     }

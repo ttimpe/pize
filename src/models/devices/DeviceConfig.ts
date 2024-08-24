@@ -5,7 +5,7 @@ class DeviceConfig {
     TERMINAL_B: boolean
     validators: boolean[]
     signs: boolean[]
-    uestraLVA: number[]
+    UESTRA_LVA: number[]
     terminal_config: IBISTerminalConfiguration
 }
 
