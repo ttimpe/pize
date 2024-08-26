@@ -580,12 +580,16 @@ private setMeldung(number: string) {
  private async setSonderzeichen(number: string) {
     Util.log('set character')
     let sonderzeichen = parseInt(number)
+    if (sonderzeichen != 0) {
     const res = await this.ibisController.setSpecialCharacter(sonderzeichen)
-    if (!res) {
-        this.throwError('FALSCHES SONDERZ')
+        if (!res) {
+            this.throwError('FALSCHES SONDERZ')
         
+        } else {
+            this.setDisplayMode(TerminalDisplayMode.Sonderzeichen)
+        }
     } else {
-        this.setDisplayMode(TerminalDisplayMode.Sonderzeichen)
+        await this.ibisController.setSpecialCharacter(0);
     }
     this.setDisplayMode(TerminalDisplayMode.None)
 }

@@ -363,6 +363,7 @@ class IBISController {
         })
         if (line) {
             this.linie = line
+            this.route = null;
             return true
         }
         return false
@@ -473,6 +474,7 @@ class IBISController {
     }
 
     async setSpecialCharacter(characterNumber: number): Promise<boolean> {
+        if (characterNumber != 0) {
         const specialCharacter = await SpecialCharacter.findOne({
             where: {
                 number: characterNumber
@@ -483,6 +485,10 @@ class IBISController {
             return true
         } else {
             return false
+        }
+        } else {
+            this.sonderzeichen = null;
+            return true;
         }
     }
 
