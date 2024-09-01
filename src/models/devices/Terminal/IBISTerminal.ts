@@ -628,7 +628,7 @@ private promptForSpecialCharacter() {
     }
     showError() {
         this.setText(0, this.errors[this.errors.length - 1])
-        this.playSound(3);
+        this.playSound(4);
     }
 
     playSound(soundNumber: number) {
