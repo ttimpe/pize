@@ -653,13 +653,13 @@ private promptForSpecialCharacter() {
         this.updateSecondLine()
 
         if (this.ibisController.route != undefined) {
-            this.setText(0, this.ibisController.route.stops[0].stop.name);
+            this.setText(0, this.ibisController.route.stops[0].stop.information.shortName.toUpperCase());
             setTimeout(() => {
-                this.setText(0, this.ibisController.route.stops[this.ibisController.route.stops.length - 1].stop.name)
-            }, 2000);
+                this.setText(0, this.ibisController.route.stops[this.ibisController.route.stops.length - 1].stop.information.shortName.toUpperCase())
+            }, 1000);
             setTimeout(() => {
                 this.setDisplayMode(TerminalDisplayMode.None);
-            }, 4000);
+            }, 3000);
         }
     }
     onSetZiel() {
