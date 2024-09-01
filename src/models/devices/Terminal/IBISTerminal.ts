@@ -542,6 +542,7 @@ private setRichtung(number: string) {
 
 private setMeldung(number: string) {
     Util.log('Sending message')
+    this.playSound(parseInt(number));
     this.setDisplayMode(TerminalDisplayMode.None)
 }
 
@@ -628,7 +629,7 @@ private promptForSpecialCharacter() {
     }
     showError() {
         this.setText(0, this.errors[this.errors.length - 1])
-        this.playSound(4);
+        this.playSound(1);
     }
 
     playSound(soundNumber: number) {
