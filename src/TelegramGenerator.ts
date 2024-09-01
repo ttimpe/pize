@@ -104,8 +104,8 @@ class TelegramGenerator {
     }
 
     // DS004a - Entwertermerkmale erweitert
-    static DS004a() {
-
+    static DS004a(extension: number) {
+        return 'eA' + extension.toString().padStart(4, "0");
     }
 
     // DS004b - Entwerter Haltestellennummer
