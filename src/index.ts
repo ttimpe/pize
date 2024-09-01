@@ -17,6 +17,7 @@ import { SpecialCharacter } from './models/database/SpecialCharacter';
 import readline from 'readline';
 import { IBISTelegram } from './extensions/IBISTelegram';
 import { MFDController } from './controllers/MFDController';
+import { DeviceConfig } from './models/devices/DeviceConfig';
 
 
 let ibisController: IBISController
@@ -69,10 +70,12 @@ function main() {
   sequelize.sync();
   // Init terminal(s)
   
-  
+  const deviceConfig: DeviceConfig = require('../device_config.json')
+
   ibisController = new IBISController(portString, 10)
-  let mfdController = new MFDController(ibisController);
-    
+  if (deviceConfig.MFD == true) {
+    let mfdController = new MFDController(ibisController);
+  }
   } else {
     console.error('ERROR: Please specify serial port')
   }

@@ -628,6 +628,18 @@ private promptForSpecialCharacter() {
     }
     showError() {
         this.setText(0, this.errors[this.errors.length - 1])
+        this.playSound(2);
+    }
+
+    playSound(soundNumber: number) {
+        let telegram: IBISTelegram;
+        if (this.isPrimary) {
+            
+            telegram = TelegramGenerator.DS045a(this.mode, soundNumber); 
+        } else {
+            telegram = TelegramGenerator.DS045b(this.mode, soundNumber); 
+        }
+        this.ibisController.sendTelegram(telegram)
     }
 
     onSetHaltestelle() {

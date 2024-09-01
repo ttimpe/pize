@@ -5,6 +5,7 @@ import { IBISSign } from "../IBISSign";
 
 class UestraLVA extends IBISSign {
 
+    
     onSetRoute(line: Line, route: Route) {
         if (route) {
             console.log('UESTRA LVA detected')

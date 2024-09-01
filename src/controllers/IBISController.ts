@@ -23,6 +23,9 @@ class IBISController {
     private IBIS_SEND_INTERVAL = 5
     private IBIS_QUEUE_SEND_INTERVAL_MS = 2
     private IBIS_TERMINAL_RECEIVE_INTERVAL = 1
+
+    // Timeout waiting for response to status request
+    private IBIS_RESPONSE_TIMEOUT = 5
     private serialPort: SerialPort
 
     private aTerminal?: IBISTerminal
@@ -302,7 +305,6 @@ class IBISController {
         }
         if (this.linie != undefined && this.route != undefined) {
             this.sendStopData()
-            // this.sendTelegram("x2" + (this.stopIndex + 1).toString().padStart(3, "0"));
 
             // Routennummer für ZUB
             this.sendTelegram(TelegramGenerator.DS003d(parseInt(this.route.route_id)))

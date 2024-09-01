@@ -4,6 +4,8 @@ import { TelegramGenerator } from "../../TelegramGenerator";
 
 class IBISValidator {
     address: IBISAddress
+    deviceStatus: number
+    lastStatusResponseTime: Date
     constructor(private ibisController: IBISController, address: IBISAddress) {
         this.ibisController = ibisController
         this.address = address
@@ -11,6 +13,7 @@ class IBISValidator {
 
     queryStatus() {
         this.ibisController.sendTelegram(TelegramGenerator.DS070(this.address));
+        
     }
     onReceiveTelegram(telegram: IBISTelegram) {
         
