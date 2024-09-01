@@ -392,6 +392,12 @@ class IBISController {
                 this.stopIndex = 0;
                 this.route = route
                 this.ziel = route.destination
+                if (this.aTerminal) {
+                    this.aTerminal.onSetRoute();
+                }
+                if (this.bTerminal) {
+                    this.bTerminal.onSetRoute();
+                }
                 for (var i=0; i<this.uestraLVAs.length; i++) {
                     this.uestraLVAs[i].onSetRoute(this.linie, this.route)
                 }

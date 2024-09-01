@@ -651,6 +651,16 @@ private promptForSpecialCharacter() {
     }
     onSetRoute() {
         this.updateSecondLine()
+
+        if (this.ibisController.route != undefined) {
+            this.setText(0, this.ibisController.route.stops[0].stop.name);
+            setTimeout(() => {
+                this.setText(0, this.ibisController.route.stops[this.ibisController.route.stops.length - 1].stop.name)
+            }, 2000);
+            setTimeout(() => {
+                this.setDisplayMode(TerminalDisplayMode.None);
+            }, 4000);
+        }
     }
     onSetZiel() {
         this.updateSecondLine()
