@@ -21,7 +21,7 @@ import { Announcement } from '../models/database/Announcement';
 import { Util } from '../util';
 class IBISController {
     private IBIS_SEND_INTERVAL = 5
-    private IBIS_QUEUE_SEND_INTERVAL_MS = 2
+    private IBIS_QUEUE_SEND_INTERVAL_MS = 50
     private IBIS_TERMINAL_RECEIVE_INTERVAL = 1
 
     // Timeout waiting for response to status request
