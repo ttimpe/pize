@@ -629,7 +629,7 @@ private promptForSpecialCharacter() {
     }
     showError() {
         this.setText(0, this.errors[this.errors.length - 1])
-        this.playSound(5);
+        this.playSound(6);
     }
 
     playSound(soundNumber: number) {
