@@ -20,8 +20,7 @@ import { StopInformation } from '../models/database/StopInformation.js';
 import { Announcement } from '../models/database/Announcement';
 import { Util } from '../util';
 class IBISController {
-    private IBIS_SEND_INTERVAL = 5
-    private IBIS_QUEUE_SEND_INTERVAL_MS = 100
+    private IBIS_QUEUE_SEND_INTERVAL_MS = 20
     private IBIS_TERMINAL_RECEIVE_INTERVAL = 1
 
     // Timeout waiting for response to status request
@@ -91,7 +90,6 @@ class IBISController {
         return ''
     }
     constructor(portString: string, interval: number) {
-        this.IBIS_SEND_INTERVAL = interval
         
         this.serialPort = new SerialPort({
             path: portString,

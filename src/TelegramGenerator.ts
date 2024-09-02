@@ -60,7 +60,7 @@ class TelegramGenerator {
     // DS003a - Außenanzeigen Text
 
     static DS003a(text: string): IBISTelegram {
-        return 'zA' + Math.round(text.length / 16).toIBISHexString() + text.toUpperCase()
+        return 'zA' + Math.round(text.length / 16).toIBISHexString() + text.toIBISUppercase()
     }
 
     // DS003b - Ziel für ZUB / Fahrstraßenanforderung
@@ -70,7 +70,7 @@ class TelegramGenerator {
 
     // DS003c - Haltestellenname
     static DS003c(name: string): IBISTelegram {
-        return 'zI' + Math.round(name.length / 4).toIBISHexString() + name.toUpperCase()
+        return 'zI' + Math.round(name.length / 4).toIBISHexString() + name.toIBISUppercase()
     }
 
     // DS003d - Routennummer für ZUB / Fahrstraßenanforderung
@@ -165,21 +165,21 @@ class TelegramGenerator {
 
     // DS009 - Haltestellenname 16 Zeichen
     static DS009(name: string): IBISTelegram {
-        return 'v' + name.toUpperCase().padEnd(16, ' ').substring(0, 16)
+        return 'v' + name.toIBISUppercase().padEnd(16, ' ').substring(0, 16)
     }
 
     // DS009a - Haltestellenname 20 Zeichen
     static DS009a(name: string): IBISTelegram {
-        return 'v' + name.toUpperCase().padEnd(20, ' ').substring(0, 20)
+        return 'v' + name.toIBISUppercase().padEnd(20, ' ').substring(0, 20)
     }
 
     // DS009b - Haltestellenname 24 Zeichen
     static DS009b(name: string): IBISTelegram {
-        return 'v' + name.toUpperCase().padEnd(24, ' ').substring(0, 24)
+        return 'v' + name.toIBISUppercase().padEnd(24, ' ').substring(0, 24)
     }
     // DS009b - Haltestellenname 32 Zeichen
     static DS009c(name: string): IBISTelegram {
-        return 'v' + name.toUpperCase()
+        return 'v' + name.toIBISUppercase()
     }
 
 
