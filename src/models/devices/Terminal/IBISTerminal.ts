@@ -402,7 +402,12 @@ private setHaltestelle(number: string) {
 promptForLinieKurs() {
     let action = this.getAction(IBISTerminalKeyAction.LINIE_KURS)
     this.mode = IBISTerminalMode.DIGITS
-    this.setText(0, action.textLine1)
+    let outputText = action.textLine1
+    if (this.ibisController.linie) {
+        outputText = action.textLine1.split(':')[0] + this.ibisController.linie.number.padStart(3, '0') + this.ibisController.kurs.toString().padStart(2, '0');
+    }
+
+    this.setText(0, outputText)
 }
 promptForBesetzgrad() {
     let action = this.getAction(IBISTerminalKeyAction.BESETZGRAD)
