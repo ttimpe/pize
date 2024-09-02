@@ -680,7 +680,7 @@ private promptForSpecialCharacter() {
             }, 1000);
             setTimeout(() => {
                 this.setDisplayMode(TerminalDisplayMode.None);
-            }, 3000);
+            }, 1000);
         }
     }
     onSetZiel() {
