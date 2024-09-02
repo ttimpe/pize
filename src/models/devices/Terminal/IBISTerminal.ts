@@ -636,7 +636,7 @@ private promptForSpecialCharacter() {
     private showNormalMode() {
         this.mode = IBISTerminalMode.FUNCTION
         if (this.ibisController.upcomingStop != null) {
-            this.setText(0, this.ibisController.upcomingStop.stop.information.shortName.toIBISUppercase())
+            this.setText(0, this.ibisController.upcomingStop.stop.information.shortName.toUpperCase())
         } else {
             this.setText(0, '')
         }
@@ -666,7 +666,7 @@ private promptForSpecialCharacter() {
 
     onSetHaltestelle() {
         if (this.currentDisplayMode == TerminalDisplayMode.None) {
-            this.setText(0, this.ibisController.upcomingStop.stop.information.shortName.toIBISUppercase()) 
+            this.setText(0, this.ibisController.upcomingStop.stop.information.shortName.toUpperCase()) 
         }
         this.updateSecondLine()
     }
@@ -674,13 +674,14 @@ private promptForSpecialCharacter() {
         this.updateSecondLine()
 
         if (this.ibisController.route != undefined) {
-            this.setText(0, this.ibisController.route.stops[0].stop.information.shortName.toIBISUppercase());
+            this.setText(0, this.ibisController.route.stops[0].stop.information.shortName.toUpperCase());
             setTimeout(() => {
-                this.setText(0, this.ibisController.route.stops[this.ibisController.route.stops.length - 1].stop.information.shortName.toIBISUppercase())
+                this.setText(0, this.ibisController.route.stops[this.ibisController.route.stops.length - 1].stop.information.shortName.toUpperCase())
+                setTimeout(() => {
+                    this.setDisplayMode(TerminalDisplayMode.None);
+                }, 1000);
             }, 1000);
-            setTimeout(() => {
-                this.setDisplayMode(TerminalDisplayMode.None);
-            }, 1000);
+           
         }
     }
     onSetZiel() {
