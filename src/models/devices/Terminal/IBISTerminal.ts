@@ -1,3 +1,4 @@
+import { Destination } from './../../database/Destination';
 import { IBISTerminalKey } from '../../../enums/IBISTerminalKey';
 import { TerminalDisplayMode } from '../../../enums/IBISTerminalDisplayMode';
 import { Vehicle } from "../../../Vehicle.js"
@@ -404,7 +405,7 @@ promptForLinieKurs() {
     this.mode = IBISTerminalMode.DIGITS
     let outputText = action.textLine1
     if (this.ibisController.linie) {
-        outputText = action.textLine1.split(':')[0] + this.ibisController.linie.number.padStart(3, '0') + this.ibisController.kurs.toString().padStart(2, '0');
+        outputText = action.textLine1.split(':')[0] + ":" + this.ibisController.linie.number.padStart(3, '0') + this.ibisController.kurs.toString().padStart(2, '0');
     }
 
     this.setText(0, outputText)
@@ -423,17 +424,32 @@ promptForStopNumber() {
 promptForDirection() {
     let action = this.getAction(IBISTerminalKeyAction.RICHTUNG)
     this.mode = IBISTerminalMode.DIGITS
-    this.setText(0, action.textLine1)
+    let outputText = action.textLine1
+    if (this.ibisController.richtung != undefined) {
+        outputText = action.textLine1.split(':')[0] + ":" + this.ibisController.richtung.toString();
+    }
+
+    this.setText(0, outputText)
 }
 promptForRoute() {
     let action = this.getAction(IBISTerminalKeyAction.ROUTE)
     this.mode = IBISTerminalMode.DIGITS
-    this.setText(0, action.textLine1)
+    let outputText = action.textLine1
+    if (this.ibisController.route) {
+        outputText = action.textLine1.split(':')[0] + ":" + this.ibisController.route.route_id.padStart(3, '0');
+    }
+
+    this.setText(0, outputText)
 }
 promptForDestination() {
     let action = this.getAction(IBISTerminalKeyAction.ZIEL)
     this.mode = IBISTerminalMode.DIGITS
-    this.setText(0, action.textLine1)
+    let outputText = action.textLine1
+    if (this.ibisController.ziel) {
+        outputText = action.textLine1.split(':')[0] + ":" + this.ibisController.ziel.number.toString().padStart(3, '0');
+    }
+
+    this.setText(0, outputText)
 }
 setWeicheLinks() {
 
