@@ -21,7 +21,7 @@ export class Route extends Model {
   @ForeignKey(() => Destination)
   @Column(DataType.INTEGER)
   destination_id!: number
-  @BelongsTo(() => Destination, { foreignKey: 'destination_id', targetKey: 'id' , as: 'routeDestination' })
+  @BelongsTo(() => Destination, { foreignKey: 'destination_id', targetKey: 'id' })
   destination!: Destination
   @HasMany(() => RouteStop) // 'route_id' is the foreign key in RouteStop model
   stops!: RouteStop[];
