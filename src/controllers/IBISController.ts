@@ -392,6 +392,7 @@ class IBISController {
                 this.stopIndex = 0;
                 this.route = route
                 this.ziel = route.destination
+                this.richtung = route.direction
                 if (this.aTerminal) {
                     this.aTerminal.onSetRoute();
                 }
