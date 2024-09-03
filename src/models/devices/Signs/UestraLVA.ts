@@ -1,19 +1,19 @@
 import { IBISTelegram } from "../../../extensions/IBISTelegram";
+import { Destination } from "../../database/Destination";
 import { Line } from "../../database/Line";
 import { Route } from "../../database/Route";
 import { IBISSign } from "../IBISSign";
 
 class UestraLVA extends IBISSign {
 
-    
+
     onSetRoute(line: Line, route: Route) {
         if (route) {
             console.log('UESTRA LVA detected')
-
-            //let guteFahrtTelegram = "aX" + this.address + "0\x03100\x040GUTE FAHRT";
-            // this.ibisController.sendTelegram(guteFahrtTelegram);
+            this.clearSign();
+            
            
-            let destinationTelegram = "aX" + this.address + "1" + "\x03" + "101" + "\x04" + "ZIELNAME".toUpperCase().substring(0,16)
+            let destinationTelegram = "aX" + this.address + "1" + "\x03" + "101" + "\x04" + route.destination.short_name.toIBISUppercase().substring(0,16)
             this.ibisController.sendTelegram(destinationTelegram)
             let lineNameTelegram = "aX" + this.address + "1" + "\x03" + "102" + "\x04" + line.number;
             this.ibisController.sendTelegram(lineNameTelegram)
@@ -39,6 +39,14 @@ class UestraLVA extends IBISSign {
           
 
         }
+    }
+    onSetZiel(ziel: Destination) {
+        let destinationTelegram = "aX" + this.address + "1" + "\x03" + "101" + "\x04" + ziel.short_name.toIBISUppercase().substring(0,16)
+        this.ibisController.sendTelegram(destinationTelegram)
+    }
+    clearSign() {
+        let guteFahrtTelegram = "aX" + this.address + "0\x03100\x040GUTE FAHRT";
+        this.ibisController.sendTelegram(guteFahrtTelegram);
     }
 }
 export { UestraLVA }

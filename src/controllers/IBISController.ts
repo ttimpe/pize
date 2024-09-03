@@ -366,6 +366,9 @@ class IBISController {
         if (line) {
             this.linie = line
             this.route = null;
+            for (var i=0; i<this.uestraLVAs.length; i++) {
+                this.uestraLVAs[i].clearSign();
+            }
             return true
         }
         return false
@@ -401,6 +404,7 @@ class IBISController {
                 }
                 for (var i=0; i<this.uestraLVAs.length; i++) {
                     this.uestraLVAs[i].onSetRoute(this.linie, this.route)
+                    this.uestraLVAs[i].onSetZiel(this.ziel)
                 }
                 return true
             } else {
@@ -422,6 +426,9 @@ class IBISController {
         })
         if (destination) {
             this.ziel = destination
+            for (var i=0; i<this.uestraLVAs.length; i++) {
+                this.uestraLVAs[i].onSetZiel(this.ziel)
+            }
             return true
         } else {
             return false
