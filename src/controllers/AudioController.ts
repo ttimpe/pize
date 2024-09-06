@@ -6,6 +6,7 @@ import { Util } from "../util"
 class AudioController {
 
     announcementsMuted: boolean = false;
+    lastAnnouncement?: Announcement
     async playAnnouncement(announcement: Announcement, callback: Function) {
         if (this.announcementsMuted == false) {
             Util.log('PLAY ANNOUNCEMENT', announcement);
@@ -20,6 +21,7 @@ class AudioController {
         if (this.announcementsMuted == false) {
 
         if (routeStop.announcement) {
+            this.lastAnnouncement = routeStop.announcement
             PlaySound().play('./announcements/Gong.wav', (err) => {
                 this.playAnnouncement(routeStop.announcement, () => {
                     // Play door side

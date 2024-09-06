@@ -22,6 +22,8 @@ export class RouteStop extends Model {
   @ForeignKey(() => Route)
   @Column(DataType.INTEGER)
   route_id!: number
+  @BelongsTo(() => Route)
+  route!: Route
 /*  @HasMany(() => StopTime, {
     foreignKey: 'route_stop_id', // Ensure the foreign key is correctly defined
     sourceKey: 'id'
@@ -32,5 +34,6 @@ export class RouteStop extends Model {
   announcement_id?: number;
   @BelongsTo(() => Announcement, { foreignKey: 'announcement_id' })
   announcement?: Announcement;
+
 }
 

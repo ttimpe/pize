@@ -18,5 +18,7 @@ export class Destination extends Model {
     short_name!: string
     @HasMany(() => Route, { foreignKey: 'destination_id' })
     routes!: Route[]
+    @Column(DataType.STRING)
+    sign_text!: string
   }
   

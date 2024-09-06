@@ -1,3 +1,4 @@
+import { GPIOPinoutConfiguration } from "./GPIOPinoutConfiguration"
 import { IBISTerminalConfiguration } from "./Terminal/IBISTerminalConfiguration"
 
 class DeviceConfig {
@@ -9,6 +10,9 @@ class DeviceConfig {
     signs: boolean[]
     UESTRA_LVA: number[]
     terminal_config: IBISTerminalConfiguration
+    use_gpio?: boolean
+    GPIO_PINOUT?: GPIOPinoutConfiguration
+    announcement_distance_before_next_stop: number
 }
 
 export { DeviceConfig }

@@ -13,7 +13,7 @@ class UestraLVA extends IBISSign {
             this.clearSign();
             
            
-            let destinationTelegram = "aX" + this.address + "1" + "\x03" + "101" + "\x04" + route.destination.short_name.toIBISUppercase().substring(0,16)
+            let destinationTelegram = "aX" + this.address + "1" + "\x03" + "101" + "\x04" + route.destination.sign_text.toIBISUppercase().substring(0,16)
             this.ibisController.sendTelegram(destinationTelegram)
             let lineNameTelegram = "aX" + this.address + "1" + "\x03" + "102" + "\x04" + line.number;
             this.ibisController.sendTelegram(lineNameTelegram)

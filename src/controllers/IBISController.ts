@@ -19,6 +19,7 @@ import { RouteStop } from '../models/database/RouteStop';
 import { StopInformation } from '../models/database/StopInformation.js';
 import { Announcement } from '../models/database/Announcement';
 import { Util } from '../util';
+import { LocationController } from './LocationController';
 class IBISController {
     private IBIS_QUEUE_SEND_INTERVAL_MS = 20
     private IBIS_TERMINAL_RECEIVE_INTERVAL = 1
@@ -41,7 +42,7 @@ class IBISController {
     private timer: any
     private deviceConfig: DeviceConfig = require('../../device_config.json')
     private audioController: AudioController = new AudioController()
-
+    public locationController: LocationController
     public linie?: Line
     public kurs: number = 0
     public sonderzeichen?: SpecialCharacter
@@ -265,7 +266,7 @@ class IBISController {
 
     private actuallySendTelegram(telegram: IBISTelegram) {
         this.serialPort.write(telegram)
-        Util.log('out > ' + this.sanatizeOutputForLog(telegram))
+     //   Util.log('out > ' + this.sanatizeOutputForLog(telegram))
     }
     
     // IBIS Telegrammsignierung
@@ -312,7 +313,7 @@ class IBISController {
             // Zielnummer 
             this.sendTelegram(TelegramGenerator.DS003(this.ziel.number))
             // Zieltext
-            this.sendTelegram(TelegramGenerator.DS003a(this.ziel.name))
+            this.sendTelegram(TelegramGenerator.DS003a(this.ziel.sign_text))
             // Ziel für ZUB
             this.sendTelegram(TelegramGenerator.DS003b(this.ziel.number))
         }
@@ -406,6 +407,9 @@ class IBISController {
                     this.uestraLVAs[i].onSetRoute(this.linie, this.route)
                     this.uestraLVAs[i].onSetZiel(this.ziel)
                 }
+                if (this.locationController) {
+                    this.locationController.onSetRoute()
+                }
                 return true
             } else {
                 return false
@@ -449,10 +453,18 @@ class IBISController {
         if (this.route && this.stopIndex < (this.route.stops.length) - 1) {
             this.stopIndex = this.stopIndex + 1
             this.setHaltestelle(this.route.stops[this.stopIndex])
-
+            this.playAnnouncementForRouteStop(this.route.stops[this.stopIndex])
         }
     }
 
+    playAnnouncementForRouteStop(routeStop: RouteStop) {
+        this.audioController.playStopAnnouncement(routeStop, ()=> {
+            if (this.stopIndex == (this.route.stops.length - 1)) {
+                // Is end
+                this.audioController.playEndAnnouncement();
+            }
+        })
+    }
     setHaltestelle(stop: RouteStop) {
         Util.log('setting stop to', stop);
         this.sendStopData()
@@ -463,15 +475,16 @@ class IBISController {
         if (this.bTerminal) {
             this.bTerminal.onSetHaltestelle()
         }
-        this.audioController.playStopAnnouncement(stop, () => {
-            if (this.stopIndex == (this.route.stops.length - 1)) {
-                // Is end
-                this.audioController.playEndAnnouncement();
-            }
-        });
+        
         
     }
 
+    arriveAtStop(routeStop: RouteStop) {
+        // Find stop index based on id
+        this.stopIndex = (routeStop.sequence_number + 1);
+        this.setHaltestelle(this.route.stops[this.stopIndex]);
+
+    }
 
 
     private sendStopData() {
