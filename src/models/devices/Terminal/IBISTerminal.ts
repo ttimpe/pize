@@ -101,7 +101,6 @@ class IBISTerminal {
 
     private onKeyPress(key?: IBISTerminalKey) {
         if (key) {
-            this.lastReceiveTimestamp = new Date()
             if (key != 'Q') {
             // This will change the display mode of the terminal and fire a command
             // Check if we have predefined text in the device config for this
@@ -309,8 +308,8 @@ class IBISTerminal {
         if (lineNumber == 1) {
             mode = IBISTerminalMode.FUNCTION_NO_RECEIVE
         }
-        this.currentLine = lineNumber
-        this.textBuffer = text
+        // this.currentLine = lineNumber
+        // this.textBuffer = text
         let telegram: IBISTelegram
         if (this.isPrimary) {
             
