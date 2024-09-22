@@ -1,11 +1,10 @@
 import { Destination } from './../../database/Destination';
 import { IBISTerminalKey } from '../../../enums/IBISTerminalKey';
 import { TerminalDisplayMode } from '../../../enums/IBISTerminalDisplayMode';
-import { Vehicle } from "../../../Vehicle.js"
 import { IBISTerminalKeyMapping } from './IBISTerminalKeyMapping';
 import { IBISTerminalKeyAction } from './IBISTerminalKeyAction';
 
-import { Line } from '../../database/Line';
+
 import { IBISController } from '../../../controllers/IBISController';
 import {TelegramGenerator } from '../../../TelegramGenerator';
 import {IBISTerminalMode } from './IBISTerminalMode';
@@ -16,11 +15,6 @@ import { Util } from '../../../util';
 class IBISTerminal {
     private isPrimary: boolean = true
     private lines: string[] = ['', '']
-    private textBuffer: string = null
-    private currentLine: number = 0
-    private lastReceiveTimestamp: Date
-    private lastTextSentTimestamp: Date
-    private previousDisplayMode?: TerminalDisplayMode
     mode: IBISTerminalMode = IBISTerminalMode.FUNCTION
 
      // active function definition
@@ -329,7 +323,7 @@ class IBISTerminal {
         this.ibisController.sendTelegram(telegram)
         this.ibisController.sendTelegram(telegram)
 
-        this.lastTextSentTimestamp = new Date()
+   //     this.lastTextSentTimestamp = new Date()
     }
 
 
@@ -340,14 +334,7 @@ class IBISTerminal {
     this.setText(0, " ".repeat(16))
    }
     updateSecondLine() {
-       /* switch (richtung) {
-          case '01':
-            directionLetter = 'H'
-            break;
-          case '02':
-            directionLetter = 'R'
-            break;
-        }*/
+       
 
         let linie = '   '
         let kurs = this.ibisController.kurs.toString().padStart(2, '0')
@@ -372,7 +359,7 @@ class IBISTerminal {
                 richtung = 'R'
             }
         }
-        this.setText(1, linie + kurs + ziel +richtung + hst + abweichung)
+        this.setText(1, linie + kurs + ziel + richtung + hst + abweichung)
       }
 
 
