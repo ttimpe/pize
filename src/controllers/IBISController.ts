@@ -66,13 +66,18 @@ class IBISController {
     private get stopName(): string {
         let length = 24
         if (this.linie != undefined && this.route != undefined) {
+            let stopName = this.route.stops[this.stopIndex].stop.information.shortName;
+            // Fix for signs that don't support DS001
+            if (this.deviceConfig.line_number_in_ds009 == false) {
+                return stopName;
+            }
+            
             let lineString = this.linie.number
             if (this.sonderzeichen) {
                 lineString = this.sonderzeichen.stringValue
             }
 
-            let stopName = this.route.stops[this.stopIndex].stop.information.shortName;
-
+  
             // cut off stop name based on sign length
             stopName = stopName.substring(0, length - lineString.length);
             const whitespacePaddingOnLeftLength = Math.floor(length - lineString.length - stopName.length) / 2;
@@ -195,12 +200,17 @@ class IBISController {
     }
 
     repeatStopAnnouncement() {
+        if (this.deviceConfig.external_announcements) {
+            this.sendTelegram(TelegramGenerator.DS033());
+            
+        } else {
         this.audioController.playStopAnnouncement(this.upcomingStop, () => {
             if (this.stopIndex == (this.route.stops.length - 1)) {
                 // Is end
                 this.audioController.playEndAnnouncement();
             }
         });
+    }
         this.sendStopData();
 
     }
@@ -458,12 +468,17 @@ class IBISController {
     }
 
     playAnnouncementForRouteStop(routeStop: RouteStop) {
+        if (this.deviceConfig.external_announcements) {
+            this.sendTelegram(TelegramGenerator.DS036(routeStop.announcement.number));
+        } else {
+
         this.audioController.playStopAnnouncement(routeStop, ()=> {
             if (this.stopIndex == (this.route.stops.length - 1)) {
                 // Is end
                 this.audioController.playEndAnnouncement();
             }
         })
+    }
     }
     setHaltestelle(stop: RouteStop) {
         Util.log('setting stop to', stop);
