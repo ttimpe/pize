@@ -34,6 +34,9 @@ class IBISController {
     private signs: IBISSign[] = []
     private validators: IBISValidator[] = []
 
+    // Scanning variables
+    public currentSign?: IBISSign;
+    public currentValidator?: IBISValidator;
 
     private uestraLVAs: UestraLVA[] = []
     private terminalStatusTimer: any
@@ -187,17 +190,24 @@ class IBISController {
 
     }
 
+   
+    // Status scanning logic
     private queryStatusOfAllSigns() {
+        // TODO: Query status of sign, then wait for n seconds, then query next sign
         this.signs.forEach((sign) => {
+            this.currentSign = sign
             sign.queryStatus()
         })
     }
     private queryStatusOfAllValidators() {
         Util.log('Querying validators')
         this.validators.forEach((validator) => {
+            this.currentValidator = validator
             validator.queryStatus()
         })
     }
+
+
 
     repeatStopAnnouncement() {
         if (this.deviceConfig.external_announcements) {
@@ -407,10 +417,10 @@ class IBISController {
                 this.route = route
                 this.ziel = route.destination
                 this.richtung = route.direction
-                if (this.aTerminal) {
+                if (this.aTerminal && this.aTerminal.isActive) {
                     this.aTerminal.onSetRoute();
                 }
-                if (this.bTerminal) {
+                if (this.bTerminal && this.bTerminal.isActive) {
                     this.bTerminal.onSetRoute();
                 }
                 for (var i=0; i<this.uestraLVAs.length; i++) {

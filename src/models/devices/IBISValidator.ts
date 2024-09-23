@@ -4,9 +4,10 @@ import { TelegramGenerator } from "../../TelegramGenerator";
 
 class IBISValidator {
     address: IBISAddress
-    deviceStatus: number
-    lastStatusResponseTime: Date
-    constructor(private ibisController: IBISController, address: IBISAddress) {
+    status: number
+    lastStatusReceivedTime: Date
+    ibisController: IBISController
+    constructor(ibisController: IBISController, address: IBISAddress) {
         this.ibisController = ibisController
         this.address = address
     }
@@ -16,7 +17,13 @@ class IBISValidator {
         
     }
     onReceiveTelegram(telegram: IBISTelegram) {
-        
+        if (this == this.ibisController.currentValidator) {
+            if (telegram.match('g[0-9]')) {
+                this.lastStatusReceivedTime = new Date();
+                // Is status back from sign
+                this.status = parseInt(telegram.substring(1, 2));
+            }
+        }
     }
 }
 export { IBISValidator }

@@ -16,7 +16,8 @@ class IBISTerminal {
     private isPrimary: boolean = true
     private lines: string[] = ['', '']
     mode: IBISTerminalMode = IBISTerminalMode.FUNCTION
-
+    // TEIN
+    public isActive: boolean = false
      // active function definition
     currentDisplayMode :TerminalDisplayMode = TerminalDisplayMode.None
     
@@ -55,14 +56,20 @@ class IBISTerminal {
         // Number returned from the terminal
         Util.log('received')
         if (telegram.startsWith(this.terminalLetter + '?')) {
+            this.isActive = true;
             Util.log('got number')
             this.onNumber(telegram.substring(2))
         } else if (telegram.startsWith(this.terminalLetter + 'Q')) {
             // status reply
 
 
+        }
+        // terminal not active but on bus
+        else if (telegram.startsWith(this.terminalLetter + 'A')) {
+            this.isActive = false
         } else if (telegram.startsWith(this.terminalLetter) && telegram.length == 2) {
             // Handle keys
+            this.isActive = true
             this.onKeyPress(telegram[1] as IBISTerminalKey)
 
         } else {

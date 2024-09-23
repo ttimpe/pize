@@ -14,8 +14,10 @@ class UestraLVA extends IBISSign {
             
            
             let destinationTelegram = "aX" + this.address + "1" + "\x03" + "101" + "\x04" + route.destination.sign_text.toIBISUppercase().substring(0,16)
+            destinationTelegram = this.convertSpecialCharacters(destinationTelegram)
             this.ibisController.sendTelegram(destinationTelegram)
             let lineNameTelegram = "aX" + this.address + "1" + "\x03" + "102" + "\x04" + line.number;
+
             this.ibisController.sendTelegram(lineNameTelegram)
             let refreshTelegram = "x2001";
             this.ibisController.sendTelegram(refreshTelegram)
@@ -34,6 +36,7 @@ class UestraLVA extends IBISSign {
                 telegram += indexNumberString
                 telegram += "\x04"
                 telegram += route.stops[i].stop.information.shortName.toUpperCase().padEnd(16).substring(0, 16)
+                telegram = this.convertSpecialCharacters(telegram)
                 this.ibisController.sendTelegram(telegram)
             }
           
@@ -47,6 +50,12 @@ class UestraLVA extends IBISSign {
     clearSign() {
         let guteFahrtTelegram = "aX" + this.address + "0\x03100\x040GUTE FAHRT";
         this.ibisController.sendTelegram(guteFahrtTelegram);
+    }
+
+    private convertSpecialCharacters(telegram: string) {
+        telegram = telegram.replaceAll("ß", "\x06\x02?\x06")
+        telegram = telegram.replaceAll("Ü", "\x06\x02\\\x06")
+        return telegram
     }
 }
 export { UestraLVA }

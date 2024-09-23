@@ -18,7 +18,13 @@ class IBISSign {
         this.ibisController.sendTelegram(TelegramGenerator.DS020(this.address))
     }
     onReceiveTelegram(telegram: IBISTelegram) {
-        this.lastStatusReceivedTime = new Date()
+        if (this == this.ibisController.currentSign) {
+        if (telegram.match('a[0-9]')) {
+            this.lastStatusReceivedTime = new Date();
+            // Is status back from sign
+            this.status = parseInt(telegram.substring(1, 2));
+        }
+    }
     }
 }
 export { IBISSign }
