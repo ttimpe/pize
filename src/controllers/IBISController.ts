@@ -360,6 +360,8 @@ class IBISController {
       tick60Seconds() {
         // Uhrzeit
         this.sendTelegram(TelegramGenerator.DS005(new Date()))
+        // Datum 5-stellig
+        this.sendTelegram(TelegramGenerator.DS006(new Date()))
         // Datum 6 stellig
         this.sendTelegram(TelegramGenerator.DS006a(new Date()))
         // Jahreszahl 4 stellig
@@ -514,7 +516,7 @@ class IBISController {
 
     private sendStopData() {
             // Haltestellenname
-            this.sendTelegram(TelegramGenerator.DS003c(this.route.stops[this.stopIndex].stop.name))
+            this.sendTelegram(TelegramGenerator.DS003c(this.stopName))
           // Haltestellenname
           this.sendTelegram(TelegramGenerator.DS009c(this.stopName))
           // Haltestellennummer 4 stellig
