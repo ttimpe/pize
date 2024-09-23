@@ -44,7 +44,7 @@ class UestraLVA extends IBISSign {
         }
     }
     onSetZiel(ziel: Destination) {
-        let destinationTelegram = "aX" + this.address + "1" + "\x03" + "101" + "\x04" + ziel.sign_text.toIBISUppercase().substring(0,16)
+        let destinationTelegram = "aX" + this.address + "1" + "\x03" + "101" + "\x04" + this.convertSpecialCharacters(ziel.sign_text.toIBISUppercase().substring(0,16))
         this.ibisController.sendTelegram(destinationTelegram)
     }
     clearSign() {
