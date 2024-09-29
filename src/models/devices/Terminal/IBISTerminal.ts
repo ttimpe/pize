@@ -185,6 +185,10 @@ class IBISTerminal {
                 if (key == '/') {
                     this.onPressDelete()
                 }
+                if (key == 'A') {
+                    // Terminal is not active, no TEIN
+                    this.isActive = false
+                }
             }
         }
         } else {
