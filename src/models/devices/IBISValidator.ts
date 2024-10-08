@@ -6,8 +6,8 @@ import { Util } from "../../util";
 class IBISValidator {
     address: IBISAddress
     status: number
-    lastStatusQueriedTime; Date?
-    lastStatusReceivedTime: Date
+    lastStatusQueriedTime?: Date
+    lastStatusReceivedTime?: Date
     ibisController: IBISController
     constructor(ibisController: IBISController, address: IBISAddress) {
         this.ibisController = ibisController
@@ -20,7 +20,7 @@ class IBISValidator {
         this.lastStatusQueriedTime = new Date()
         this.ibisController.sendTelegram(TelegramGenerator.DS070(this.address))
         setTimeout(() => {
-            if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) >= 1000) {
+            if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) >= 2000) {
                 // Is active, have received status
                 Util.log("Entwerter ", this.address, " OK")
 
