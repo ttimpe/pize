@@ -321,8 +321,12 @@ class IBISController {
 
 
       tick10Seconds() {
+        if (this.signs.length > 0) {
         this.queryStatusOfAllSigns()
-        this.queryStatusOfAllValidators()
+        }
+        if (this.validators.length > 0) {
+            this.queryStatusOfAllValidators()
+        }
         // Kursnummer
         this.sendTelegram(TelegramGenerator.DS002(this.kurs))
           // Liniennummer
