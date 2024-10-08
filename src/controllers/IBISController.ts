@@ -203,10 +203,9 @@ class IBISController {
         // TODO: Query status of sign, then wait for n seconds, then query next sign
         this.currentSign = this.signs[0]
         this.currentSign.queryStatus()
-        for (var i=1; i<this.signs.length; i++) {
-            setTimeout((i) => {
-                var index = i;
-                this.currentSign = this.signs[index]
+        for (let i=1; i<this.signs.length; i++) {
+            setTimeout(() => {
+                this.currentSign = this.signs[i]
                 this.currentSign.queryStatus()
             }, 1000 * i);
         }
@@ -215,7 +214,7 @@ class IBISController {
         Util.log('Querying validators')
         this.currentValidator = this.validators[0]
         this.currentValidator.queryStatus()
-        for (var i=1; i<this.validators.length; i++) {
+        for (let i=1; i<this.validators.length; i++) {
             setTimeout(() => {
                 this.currentValidator = this.validators[i]
                 this.currentValidator.queryStatus()
