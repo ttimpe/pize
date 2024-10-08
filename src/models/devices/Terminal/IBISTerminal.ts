@@ -55,18 +55,20 @@ class IBISTerminal {
     onReceiveTelegram(telegram:IBISTelegram) {
         // Number returned from the terminal
         Util.log('received')
+
         if (telegram.startsWith(this.terminalLetter + '?')) {
             this.isActive = true;
             Util.log('got number')
             this.onNumber(telegram.substring(2))
         } else if (telegram.startsWith(this.terminalLetter + 'Q')) {
             // status reply
-
-
+            this.isActive = true;
         }
         // terminal not active but on bus
         else if (telegram.startsWith(this.terminalLetter + 'A')) {
+            Util.log('Terminal not active');
             this.isActive = false
+            this.setDisplayMode(TerminalDisplayMode.None)
         } else if (telegram.startsWith(this.terminalLetter) && telegram.length == 2) {
             // Handle keys
             this.isActive = true
@@ -184,10 +186,6 @@ class IBISTerminal {
             } else {
                 if (key == '/') {
                     this.onPressDelete()
-                }
-                if (key == 'A') {
-                    // Terminal is not active, no TEIN
-                    this.isActive = false
                 }
             }
         }

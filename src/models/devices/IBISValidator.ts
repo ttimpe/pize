@@ -5,6 +5,7 @@ import { TelegramGenerator } from "../../TelegramGenerator";
 class IBISValidator {
     address: IBISAddress
     status: number
+    lastStatusQueriedTime; Date?
     lastStatusReceivedTime: Date
     ibisController: IBISController
     constructor(ibisController: IBISController, address: IBISAddress) {
@@ -12,18 +13,31 @@ class IBISValidator {
         this.address = address
     }
 
+
+
     queryStatus() {
-        this.ibisController.sendTelegram(TelegramGenerator.DS070(this.address));
-        
+        this.lastStatusQueriedTime = new Date()
+        this.ibisController.sendTelegram(TelegramGenerator.DS070(this.address))
+        setTimeout(() => {
+            if ((this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) >= 1000) {
+                // Is active, have received status
+                
+            } else {
+                // Have not received status, throw error
+                this.ibisController.throwError("ENTW. " + this.address + " DEFEKT");
+            }
+            this.ibisController.currentValidator = undefined;
+
+        }, 1000);
     }
     onReceiveTelegram(telegram: IBISTelegram) {
-        if (this == this.ibisController.currentValidator) {
-            if (telegram.match('g[0-9]')) {
-                this.lastStatusReceivedTime = new Date();
-                // Is status back from sign
-                this.status = parseInt(telegram.substring(1, 2));
-            }
+        if (telegram.match('g[0-9]')) {
+            this.lastStatusReceivedTime = new Date();
+            // Is status back from sign
+            this.status = parseInt(telegram.substring(1, 2));
         }
     }
+
+ 
 }
 export { IBISValidator }

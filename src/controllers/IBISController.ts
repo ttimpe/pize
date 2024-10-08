@@ -34,9 +34,6 @@ class IBISController {
     private signs: IBISSign[] = []
     private validators: IBISValidator[] = []
 
-    // Scanning variables
-    public currentSign?: IBISSign;
-    public currentValidator?: IBISValidator;
 
     private uestraLVAs: UestraLVA[] = []
     private terminalStatusTimer: any
@@ -49,6 +46,11 @@ class IBISController {
     public linie?: Line
     public kurs: number = 0
     public sonderzeichen?: SpecialCharacter
+
+    public currentSign?: IBISSign
+    public currentValidator?: IBISValidator
+    
+
     get upcomingStop(): RouteStop {
         if (this.route && this.route.stops.length > 0) {
         return this.route.stops[this.stopIndex]
@@ -186,25 +188,38 @@ class IBISController {
         }
     }
 
-    private throwError(errorText: string) {
-
+    throwError(errorText: string) {
+        if (this.aTerminal) {
+            this.aTerminal.throwError(errorText)
+        }
+        if (this.bTerminal) {
+            this.bTerminal.throwError(errorText)
+        }
     }
 
    
     // Status scanning logic
     private queryStatusOfAllSigns() {
         // TODO: Query status of sign, then wait for n seconds, then query next sign
-        this.signs.forEach((sign) => {
-            this.currentSign = sign
-            sign.queryStatus()
-        })
+        this.currentSign = this.signs[0]
+        this.currentSign.queryStatus()
+        for (var i=1; i<this.signs.length; i++) {
+            setTimeout(() => {
+                this.currentSign = this.signs[i]
+                this.currentSign.queryStatus()
+            }, 1000 * i);
+        }
     }
     private queryStatusOfAllValidators() {
         Util.log('Querying validators')
-        this.validators.forEach((validator) => {
-            this.currentValidator = validator
-            validator.queryStatus()
-        })
+        this.currentValidator = this.validators[0]
+        this.currentValidator.queryStatus()
+        for (var i=1; i<this.validators.length; i++) {
+            setTimeout(() => {
+                this.currentValidator = this.validators[i]
+                this.currentValidator.queryStatus()
+            }, 1000 * i);
+        }
     }
 
 
@@ -254,13 +269,16 @@ class IBISController {
         if (this.bTerminal) {
             this.bTerminal.onReceiveTelegram(telegram.substring(1))
         }
-        this.signs.forEach((sign) => {
-            sign.onReceiveTelegram(telegram.substring(1))
-        })
-        this.validators.forEach((validator) => {
-            validator.onReceiveTelegram(telegram.substring(1))
-        })
 
+        if (this.currentSign) {
+            // Currently have a sign active, if this is a reply, handle it
+            this.currentSign.onReceiveTelegram(telegram)
+        }
+        if (this.currentValidator) {
+            // Currently have a validator active, if this is a reply, handle it
+            this.currentValidator.onReceiveTelegram(telegram)
+        }
+     
         // Update status values for devices
         // Throw errors for missing devices
     }

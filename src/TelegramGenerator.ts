@@ -520,7 +520,8 @@ class TelegramGenerator {
     // DS060 - Ortung - Status
 
 
-
+// TODO: Check status replies
+   
 
 
 }
