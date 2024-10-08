@@ -74,8 +74,6 @@ class IBISTerminal {
             this.isActive = true
             this.onKeyPress(telegram[1] as IBISTerminalKey)
 
-        } else {
-            Util.log('cannot handle', telegram)
         }
     }
 

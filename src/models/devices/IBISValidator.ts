@@ -1,6 +1,7 @@
 import { IBISController } from "../../controllers/IBISController";
 import { IBISTelegram } from "../../extensions/IBISTelegram";
 import { TelegramGenerator } from "../../TelegramGenerator";
+import { Util } from "../../util";
 
 class IBISValidator {
     address: IBISAddress
@@ -21,10 +22,13 @@ class IBISValidator {
         setTimeout(() => {
             if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) >= 1000) {
                 // Is active, have received status
-                
+                Util.log("Entwerter ", this.address, " OK")
+
             } else {
                 // Have not received status, throw error
                 this.ibisController.throwError("ENTW. " + this.address + " DEFEKT");
+                Util.log("Entwerter ", this.address, " FAIL")
+
             }
             this.ibisController.currentValidator = undefined;
 

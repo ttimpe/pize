@@ -1,6 +1,7 @@
 import { TelegramGenerator } from "../../TelegramGenerator"
 import { IBISController } from "../../controllers/IBISController"
 import { IBISTelegram } from "../../extensions/IBISTelegram"
+import { Util } from "../../util"
 
 class IBISSign {
     address: IBISAddress
@@ -19,10 +20,12 @@ class IBISSign {
         setTimeout(() => {
             if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) >= 1000) {
                 // Is active, have received status
-                
+                Util.log("Anzeige ", this.address, " OK")
             } else {
                 // Have not received status, throw error
                 this.ibisController.throwError("ANZ. " + this.address + " DEFEKT");
+                Util.log("Anzeige ", this.address, " FAIL")
+
             }
             this.ibisController.currentSign = undefined;
 
