@@ -204,8 +204,9 @@ class IBISController {
         this.currentSign = this.signs[0]
         this.currentSign.queryStatus()
         for (var i=1; i<this.signs.length; i++) {
-            setTimeout(() => {
-                this.currentSign = this.signs[i]
+            setTimeout((i) => {
+                var index = i;
+                this.currentSign = this.signs[index]
                 this.currentSign.queryStatus()
             }, 1000 * i);
         }
