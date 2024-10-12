@@ -5,7 +5,7 @@ import { Util } from "../../util";
 
 class IBISValidator {
     address: IBISAddress
-    status: number
+    status?: number
     lastStatusQueriedTime?: Date
     lastStatusReceivedTime?: Date
     ibisController: IBISController
@@ -17,6 +17,7 @@ class IBISValidator {
 
 
     queryStatus() {
+        if (this.status != undefined || this.status == 0) {
         this.lastStatusQueriedTime = new Date()
         this.ibisController.sendTelegram(TelegramGenerator.DS070(this.address))
         setTimeout(() => {
@@ -33,6 +34,7 @@ class IBISValidator {
             this.ibisController.currentValidator = undefined;
 
         }, 1000);
+        }
     }
     onReceiveTelegram(telegram: IBISTelegram) {
         if (telegram.match('g[0-9]')) {

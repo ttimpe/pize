@@ -201,11 +201,13 @@ class IBISController {
     // Status scanning logic
     private queryStatusOfAllSigns() {
         // TODO: Query status of sign, then wait for n seconds, then query next sign
+        
         this.currentSign = this.signs[0]
         this.currentSign.queryStatus()
         for (let i=1; i<this.signs.length; i++) {
             setTimeout(() => {
                 this.currentSign = this.signs[i]
+                
                 this.currentSign.queryStatus()
             }, 1000 * i);
         }
@@ -321,11 +323,13 @@ class IBISController {
 
 
       tick10Seconds() {
+        if (this.deviceConfig.query_device_status) {
         if (this.signs.length > 0) {
         this.queryStatusOfAllSigns()
         }
         if (this.validators.length > 0) {
             this.queryStatusOfAllValidators()
+        }
         }
         // Kursnummer
         this.sendTelegram(TelegramGenerator.DS002(this.kurs))
@@ -343,6 +347,8 @@ class IBISController {
             }
             // Funkkennung
             this.sendTelegram(TelegramGenerator.DS001b(parseInt(this.linie.number), this.kurs))
+        } else {
+            this.sendTelegram(TelegramGenerator.DS001(0))
         }
         if (this.linie != undefined && this.route != undefined) {
             this.sendStopData()

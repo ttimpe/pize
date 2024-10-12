@@ -6,7 +6,7 @@ import { Util } from "../../util"
 class IBISSign {
     address: IBISAddress
     ibisController: IBISController
-    status: number
+    status?: number
     lastStatusQueriedTime?: Date
     lastStatusReceivedTime?: Date
     constructor(ibisController: IBISController, address: IBISAddress) {
@@ -15,6 +15,8 @@ class IBISSign {
     }
     
     queryStatus() {
+        if (this.status != undefined || this.status == 0) {
+
         this.lastStatusQueriedTime = new Date()
         this.ibisController.sendTelegram(TelegramGenerator.DS020(this.address))
         setTimeout(() => {
@@ -31,11 +33,13 @@ class IBISSign {
 
         }, 1000);
     }
+    }
     onReceiveTelegram(telegram: IBISTelegram) {
         if (telegram.match('a[0-9]')) {
             this.lastStatusReceivedTime = new Date();
             // Is status back from sign
             this.status = parseInt(telegram.substring(1, 2));
+            
         }
     }
 }
