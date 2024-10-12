@@ -267,6 +267,11 @@ class IBISTerminal {
         let d = new Date()
         let outputString = d.toLocaleDateString('de', { dateStyle: "short" }) + '   ' + d.toLocaleTimeString('de', { timeStyle: "short" })
         this.setText(0, outputString)
+        setTimeout(() => {
+            if (this.currentDisplayMode == TerminalDisplayMode.DatumUhrzeit) {
+                this.setDisplayMode(TerminalDisplayMode.None)
+            }
+        })
     }
     private onPressBesetzgrad() {
         this.setDisplayMode(TerminalDisplayMode.Besetzung)
@@ -638,7 +643,9 @@ private promptForSpecialCharacter() {
 
     throwError(errorText: string) {
         this.errors.push(errorText)
-        this.setDisplayMode(TerminalDisplayMode.Fehler)
+        if (this.currentDisplayMode != TerminalDisplayMode.Fehler) {
+            this.setDisplayMode(TerminalDisplayMode.Fehler)
+        }
 
     }
     showError() {
