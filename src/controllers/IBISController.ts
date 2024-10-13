@@ -121,9 +121,7 @@ class IBISController {
 
     
         // TODO: wait until mA turns into mQ
-        while (this.aTerminal.isActive == false) {
-        }
-
+   
         this.registerSigns()
         this.registerUestraLVAs()
         this.registerValidators()
