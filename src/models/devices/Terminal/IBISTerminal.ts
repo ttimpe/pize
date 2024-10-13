@@ -104,6 +104,7 @@ class IBISTerminal {
             this.setText(1,'')
         }, 5000);
         */
+       this.setDisplayMode(TerminalDisplayMode.LinieKurs)
     }
     
 
