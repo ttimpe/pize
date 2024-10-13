@@ -323,7 +323,7 @@ class IBISController {
       tick10Seconds() {
         if (this.deviceConfig.query_device_status) {
         if (this.signs.length > 0) {
-        this.queryStatusOfAllSigns()
+            this.queryStatusOfAllSigns()
         }
         if (this.validators.length > 0) {
             this.queryStatusOfAllValidators()
