@@ -38,6 +38,7 @@ class IBISValidator {
     }
     onReceiveTelegram(telegram: IBISTelegram) {
         if (telegram.match('g[0-9]')) {
+            Util.log('Received response from validator', this.address)
             this.lastStatusReceivedTime = new Date();
             // Is status back from sign
             this.status = parseInt(telegram.substring(1, 2));
