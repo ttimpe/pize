@@ -23,7 +23,7 @@ class IBISValidator {
         setTimeout(() => {
             Util.log('Last status received time', this.lastStatusReceivedTime);
             Util.log('Last status queried time', this.lastStatusQueriedTime);
-            if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) >= 5000) {
+            if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) <= 6000) {
                 // Is active, have received status
                 Util.log("Entwerter ", this.address, " OK")
 
@@ -35,7 +35,7 @@ class IBISValidator {
             }
             this.ibisController.currentValidator = undefined;
 
-        }, 5000);
+        }, 6000);
         }
     }
     onReceiveTelegram(telegram: IBISTelegram) {

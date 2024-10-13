@@ -321,14 +321,7 @@ class IBISController {
 
 
       tick10Seconds() {
-        if (this.deviceConfig.query_device_status) {
-        if (this.signs.length > 0) {
-            this.queryStatusOfAllSigns()
-        }
-        if (this.validators.length > 0) {
-            this.queryStatusOfAllValidators()
-        }
-        }
+     
         // Kursnummer
         this.sendTelegram(TelegramGenerator.DS002(this.kurs))
           // Liniennummer
@@ -376,6 +369,14 @@ class IBISController {
             // Erweitert für KVRG
             this.sendTelegram(TelegramGenerator.DS004a(2000));
         }
+        if (this.deviceConfig.query_device_status) {
+            if (this.signs.length > 0) {
+                this.queryStatusOfAllSigns()
+            }
+            if (this.validators.length > 0) {
+                this.queryStatusOfAllValidators()
+            }
+            }
       
       }
 
