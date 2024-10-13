@@ -9,7 +9,7 @@ export class Util {
             readline.cursorTo(process.stdout, 0, process.stdout.rows - 2);
           */
             // Log the message above the prompt
-            console.log(...args);
+            console.log(new Date().toISOString(), ': ', ...args);
           /*
             // Move the cursor back to the prompt line
             readline.cursorTo(process.stdout, 0, process.stdout.rows - 1);
