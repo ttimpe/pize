@@ -651,7 +651,7 @@ private promptForSpecialCharacter() {
     showError() {
         this.mode = IBISTerminalMode.BLINKING_FUNCTION;
         this.setText(0, this.errors[this.errors.length - 1])
-        this.playSound(2);
+        this.playSound(4);
     }
 
     playSound(soundNumber: number) {
