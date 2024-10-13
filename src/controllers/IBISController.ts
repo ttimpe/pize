@@ -274,11 +274,11 @@ class IBISController {
 
         if (this.currentSign) {
             // Currently have a sign active, if this is a reply, handle it
-            this.currentSign.onReceiveTelegram(telegram)
+            this.currentSign.onReceiveTelegram(telegram.substring(1))
         }
         if (this.currentValidator) {
             // Currently have a validator active, if this is a reply, handle it
-            this.currentValidator.onReceiveTelegram(telegram)
+            this.currentValidator.onReceiveTelegram(telegram.substring(1))
         }
      
         // Update status values for devices
