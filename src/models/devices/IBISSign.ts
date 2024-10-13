@@ -25,7 +25,7 @@ class IBISSign {
                 Util.log("Anzeige ", this.address, " OK")
             } else {
                 // Have not received status, throw error
-                this.ibisController.throwError("ANZ. " + this.address + " DEFEKT");
+                this.ibisController.throwError("ANZEIGE.DEF.1:" + this.address.toString().padStart(2, '0'));
                 Util.log("Anzeige ", this.address, " FAIL")
 
             }
