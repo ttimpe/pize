@@ -207,7 +207,7 @@ class IBISController {
                 this.currentSign = this.signs[i]
                 
                 this.currentSign.queryStatus()
-            }, 1000 * i);
+            }, 5000 * i);
         }
     }
     private queryStatusOfAllValidators() {
@@ -218,7 +218,7 @@ class IBISController {
             setTimeout(() => {
                 this.currentValidator = this.validators[i]
                 this.currentValidator.queryStatus()
-            }, 1000 * i);
+            }, 5000 * i);
         }
     }
 
