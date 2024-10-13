@@ -15,7 +15,7 @@ class IBISSign {
     }
     
     queryStatus() {
-        if (this.status == undefined || this.status == 0) {
+        if (this.status === undefined || this.status == 0) {
 
         this.lastStatusQueriedTime = new Date()
         this.ibisController.sendTelegram(TelegramGenerator.DS020(this.address))
