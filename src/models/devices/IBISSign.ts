@@ -27,7 +27,7 @@ class IBISSign {
                 // Have not received status, throw error
                 this.ibisController.throwError("ANZEIGE.DEF.1:" + this.address.toString().padStart(2, '0'));
                 Util.log("Anzeige ", this.address, " FAIL")
-
+                this.status = null;
             }
             this.ibisController.currentSign = undefined;
 
