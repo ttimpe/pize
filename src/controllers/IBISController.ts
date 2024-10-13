@@ -304,7 +304,7 @@ class IBISController {
 
     private actuallySendTelegram(telegram: IBISTelegram) {
         this.serialPort.write(telegram)
-     //   Util.log('out > ' + this.sanatizeOutputForLog(telegram))
+        Util.log('out > ' + this.sanatizeOutputForLog(telegram))
     }
     
     // IBIS Telegrammsignierung
