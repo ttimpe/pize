@@ -6,6 +6,7 @@ import { StopDistance } from "../models/database/StopDistance";
 import { Stop } from "../models/database/Stop";
 import { DeviceConfig } from '../models/devices/DeviceConfig';
 import { Util } from "../util";
+import { TelegramGenerator } from "../TelegramGenerator";
 
 class LocationController {
     private latitude: number
@@ -16,6 +17,7 @@ class LocationController {
     private FANGRADIUS = 10;
     private ibisController: IBISController
 
+
     possibleNextStopDistances: StopDistance[] = []
     private deviceConfig: DeviceConfig = require('../device_config.json')
 
@@ -23,6 +25,7 @@ class LocationController {
         this.ibisController = ibisController
         
     }
+
     // Interrupt wenn Wegimpuls
     wiInterrupt() {
         this.impulsesSinceReset++;
@@ -81,6 +84,9 @@ class LocationController {
         }})
         Util.log('possible next stops', possibleStops)
         return possibleStops;
+    }
+
+    queryIRIS() {
     }
 }
 export { LocationController }

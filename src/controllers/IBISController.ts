@@ -50,14 +50,30 @@ class IBISController {
     public currentSign?: IBISSign
     public currentValidator?: IBISValidator
     
+    // HAG
+
+    private HAGlastStatusQueriedTime?: Date
+    private HAGlastStatusReceivedTime?: Date
+    private HAGstatus?: number
+
 
     get upcomingStop(): RouteStop {
         if (this.route && this.route.stops.length > 0) {
-        return this.route.stops[this.stopIndex]
+            return this.route.stops[this.stopIndex]
         } else {
             return null
         }
     }
+
+    get fahrtrichtung(): string {
+        if (this.aTerminal && this.aTerminal.isActive) {
+            return 'A';
+        }
+        if (this.bTerminal && this.bTerminal.isActive) {
+            return 'B';
+        }
+    }
+
     public route?: Route
     public ziel?: Destination
     public stopIndex: number = 0
@@ -195,6 +211,23 @@ class IBISController {
         }
     }
 
+    private queryHAG() {
+        if (this.HAGstatus === undefined || this.HAGstatus == 0) {
+            this.sendTelegram(TelegramGenerator.DS030())
+            setTimeout(() => {
+                if (this.HAGlastStatusReceivedTime != undefined && (this.HAGlastStatusReceivedTime.getTime() - this.HAGlastStatusQueriedTime.getTime()) <= 6000) {
+                    // Is active, have received status
+                    Util.log("HAG OK")
+                } else {
+                    // Have not received status, throw error
+                    this.throwError("H.ANSAG DEF!");
+                    Util.log("HAG FAIL")
+                    this.HAGstatus = null;
+                }
+            }, 6000);
+        }
+    }
+
    
     // Status scanning logic
     private queryStatusOfAllSigns() {
@@ -205,7 +238,6 @@ class IBISController {
         for (let i=1; i<this.signs.length; i++) {
             setTimeout(() => {
                 this.currentSign = this.signs[i]
-                
                 this.currentSign.queryStatus()
             }, 5000 * i);
         }
@@ -279,6 +311,11 @@ class IBISController {
             this.currentValidator.onReceiveTelegram(telegram.substring(1))
         }
      
+        if (telegram.substring(1).match("h[0-9]")) {
+            this.HAGlastStatusReceivedTime = new Date()
+            this.HAGstatus = parseInt(telegram.substring(2))
+        }
+
         // Update status values for devices
         // Throw errors for missing devices
     }
@@ -377,7 +414,9 @@ class IBISController {
                 this.queryStatusOfAllValidators()
             }
             }
-      
+            if (this.deviceConfig.external_announcements) {
+                this.queryHAG();
+            }
       }
 
       tick30Seconds() {

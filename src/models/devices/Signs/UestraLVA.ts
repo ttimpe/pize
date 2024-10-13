@@ -56,7 +56,7 @@ class UestraLVA extends IBISSign {
         telegram = telegram.replaceAll("ß", "\x02\x3f")
         telegram = telegram.replaceAll("Ä", "\x02\x24")
         telegram = telegram.replaceAll("Ö", "\x02\x36")
-        telegram = telegram.replaceAll("Ü", "\x02\x03")
+        telegram = telegram.replaceAll("Ü", "\x06\x02\\\x06")
         telegram = telegram.replaceAll("ä", "\x02\x44")
         telegram = telegram.replaceAll("ö", "\x02\x56")
         telegram = telegram.replaceAll("ü", "\x02\x5c")

@@ -519,6 +519,27 @@ class TelegramGenerator {
 
     // DS060 - Ortung - Status
 
+    static DS060(richtung: string): IBISTelegram {
+        return 'o' + richtung + 'S';
+    }
+    // DS061 - Ortung Datenabfrage
+    static DS061(richtung: string): IBISTelegram {
+        return 'o' + richtung + 'D';
+    }
+
+    // DS062- Ortung Zielrichtung
+    static DS062(richtung: string, zielrichtung: string): IBISTelegram {
+        return 'o' + richtung + 'R' + zielrichtung;
+    }
+    
+    // DS063 - Ortung einschalten
+    static DS063(richtung: string): IBISTelegram {
+        return 'o' + richtung + 'E';
+    } 
+
+    static DS064(richtug: string): IBISTelegram {
+        return 'o' + richtug + 'A';
+    }
 
 // TODO: Check status replies
    
