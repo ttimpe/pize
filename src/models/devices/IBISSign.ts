@@ -20,7 +20,7 @@ class IBISSign {
         this.lastStatusQueriedTime = new Date()
         this.ibisController.sendTelegram(TelegramGenerator.DS020(this.address))
         setTimeout(() => {
-            if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) >= 1000) {
+            if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) <= 6000) {
                 // Is active, have received status
                 Util.log("Anzeige ", this.address, " OK")
             } else {
@@ -31,7 +31,7 @@ class IBISSign {
             }
             this.ibisController.currentSign = undefined;
 
-        }, 1000);
+        }, 6000);
     }
     }
     onReceiveTelegram(telegram: IBISTelegram) {
