@@ -21,8 +21,8 @@ class IBISValidator {
         this.lastStatusQueriedTime = new Date()
         this.ibisController.sendTelegram(TelegramGenerator.DS070(this.address))
         setTimeout(() => {
-            Util.log('Last status received time', this.lastStatusReceivedTime.getTime());
-            Util.log('Last status queried time', this.lastStatusQueriedTime.getTime());
+            Util.log('Last status received time', this.lastStatusReceivedTime);
+            Util.log('Last status queried time', this.lastStatusQueriedTime);
             if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) >= 2000) {
                 // Is active, have received status
                 Util.log("Entwerter ", this.address, " OK")
