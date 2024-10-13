@@ -35,7 +35,7 @@ class IBISValidator {
             }
             this.ibisController.currentValidator = undefined;
 
-        }, 1000);
+        }, 2000);
         }
     }
     onReceiveTelegram(telegram: IBISTelegram) {

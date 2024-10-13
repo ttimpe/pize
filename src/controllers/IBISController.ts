@@ -121,7 +121,7 @@ class IBISController {
 
     
         // TODO: wait until mA turns into mQ
-        
+        while (this.aTerminal.isActive == false) {
 
 
         this.registerSigns()
@@ -154,7 +154,7 @@ class IBISController {
             this.actuallySendTelegram(telegram)
         }
        }, this.IBIS_QUEUE_SEND_INTERVAL_MS)
-
+        }
        parser.on('data', (data) => {
         this.onReceiveTelegram(data)
        })
