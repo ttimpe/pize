@@ -15,6 +15,7 @@ import { Util } from '../../../util';
 class IBISTerminal {
     private isPrimary: boolean = true
     private lines: string[] = ['', '']
+    private previousDisplayMode = TerminalDisplayMode.None;
     mode: IBISTerminalMode = IBISTerminalMode.FUNCTION
     // TEIN
     public isActive: boolean = false
@@ -201,7 +202,7 @@ class IBISTerminal {
             if (this.errors.length > 0) {
                 this.showError();
             } else {
-                this.setDisplayMode(TerminalDisplayMode.None)
+                this.setDisplayMode(this.previousDisplayMode)
 
             }
         } else {
@@ -487,6 +488,7 @@ skipStop() {
 }
 
 private setDisplayMode(displayMode: TerminalDisplayMode) {
+    this.previousDisplayMode = this.currentDisplayMode
     this.currentDisplayMode = displayMode
     switch (displayMode) {
         case TerminalDisplayMode.Besetzung:
@@ -651,8 +653,8 @@ private promptForSpecialCharacter() {
     }
     showError() {
         this.mode = IBISTerminalMode.BLINKING_FUNCTION;
-        this.setText(0, this.errors[this.errors.length - 1])
         this.playSound(4);
+        this.setText(0, this.errors[this.errors.length - 1])
     }
 
     playSound(soundNumber: number) {
