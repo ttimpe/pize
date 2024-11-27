@@ -20,6 +20,7 @@ import { StopInformation } from '../models/database/StopInformation.js';
 import { Announcement } from '../models/database/Announcement';
 import { Util } from '../util';
 import { LocationController } from './LocationController';
+import { Trip } from '../models/database/Trip';
 class IBISController {
     private IBIS_QUEUE_SEND_INTERVAL_MS = 20
     private IBIS_TERMINAL_RECEIVE_INTERVAL = 1
@@ -535,6 +536,18 @@ class IBISController {
             this.bTerminal.onSetKurs()
         }
         // If we also have a line, let's go find a valid schedule
+
+        if (this.linie && this.kurs > 0) {
+            // Find schedule/trip at current time
+            /*
+            await Trip.findOne( {
+                where: {
+                    // aktuelle Zeit in Sekunden nach 0:00 + aktueller Tagtyp von Firmenkalender
+
+                }
+            })
+            */
+        }
     }
 
     skipStop() {

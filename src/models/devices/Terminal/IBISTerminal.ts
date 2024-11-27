@@ -351,17 +351,17 @@ class IBISTerminal {
        
 
         let linie = '   '
-        let kurs = this.ibisController.kurs.toString().padStart(2, '0')
+        let kurs = this.ibisController.kurs.toString().padStart(2, ' ')
         let ziel = '   '
         let hst = '   '
         let richtung = 'Z'
         let abweichung = '+0.0'
 
         if (this.ibisController.linie) {
-            linie = this.ibisController.linie.number.padStart(3, '0')
+            linie = this.ibisController.linie.number.padStart(3, ' ')
         }
         if (this.ibisController.ziel) {
-            ziel = this.ibisController.ziel.number.toString().padStart(3, '0')
+            ziel = this.ibisController.ziel.number.toString().padStart(3, ' ')
         }
         if (this.ibisController.route && this.ibisController.route.stops[this.ibisController.stopIndex] != undefined) {
             hst = this.ibisController.route.stops[this.ibisController.stopIndex].stop.number.toString().padStart(3, '0')
@@ -403,7 +403,7 @@ private setHaltestelle(number: string) {
 
 promptForLinieKurs() {
     let action = this.getAction(IBISTerminalKeyAction.LINIE_KURS)
-    this.mode = IBISTerminalMode.DIGITS
+    this.mode = IBISTerminalMode.BLINKING_DIGITS
     let outputText = action.textLine1
     if (this.ibisController.linie) {
         outputText = action.textLine1.split(':')[0] + ":" + this.ibisController.linie.number.padStart(3, '0') + this.ibisController.kurs.toString().padStart(2, '0');
