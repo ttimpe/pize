@@ -1,5 +1,5 @@
 import { Column, DataType, HasMany, Model, PrimaryKey, Table } from "sequelize-typescript"
-import { Trip } from "./Trip"
+//import { Trip } from "./Trip"
 @Table({ 
     timestamps: false,
     tableName: 'schedules'
@@ -18,6 +18,6 @@ export class VehicleSchedule extends Model {
     departureTime?: number
     @Column(DataType.INTEGER)
     arrivalTime?: number
-    @HasMany(() => Trip)
-    trips: Trip[] = []
+   /* @HasMany(() => Trip)
+    trips: Trip[] = []*/
 }

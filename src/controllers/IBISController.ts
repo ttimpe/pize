@@ -21,6 +21,8 @@ import { Announcement } from '../models/database/Announcement';
 import { Util } from '../util';
 import { LocationController } from './LocationController';
 import { Trip } from '../models/database/Trip';
+
+
 class IBISController {
     private IBIS_QUEUE_SEND_INTERVAL_MS = 20
     private IBIS_TERMINAL_RECEIVE_INTERVAL = 1
@@ -42,7 +44,7 @@ class IBISController {
     private queueSendTimer: any
     private timer: any
     private deviceConfig: DeviceConfig = require('../../device_config.json')
-    private audioController: AudioController = new AudioController()
+    public audioController: AudioController
     public locationController: LocationController
     public linie?: Line
     public kurs: number = 0

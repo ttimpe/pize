@@ -22,24 +22,12 @@ import { LocationController } from './controllers/LocationController';
 import { StopDistance } from './models/database/StopDistance';
 import express, { Express, Request, Response } from "express";
 import { Util } from './util';
+import { AudioController } from './controllers/AudioController';
 
 
 let ibisController: IBISController
 let portString: string
 let rl: any
-
-
-/*
-async function askForInput() {
-  readline.cursorTo(process.stdout, 0, process.stdout.rows - 1);
-  readline.clearLine(process.stdout, 0);
-  readline.clearScreenDown(process.stdout);
-  for await (const line of rl) {
-    console.log("SENDING", line)
-    ibisController.sendTelegram(line);
-
-  }
-}*/
 
 
 
@@ -83,6 +71,9 @@ function main() {
   app.listen(2000, () => {
     Util.log('Listening for clients on port 2000');
   })
+
+  const audioController = new AudioController()
+
   ibisController = new IBISController(portString, 10)
   if (deviceConfig.MFD == true) {
     let mfdController = new MFDController(ibisController, app);

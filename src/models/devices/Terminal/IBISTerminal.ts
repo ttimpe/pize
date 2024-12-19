@@ -1,6 +1,6 @@
+import { TerminalDisplayMode } from './../../../enums/IBISTerminalDisplayMode';
 import { Destination } from './../../database/Destination';
 import { IBISTerminalKey } from '../../../enums/IBISTerminalKey';
-import { TerminalDisplayMode } from '../../../enums/IBISTerminalDisplayMode';
 import { IBISTerminalKeyMapping } from './IBISTerminalKeyMapping';
 import { IBISTerminalKeyAction } from './IBISTerminalKeyAction';
 
@@ -11,6 +11,7 @@ import {IBISTerminalMode } from './IBISTerminalMode';
 import {IBISTerminalConfiguration } from './IBISTerminalConfiguration';
 import {IBISTelegram } from '../../../extensions/IBISTelegram';
 import { Util } from '../../../util';
+import { AudioController } from '../../../controllers/AudioController';
 
 class IBISTerminal {
     private isPrimary: boolean = true
@@ -244,7 +245,13 @@ class IBISTerminal {
         Util.log('Repeat playback of current stop')
     }
     private onPressAnsageInnen() {
-        this.setDisplayMode(TerminalDisplayMode.AnsageInnen)
+        if (this.currentDisplayMode != TerminalDisplayMode.AnsageInnen) {
+            this.setDisplayMode(TerminalDisplayMode.AnsageInnen)
+            this.ibisController.audioController.setAnsageInnen();
+        } else {
+            this.setDisplayMode(TerminalDisplayMode.None)
+        }
+       
     }
     private onPressSprechwunsch() {
         Util.log('Method not implemented.');
@@ -465,10 +472,20 @@ setAnsageStumm() {
 
 }
 setAnsageInnen() {
-
+    if (this.currentDisplayMode != TerminalDisplayMode.AnsageAussen) {
+        this.setDisplayMode(TerminalDisplayMode.AnsageAussen)
+        this.ibisController.audioController.setAnsageAussen();
+    } else {
+        this.setDisplayMode(TerminalDisplayMode.None)
+    }
 }
 setAnsageAussen() {
-
+    if (this.currentDisplayMode != TerminalDisplayMode.AnsageInnen) {
+        this.setDisplayMode(TerminalDisplayMode.AnsageInnen)
+        this.ibisController.audioController.setAnsageInnen();
+    } else {
+        this.setDisplayMode(TerminalDisplayMode.None)
+    }
 }
 
 setLStAnFG() {
