@@ -1,5 +1,5 @@
 diff --git a/node_modules/node-libgpiod/build/Makefile b/node_modules/node-libgpiod/build/Makefile
-index e87124e..9ebdde2 100644
+index fcc785b..8260990 100644
 --- a/node_modules/node-libgpiod/build/Makefile
 +++ b/node_modules/node-libgpiod/build/Makefile
 @@ -47,7 +47,6 @@ CXXFLAGS.target ?= $(CPPFLAGS) $(CXXFLAGS)
@@ -32,15 +32,15 @@ index e87124e..9ebdde2 100644
  endif
  
  quiet_cmd_regen_makefile = ACTION Regenerating $@
--cmd_regen_makefile = cd $(srcdir); /usr/local/lib/node_modules/npm/node_modules/node-gyp/gyp/gyp_main.py -fmake --ignore-environment "-Dlibrary=shared_library" "-Dvisibility=default" "-Dnode_root_dir=/Users/tobias/Library/Caches/node-gyp/21.7.3" "-Dnode_gyp_dir=/usr/local/lib/node_modules/npm/node_modules/node-gyp" "-Dnode_lib_file=/Users/tobias/Library/Caches/node-gyp/21.7.3/<(target_arch)/node.lib" "-Dmodule_root_dir=/private/var/folders/65/0pkqm_255978gkqr2qdf3cj80000gn/T/tmp-39249nm9YSevzOxtH/node_modules/node-libgpiod" "-Dnode_engine=v8" "--depth=." "-Goutput_dir=." "--generator-output=build" -I/private/var/folders/65/0pkqm_255978gkqr2qdf3cj80000gn/T/tmp-39249nm9YSevzOxtH/node_modules/node-libgpiod/build/config.gypi -I/usr/local/lib/node_modules/npm/node_modules/node-gyp/addon.gypi -I/Users/tobias/Library/Caches/node-gyp/21.7.3/include/node/common.gypi "--toplevel-dir=." binding.gyp
--Makefile: $(srcdir)/binding.gyp $(srcdir)/../../../../../../../../../usr/local/lib/node_modules/npm/node_modules/node-gyp/addon.gypi $(srcdir)/../../../../../../../../../Users/tobias/Library/Caches/node-gyp/21.7.3/include/node/common.gypi $(srcdir)/build/config.gypi
+-cmd_regen_makefile = cd $(srcdir); /usr/local/lib/node_modules/npm/node_modules/node-gyp/gyp/gyp_main.py -fmake --ignore-environment "-Dlibrary=shared_library" "-Dvisibility=default" "-Dnode_root_dir=/Users/tobias/Library/Caches/node-gyp/21.7.3" "-Dnode_gyp_dir=/usr/local/lib/node_modules/npm/node_modules/node-gyp" "-Dnode_lib_file=/Users/tobias/Library/Caches/node-gyp/21.7.3/<(target_arch)/node.lib" "-Dmodule_root_dir=/private/var/folders/65/0pkqm_255978gkqr2qdf3cj80000gn/T/tmp-52421wRQaCQ270nGE/node_modules/node-libgpiod" "-Dnode_engine=v8" "--depth=." "-Goutput_dir=." "--generator-output=build" -I/private/var/folders/65/0pkqm_255978gkqr2qdf3cj80000gn/T/tmp-52421wRQaCQ270nGE/node_modules/node-libgpiod/build/config.gypi -I/usr/local/lib/node_modules/npm/node_modules/node-gyp/addon.gypi -I/Users/tobias/Library/Caches/node-gyp/21.7.3/include/node/common.gypi "--toplevel-dir=." binding.gyp
+-Makefile: $(srcdir)/../../../../../../../../../usr/local/lib/node_modules/npm/node_modules/node-gyp/addon.gypi $(srcdir)/../../../../../../../../../Users/tobias/Library/Caches/node-gyp/21.7.3/include/node/common.gypi $(srcdir)/build/config.gypi $(srcdir)/binding.gyp
 +cmd_regen_makefile = cd $(srcdir); /Users/tobias/Developer/ibisplusplus/node_modules/node-gyp/gyp/gyp_main.py -fmake --ignore-environment "-Dlibrary=shared_library" "-Dvisibility=default" "-Dnode_root_dir=/Users/tobias/Library/Caches/node-gyp/21.7.3" "-Dnode_gyp_dir=/Users/tobias/Developer/ibisplusplus/node_modules/node-gyp" "-Dnode_lib_file=/Users/tobias/Library/Caches/node-gyp/21.7.3/<(target_arch)/node.lib" "-Dmodule_root_dir=/Users/tobias/Developer/ibisplusplus/node_modules/node-libgpiod" "-Dnode_engine=v8" "--depth=." "-Goutput_dir=." "--generator-output=build" -I/Users/tobias/Developer/ibisplusplus/node_modules/node-libgpiod/build/config.gypi -I/Users/tobias/Developer/ibisplusplus/node_modules/node-gyp/addon.gypi -I/Users/tobias/Library/Caches/node-gyp/21.7.3/include/node/common.gypi "--toplevel-dir=." binding.gyp
-+Makefile: $(srcdir)/../node-gyp/addon.gypi $(srcdir)/binding.gyp $(srcdir)/../../../../Library/Caches/node-gyp/21.7.3/include/node/common.gypi $(srcdir)/build/config.gypi
++Makefile: $(srcdir)/build/config.gypi $(srcdir)/../../../../Library/Caches/node-gyp/21.7.3/include/node/common.gypi $(srcdir)/binding.gyp $(srcdir)/../node-gyp/addon.gypi
  	$(call do_cmd,regen_makefile)
  
  # "all" is a concatenation of the "all" targets from all the included
 diff --git a/node_modules/node-libgpiod/build/config.gypi b/node_modules/node-libgpiod/build/config.gypi
-index 775a431..19a00a0 100644
+index cb09138..19a00a0 100644
 --- a/node_modules/node-libgpiod/build/config.gypi
 +++ b/node_modules/node-libgpiod/build/config.gypi
 @@ -409,15 +409,13 @@
@@ -50,7 +50,7 @@ index 775a431..19a00a0 100644
 -    "python": "/usr/local/opt/python@3.11/bin/python3.11",
      "standalone_static_library": 1,
      "global_prefix": "/usr/local",
--    "local_prefix": "/private/var/folders/65/0pkqm_255978gkqr2qdf3cj80000gn/T/tmp-39249nm9YSevzOxtH",
+-    "local_prefix": "/private/var/folders/65/0pkqm_255978gkqr2qdf3cj80000gn/T/tmp-52421wRQaCQ270nGE",
 +    "local_prefix": "/Users/tobias/Developer/ibisplusplus",
      "globalconfig": "/usr/local/etc/npmrc",
      "userconfig": "/Users/tobias/.npmrc",
