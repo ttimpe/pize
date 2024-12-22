@@ -34,7 +34,8 @@ let rl: any
 
 
 function main() {
-
+  let segfaultHandler = require('node-segfault-handler');
+  segfaultHandler.registerHandler();
   if (process.argv.length === 3) {
 
     portString = process.argv[2]

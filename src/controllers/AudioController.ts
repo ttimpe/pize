@@ -15,6 +15,7 @@ class AudioController {
     private ansageAussenLine: ChipLine
 
     constructor() {
+        if (this.deviceConfig.use_gpio == true) {
         this.chip = new Chip(0)
         this.ansageInnenLine = new ChipLine(this.chip, this.deviceConfig.GPIO_PINOUT.FLE);
         this.ansageAussenLine = new ChipLine(this.chip, this.deviceConfig.GPIO_PINOUT.PLE);
@@ -23,6 +24,7 @@ class AudioController {
 
         this.ansageInnenLine.requestOutputMode()
         this.ansageAussenLine.requestOutputMode()
+        }
 
     }
 
@@ -78,12 +80,16 @@ class AudioController {
     }
 
     async setAnsageInnen() {
+        if (this.deviceConfig.use_gpio == true) {
         this.ansageAussenLine.setValue(0)
         this.ansageInnenLine.setValue(1)
+        }
     }
     async setAnsageAussen() {
+        if (this.deviceConfig.use_gpio == true) {
         this.ansageInnenLine.setValue(0)
         this.ansageAussenLine.setValue(1)
+        }
     }
     
     
