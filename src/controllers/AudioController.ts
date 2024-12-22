@@ -9,7 +9,7 @@ class AudioController {
 
     announcementsMuted: boolean = false;
     lastAnnouncement?: Announcement
-    private deviceConfig: DeviceConfig = require('../device_config.json')
+    private deviceConfig: DeviceConfig = require('../../device_config.json')
     private chip: Chip
     private ansageInnenLine: ChipLine
     private ansageAussenLine: ChipLine
