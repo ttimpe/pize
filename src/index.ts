@@ -76,6 +76,7 @@ function main() {
   const audioController = new AudioController()
 
   ibisController = new IBISController(portString, 10)
+  ibisController.audioController = audioController
   if (deviceConfig.MFD == true) {
     let mfdController = new MFDController(ibisController, app);
   }
