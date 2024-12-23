@@ -165,7 +165,7 @@ class IBISTerminal {
                                 this.onPressAnsageStumm()
                                 break
                             case IBISTerminalKeyAction.ANSAGE_AUSSEN:
-                                this.onPressAnsageInnen()
+                                this.onPressAnsageAussen()
                                 break
                             case IBISTerminalKeyAction.LST_AN_FG:
                                 this.onPressLstAnFG()
