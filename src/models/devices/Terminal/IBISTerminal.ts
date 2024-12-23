@@ -253,6 +253,15 @@ class IBISTerminal {
         }
        
     }
+    private onPressAnsageAussen() {
+        if (this.currentDisplayMode != TerminalDisplayMode.AnsageAussen) {
+            this.setDisplayMode(TerminalDisplayMode.AnsageAussen)
+            this.ibisController.audioController.setAnsageAussen();
+        } else {
+            this.setDisplayMode(TerminalDisplayMode.None)
+        }
+       
+    }
     private onPressSprechwunsch() {
         Util.log('Method not implemented.');
     }
@@ -471,21 +480,17 @@ setWeicheRechts() {
 setAnsageStumm() {
 
 }
-setAnsageInnen() {
-    if (this.currentDisplayMode != TerminalDisplayMode.AnsageAussen) {
-        this.setDisplayMode(TerminalDisplayMode.AnsageAussen)
-        this.ibisController.audioController.setAnsageAussen();
-    } else {
-        this.setDisplayMode(TerminalDisplayMode.None)
-    }
-}
 setAnsageAussen() {
-    if (this.currentDisplayMode != TerminalDisplayMode.AnsageInnen) {
-        this.setDisplayMode(TerminalDisplayMode.AnsageInnen)
-        this.ibisController.audioController.setAnsageInnen();
-    } else {
-        this.setDisplayMode(TerminalDisplayMode.None)
-    }
+    let action = this.getAction(IBISTerminalKeyAction.ANSAGE_AUSSEN)
+    this.mode = IBISTerminalMode.FUNCTION
+    let outputText = action.textLine1
+    this.setText(0, outputText)
+}
+setAnsageInnen() {
+    let action = this.getAction(IBISTerminalKeyAction.ANSAGE_INNEN)
+    this.mode = IBISTerminalMode.FUNCTION
+    let outputText = action.textLine1
+    this.setText(0, outputText)
 }
 
 setLStAnFG() {
