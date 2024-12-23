@@ -249,6 +249,7 @@ class IBISTerminal {
             this.setDisplayMode(TerminalDisplayMode.AnsageInnen)
             this.ibisController.audioController.setAnsageInnen();
         } else {
+            this.ibisController.audioController.unsetAnsage();
             this.setDisplayMode(TerminalDisplayMode.None)
         }
        
@@ -258,6 +259,7 @@ class IBISTerminal {
             this.setDisplayMode(TerminalDisplayMode.AnsageAussen)
             this.ibisController.audioController.setAnsageAussen();
         } else {
+            this.ibisController.audioController.unsetAnsage();
             this.setDisplayMode(TerminalDisplayMode.None)
         }
        

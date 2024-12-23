@@ -20,10 +20,10 @@ class AudioController {
         this.ansageInnenLine = new ChipLine(this.chip, this.deviceConfig.GPIO_PINOUT.FLE);
         this.ansageAussenLine = new ChipLine(this.chip, this.deviceConfig.GPIO_PINOUT.PLE);
 
-        // Set initial state for pins
+        // Set initial state for pins, active LOW
 
-        this.ansageInnenLine.requestOutputMode()
-        this.ansageAussenLine.requestOutputMode()
+        this.ansageInnenLine.requestOutputMode(1)
+        this.ansageAussenLine.requestOutputMode(1)
         }
 
     }
@@ -79,17 +79,25 @@ class AudioController {
         }
     }
 
+
+    // Aktiv bei setzen auf GND
     async setAnsageInnen() {
         if (this.deviceConfig.use_gpio == true) {
-        this.ansageAussenLine.setValue(0)
-        this.ansageInnenLine.setValue(1)
+        this.ansageAussenLine.setValue(1)
+        this.ansageInnenLine.setValue(0)
         }
     }
     async setAnsageAussen() {
         if (this.deviceConfig.use_gpio == true) {
-        this.ansageInnenLine.setValue(0)
-        this.ansageAussenLine.setValue(1)
+        this.ansageInnenLine.setValue(1)
+        this.ansageAussenLine.setValue(0)
         }
+    }
+    async unsetAnsage() {
+        if (this.deviceConfig.use_gpio == true) {
+            this.ansageInnenLine.setValue(1)
+            this.ansageAussenLine.setValue(1)
+        } 
     }
     
     
