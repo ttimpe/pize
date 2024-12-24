@@ -104,6 +104,12 @@ function main() {
     res.json({ "counter": locationController.impulsesSinceReset })
   })
 
+
+  app.post('/diag/sendTelegram', (req: Request, res: Response) => {
+    const telegram = req.body.telegram;
+    ibisController.sendTelegram((telegram as IBISTelegram))
+    res.send('sent telegram: ' + telegram);
+  })
   
 
   } else {
