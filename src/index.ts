@@ -61,7 +61,6 @@ function main() {
     SpecialCharacter,
     StopDistance
   ])
-  sequelize.sync();
   // Init terminal(s)
   
   const deviceConfig: DeviceConfig = require('../device_config.json')
@@ -69,9 +68,18 @@ function main() {
   let app = express()
 
   app.use(cors());
-  app.listen(2000, () => {
-    Util.log('Listening for clients on port 2000');
-  })
+
+  (async () => {
+    try {
+      await sequelize.sync(); // Wait for the database sync
+      app.listen(2000, () => {
+        Util.log('Listening for clients on port 2000');
+      });
+    } catch (error) {
+      console.error("Initialization failed:", error);
+    }
+  })();
+  
 
   const audioController = new AudioController()
 
