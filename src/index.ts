@@ -23,7 +23,7 @@ import { StopDistance } from './models/database/StopDistance';
 import express, { Express, Request, Response } from "express";
 import { Util } from './util';
 import { AudioController } from './controllers/AudioController';
-
+import bodyParser, { BodyParser } from 'body-parser'
 
 let ibisController: IBISController
 let portString: string
@@ -68,7 +68,10 @@ function main() {
   let app = express()
 
   app.use(cors());
-
+  app.use( bodyParser.json() );       // to support JSON-encoded bodies
+  app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+    extended: true
+  })); 
   (async () => {
     try {
       await sequelize.sync(); // Wait for the database sync
@@ -115,8 +118,9 @@ function main() {
 
   app.post('/diag/sendTelegram', (req: Request, res: Response) => {
     const telegram = req.body.telegram;
-    ibisController.sendTelegram((telegram as IBISTelegram))
     res.send('sent telegram: ' + telegram);
+
+    ibisController.sendTelegram((telegram as IBISTelegram))
   })
   
 
