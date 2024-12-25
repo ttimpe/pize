@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        #events {
+            width: 50vw;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        #events_header {
+            display: flex;
+            background-color: #f8f8f8;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            border-bottom: 1px solid #ccc;
+        }
+        #events_header div {
+            flex: 1;
+            padding: 10px;
+            font-weight: bold;
+            text-align: left;
+        }
+        #events_body {
+            overflow-y: auto;
+            max-height: 60vh;
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .event_row {
+            display: flex;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        .event_row div {
+            flex: 1;
+            text-align: left;
+        }
+        #controls {
+            margin-top: 20px;
+            gap: 10px;
+            align-items: center;
+        }
+        select, button, input {
+            padding: 10px;
+            font-size: 16px;
+        }
+        .channel-wbsd {
+            background: white;
+        }
+        .channel-wbed {
+            background: yellow;
+        }
+        
+    </style>
+</head>
+<body>
+    <h1>Event Viewer</h1>
+    <div id="events">
+        <div id="events_header">
+            <div>Zeit</div>
+            <div>Kanal</div>
+            <div>Telegramm</div>
+        </div>
+        <div id="events_body">
+            <!-- Event rows will go here -->
+        </div>
+    </div>
+    <div id="controls">
+        <select id="groupSelector">
+            <option value="WBSD">WBSD</option>
+            <option value="WBED">WBED</option>
+        </select>
+        <input type="text" id="messageInput" placeholder="Type a message" />
+        <button id="sendButton">Send</button>
+    </div>
+
+    <script>
+        const eventsDiv = document.getElementById('events_body');
+        const groupSelector = document.getElementById('groupSelector');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        const websocket = new WebSocket(`ws://${window.location.hostname}:1815`);
+
+        websocket.onopen = () => {
+           // logEvent('Connected to WebSocket');
+        };
+
+        websocket.onmessage = (event) => {
+            logEvent(`${event.data}`);
+        };
+
+        websocket.onclose = () => {
+        };
+
+        websocket.onerror = (error) => {
+        };
+
+        sendButton.addEventListener('click', () => {
+            const group = groupSelector.value;
+            const message = messageInput.value;
+            if (message.trim() === '') {
+                return;
+            }
+
+            const payload = JSON.stringify({ 'channel': group, 'data': message });
+            websocket.send(payload);
+            // logEvent(`Sent to ${group}: ${message}`);
+            messageInput.value = '';
+        });
+      
+    function sanatizeOutputForLog(telegram) {
+        return telegram.replace(/[\x00-\x1F\x7F]/g, (char) => {
+            return `<${char.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase()}>`;
+        });
+    }
+        function logEvent(message) {
+            const messageObject = JSON.parse(message)
+            console.log(message)
+            const eventRow = document.createElement('div');
+            eventRow.classList.add('event_row');
+            eventRow.classList.add('channel-' + messageObject['channel'].toLowerCase())
+
+            const eventTimeColumn = document.createElement('div');
+            eventTimeColumn.textContent = new Date().toLocaleTimeString();
+
+            const eventsChannelColumn = document.createElement('div');
+            eventsChannelColumn.textContent = messageObject['channel']
+            
+            const eventDataColumn = document.createElement('div');
+            if (messageObject['channel'] == 'WBED') {
+                messageObject['data'] = messageObject['data'].substring(1)
+            }
+            eventDataColumn.textContent = sanatizeOutputForLog(messageObject['data'])
+
+            eventRow.appendChild(eventTimeColumn);
+            eventRow.appendChild(eventsChannelColumn);
+
+
+            eventRow.appendChild(eventDataColumn);
+
+            const atBottom = eventsDiv.scrollHeight - eventsDiv.scrollTop === eventsDiv.clientHeight;
+
+            // Only scroll to bottom if already at the bottom
+            eventsDiv.appendChild(eventRow);
+            if (atBottom) {
+                eventsDiv.scrollTop = eventsDiv.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>

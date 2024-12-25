@@ -24,12 +24,15 @@ import express, { Express, Request, Response } from "express";
 import { Util } from './util';
 import { AudioController } from './controllers/AudioController';
 import bodyParser, { BodyParser } from 'body-parser'
+import { WebSocketServer } from 'ws';
+
+
 
 let ibisController: IBISController
 let portString: string
 let rl: any
 
-
+let websocket: WebSocketServer;
 
 
 
@@ -64,8 +67,14 @@ function main() {
   // Init terminal(s)
   
   const deviceConfig: DeviceConfig = require('../device_config.json')
+  
+  websocket = new WebSocketServer({ port: 1815 });
+
+  
   var cors = require('cors');
   let app = express()
+
+
 
   app.use(cors());
   app.use( bodyParser.json() );       // to support JSON-encoded bodies
@@ -86,7 +95,7 @@ function main() {
 
   const audioController = new AudioController()
 
-  ibisController = new IBISController(portString, 10)
+  ibisController = new IBISController(portString, 10, websocket)
   ibisController.audioController = audioController
   if (deviceConfig.MFD == true) {
     let mfdController = new MFDController(ibisController, app);
@@ -96,6 +105,8 @@ function main() {
     let locationController = new LocationController(ibisController);
     ibisController.locationController = locationController;
   //}
+  app.use('/tfs', express.static('diag_root'));
+
   app.get('/diag', (req: Request, res: Response) => {
     res.json({
       "linie": ibisController.linie,

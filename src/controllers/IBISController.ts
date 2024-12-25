@@ -21,6 +21,7 @@ import { Announcement } from '../models/database/Announcement';
 import { Util } from '../util';
 import { LocationController } from './LocationController';
 import { Trip } from '../models/database/Trip';
+import { WebSocket, WebSocketServer } from 'ws';
 
 
 class IBISController {
@@ -59,7 +60,12 @@ class IBISController {
     private HAGlastStatusReceivedTime?: Date
     private HAGstatus?: number
 
+    // Websocket
 
+    private websocket: WebSocketServer
+
+
+    
     get upcomingStop(): RouteStop {
         if (this.route && this.route.stops.length > 0) {
             return this.route.stops[this.stopIndex]
@@ -119,7 +125,7 @@ class IBISController {
         }
         return ''
     }
-    constructor(portString: string, interval: number) {
+    constructor(portString: string, interval: number, websocket: WebSocketServer) {
         
         this.serialPort = new SerialPort({
             path: portString,
@@ -128,6 +134,7 @@ class IBISController {
             stopBits: 2,
             parity: 'even'
         })
+        this.websocket = websocket
 
         const parser = this.serialPort.pipe(new ReadlineParser({ delimiter: '\r' }))
 
@@ -174,8 +181,26 @@ class IBISController {
     
        parser.on('data', (data) => {
         this.onReceiveTelegram(data)
+        
        })
-
+       this.websocket.on('connection', (client) => {
+        client.on('message', (data) => {
+           const messageObject = JSON.parse(data.toString())
+           Util.log(messageObject)
+            switch (messageObject['channel']) {
+                case 'WBED':
+                    Util.log('Passing to onReceiveTelegram')
+                    this.onReceiveTelegram(messageObject['data'])
+                    break;
+                case 'WBSD':
+                    Util.log('Passing to sendTelegram')
+                    this.sendTelegram(messageObject['data'] as IBISTelegram)
+                    break;
+                // TODO: Zugbus    
+            }
+        });
+    });
+       
     }
 
     // Aktivierte Anzeigen loopen und registrieren
@@ -298,6 +323,15 @@ class IBISController {
         // Pass terminal keys to each terminal, change terminal state
 
         Util.log('in >', telegram.substring(1))
+               // Also send telegram to websocket for debug
+this.websocket.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+            'channel': 'WBED',
+            data: telegram
+        }))
+    }
+});
         if (this.aTerminal) {
             this.aTerminal.onReceiveTelegram(telegram.substring(1))
         }
@@ -318,6 +352,7 @@ class IBISController {
             this.HAGlastStatusReceivedTime = new Date()
             this.HAGstatus = parseInt(telegram.substring(2))
         }
+
 
         // Update status values for devices
         // Throw errors for missing devices
@@ -345,6 +380,15 @@ class IBISController {
     private actuallySendTelegram(telegram: IBISTelegram) {
         this.serialPort.write(telegram)
         Util.log('out > ' + this.sanatizeOutputForLog(telegram))
+        // Also send telegram to websocket for debug
+this.websocket.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+             "channel": "WBSD",
+             data: telegram
+            }))
+    }
+});
     }
     
     // IBIS Telegrammsignierung
