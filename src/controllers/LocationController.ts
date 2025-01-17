@@ -30,7 +30,6 @@ class LocationController {
     wiInterrupt() {
         this.impulsesSinceReset++;
         this.updateDistances();
-    
     }
 
     // Türkontakt Interrupt
@@ -59,7 +58,8 @@ class LocationController {
 
     updateDistances() {
         let traveledMetersSinceLastStop = this.impulsesSinceReset / this.IMPULSES_PER_KILOMETER * 1000;
-        
+        if (this.ibisController.route) {
+
         let nextStop = this.possibleNextStopDistances.filter((stopDistance: StopDistance) => {
             if (stopDistance.destination_stop_id == this.ibisController.upcomingStop.stop_id) {
                 return true
@@ -77,6 +77,7 @@ class LocationController {
 
         }
     }
+    }
 
     private async getPossibleNextStops(routeStop: RouteStop) {
        let possibleStops = await StopDistance.findAll( { where: {
@@ -87,6 +88,21 @@ class LocationController {
     }
 
     queryIRIS() {
+    }
+    simulateDrive(speed: number, distance: number) {
+        const impulsesNeeded = distance / 1000 * this.IMPULSES_PER_KILOMETER
+        var count = 0;
+
+        let interval = setInterval(() => {
+            if (count == impulsesNeeded) {
+                clearInterval(interval);
+                return;
+            } else {
+                this.wiInterrupt()
+                count++;
+            }
+        })
+
     }
 }
 export { LocationController }

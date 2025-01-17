@@ -32,13 +32,17 @@ Leider haben viele Hersteller damals eigene Datensätze entwickelt. Diese werden
 - Entwertermerkmale
 - Terminalfunktionen (Text, Abfragen, Melodien)
 
+
+## In Entwicklung
+
+- GPIO-Aus- und Eingänge (WI, TK, OBI, UEB)
+- Testfunktionen per Weboberfläche (Port 2000)
+- Weiterschaltung per Wegimpuls
+
 ## In Planung
 - Funktelegeramme
 - Besetzgraderfassung
 - Fahrpläne
 - LSA-Beeinflussung
 - Ortung
-- Weiterschaltung per Wegimpuls
-- Testfunktionen
 - Datenversorgungs-Editor
-- GPIO-Aus- und Eingänge (WI, TK, OBI, UEB)

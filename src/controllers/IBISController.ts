@@ -1,3 +1,4 @@
+import { StopDistance } from './../models/database/StopDistance';
 import { Destination } from './../models/database/Destination';
 import { SpecialCharacter } from './../models/database/SpecialCharacter';
 import { SerialPort } from 'serialport';
@@ -195,6 +196,26 @@ class IBISController {
                 case 'WBSD':
                     Util.log('Passing to sendTelegram')
                     this.sendTelegram(messageObject['data'] as IBISTelegram)
+                    break;
+                case 'simulation':
+                    Util.log('simulation message')
+                    Util.log(messageObject);
+                    switch (messageObject['data']['criteria']) {
+                        case 'TK':
+                            break;
+                        case 'KBA':
+                            break;
+                        case 'KBB':
+                            break;
+                        case 'DRIVING':
+                            // value reading
+                            const value = messageObject['data']['value'];
+                            const speed = parseInt(value['speed'])
+                            const distance = parseInt(value['distance'])
+                                this.locationController.simulateDrive(speed, distance)
+                
+                            break;
+                    }
                     break;
                 // TODO: Zugbus    
             }

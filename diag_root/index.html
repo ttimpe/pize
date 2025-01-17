@@ -88,12 +88,72 @@
         <input type="text" id="messageInput" placeholder="Type a message" />
         <button id="sendButton">Send</button>
     </div>
+    <div class="io-checkboxes">
+        <table>
+            <thead>
+                <th>Kriterium</th>
+                <th>Zustand</th>
+                <th>Override</th>
+                <th>Reset</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Türkriterium</td>
+                    <td><input type="checkbox" disabled></td>
+                    <td>
+                        <button class="set-criteria-button button-on" name="TK">AN</button>
+                        <button class="set-criteria-button button-off" name="TK">AUS</button>
+                    </td>
+                    <td>
+                        <button class="set-criteria-button button-reset" name="TK">RESET</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Kupplung A</td>
+                    <td><input type="checkbox" disabled></td>
+                    <td>
+                        <button class="set-criteria-button button-on" name="KBA">AN</button>
+                        <button class="set-criteria-button button-off" name="KBA">AUS</button>
+                    </td>
+                    <td>
+                        <button class="set-criteria-button button-reset" name="KBA">RESET</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Kupplung B</td>
+                    <td><input type="checkbox" disabled></td>
+                    <td>
+                        <button class="set-criteria-button button-on" name="KBB">AN</button>
+                        <button class="set-criteria-button button-off" name="KBB">AUS</button>
+                    </td>
+                    <td>
+                        <button class="set-criteria-button button-reset" name="RESET">RESET</button>
+                    </td>
+                </tr>
+               
+                
+            </tbody>
+        </table>
+    </div>
+    <div class="driving-simulation">
+        <label for="speed">km/h: </label>
+        <input type="number" name="speed" id="speed">
+        <label for="distance">Wegstrecke (m)</label>
+        <input type="number" name="distance" id="distance">
+        <button id="driveButton">DRIVE</button>
+    </div>
 
     <script>
         const eventsDiv = document.getElementById('events_body');
         const groupSelector = document.getElementById('groupSelector');
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
+
+        const setButtons = document.querySelectorAll('.set-criteria-button');
+        const checkboxes = document.querySelectorAll('input[type=checkbox]')
+
+        const kmhField = document.getElementById('speed');
+        const distanceField = document.getElementById('distance');
 
         const websocket = new WebSocket(`ws://${window.location.hostname}:1815`);
 
@@ -123,6 +183,39 @@
             // logEvent(`Sent to ${group}: ${message}`);
             messageInput.value = '';
         });
+
+        setButtons.forEach (button => {
+            button.addEventListener('click', (e) => {
+                console.log(e.target.name)
+                var payload = { 'channel': 'simulation', 'data': {
+                    'criteria': e.target.name,
+                    'value': null
+                } };
+                var value = null;
+
+                if (e.target.classList.contains('button-on') == true) {
+                    payload['data']['value'] = true
+                } else if (e.target.classList.contains('button-off') == true) {
+                    payload['data']['value'] = false
+                } 
+                console.log(payload)
+                websocket.send(JSON.stringify(payload))
+            })
+        })
+        driveButton.addEventListener('click', () => {
+                var payload = { 'channel': 'simulation', 'data': {
+                    'criteria': 'DRIVING',
+                    'value': {
+                        speed: parseInt(kmhField.value),
+                        distance: parseInt(distanceField.value)
+                    }
+                } 
+            };
+             
+               
+                console.log(payload)
+                websocket.send(JSON.stringify(payload))
+            })
       
     function sanatizeOutputForLog(telegram) {
         return telegram.replace(/[\x00-\x1F\x7F]/g, (char) => {
@@ -131,6 +224,12 @@
     }
         function logEvent(message) {
             const messageObject = JSON.parse(message)
+            if (messageObject['channel'] == 'simulation') {
+                // Kriterium in checkbox setzen
+                console.log(checkboxes)
+                
+
+            } else {
             console.log(message)
             const eventRow = document.createElement('div');
             eventRow.classList.add('event_row');
@@ -161,6 +260,7 @@
             if (atBottom) {
                 eventsDiv.scrollTop = eventsDiv.scrollHeight;
             }
+        }
         }
     </script>
 </body>
