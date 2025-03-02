@@ -12,12 +12,20 @@ import {IBISTerminalConfiguration } from './IBISTerminalConfiguration';
 import {IBISTelegram } from '../../../extensions/IBISTelegram';
 import { Util } from '../../../util';
 import { AudioController } from '../../../controllers/AudioController';
+import { DeviceConfig } from '../DeviceConfig';
+import { Line } from 'node-libgpiod';
 
 class IBISTerminal {
     private isPrimary: boolean = true
     private lines: string[] = ['', '']
     private previousDisplayMode = TerminalDisplayMode.None;
+    private statusOverrideText?: string;
+    private stausOverrideBlinking: boolean = false
+    private currentMeldung: string = ''
+    private currentWeisung: string = ''
     mode: IBISTerminalMode = IBISTerminalMode.FUNCTION
+    private deviceConfig: DeviceConfig = require('../../../device_config.json')
+
     // TEIN
     public isActive: boolean = false
      // active function definition
@@ -334,21 +342,16 @@ class IBISTerminal {
 
     
 
-    private setText(lineNumber: number = 0, text: string) {
+    private setText(lineNumber: number = 0, text: string, mode: IBISTerminalMode = this.mode, x: number = 0) {
         text = text.substring(0, 16);
         this.lines[lineNumber] = text
-        let mode = this.mode
-        if (lineNumber == 1) {
-            mode = IBISTerminalMode.FUNCTION_NO_RECEIVE
-        }
-        // this.currentLine = lineNumber
-        // this.textBuffer = text
+     
+       
         let telegram: IBISTelegram
         if (this.isPrimary) {
-            
-            telegram = TelegramGenerator.DS044a(this.mode, 0, lineNumber, text) 
+            telegram = TelegramGenerator.DS044a(this.mode, x, lineNumber, text) 
         } else {
-            telegram = TelegramGenerator.DS044b(this.mode, 0, lineNumber, text) 
+            telegram = TelegramGenerator.DS044b(this.mode, x, lineNumber, text) 
         }
         this.ibisController.sendTelegram(telegram)
         this.ibisController.sendTelegram(telegram)
@@ -391,10 +394,27 @@ class IBISTerminal {
                 richtung = 'R'
             }
         }
-        this.setText(1, linie + kurs + ziel + richtung + hst + abweichung)
+        // Statusfeld überprüfen. Falls wir eine Meldung absenden oder abgesendet haben, Status anzeigen
+        if (this.statusOverrideText) {
+            if (this.stausOverrideBlinking) {
+                this.setText(1, this.statusOverrideText, IBISTerminalMode.BLINKING_FUNCTION_NO_RECEIVE)
+            } else {
+                this.setText(1, this.statusOverrideText, IBISTerminalMode.FUNCTION_NO_RECEIVE)
+            }
+        } else {
+            this.setText(1, linie + kurs, IBISTerminalMode.FUNCTION_NO_RECEIVE)
+        }
+        // Regulären Text nicht blinkend darstellen
+        this.setText(1, ziel + richtung + hst + abweichung, IBISTerminalMode.FUNCTION_NO_RECEIVE, 3)
+        
       }
-
-
+    // Statusfeld setzen
+    private setStatus(statusText?: string, isBlinking: boolean = false) {
+    //this.setText(1, )
+        this.statusOverrideText = statusText
+        this.stausOverrideBlinking = isBlinking
+        this.updateSecondLine()
+    }
 
  private setBesetzgrad(number: string) {
     Util.log('set besetzgrad')
@@ -482,6 +502,11 @@ setWeicheRechts() {
 setAnsageStumm() {
 
 }
+showMeldung() {
+    this.mode = IBISTerminalMode.BLINKING_FUNCTION
+    this.setText(0, this.currentMeldung,IBISTerminalMode.BLINKING_FUNCTION)
+
+}
 setAnsageAussen() {
     let action = this.getAction(IBISTerminalKeyAction.ANSAGE_AUSSEN)
     this.mode = IBISTerminalMode.FUNCTION
@@ -502,7 +527,7 @@ setLStAnFG() {
 setUnfall() {
 
 }
-
+// Abfrage Meldungsnummer (1-stellig) 
 promptForMessage() {
     let action = this.getAction(IBISTerminalKeyAction.MELDUNG)
     this.mode = IBISTerminalMode.DIGITS
@@ -579,6 +604,12 @@ private setDisplayMode(displayMode: TerminalDisplayMode) {
         case TerminalDisplayMode.Fehler:
             this.showError();
             break
+        case TerminalDisplayMode.MeldungBestaetigen:
+            this.showMeldung()
+            break
+        case TerminalDisplayMode.Weisung:
+            this.showWeisung()
+            break
     }
 }
 
@@ -586,11 +617,33 @@ private setRichtung(number: string) {
     this.ibisController.setRichtung(parseInt(number))
     this.setDisplayMode(TerminalDisplayMode.None)
 }
+/* Weisung anzeigen, 10 Sekunden */
+private showWeisung() {
+    this.setText(0, this.currentWeisung.padEnd(16), IBISTerminalMode.FUNCTION)
+    setTimeout(() => {
+        this.currentWeisung = ''
+        this.setDisplayMode(TerminalDisplayMode.None)
+}, 10000)
+}
 
 private setMeldung(number: string) {
-    Util.log('Sending message')
+    Util.log('Zeige Meldung Nr.', number)
+    let meldungNumber = parseInt(number)
+    Util.log(this.deviceConfig)
+    let meldungen = this.deviceConfig.messages
+    this.currentMeldung = meldungen[meldungNumber]
+    Util.log('Meldung: ', meldungen[meldungNumber])
+    this.setDisplayMode(TerminalDisplayMode.MeldungBestaetigen)
+    /* TODO:
+    Meldung anzeigen zur Kontrolle, muss von FP bestätigt werden
+    Durch Bestätigung an VZ senden (Funktelegramm)
+    oberer Zeile löschen
+    -ML(X)- blinkend in Statuszellen anzeigen
+    sobald Meldung bestätigt, ML(X) statisch weiter 15 Sekunden anzeigen
     this.playSound(parseInt(number));
     this.setDisplayMode(TerminalDisplayMode.None)
+*/
+
 }
 
  private async setLinieKurs(number: string) {

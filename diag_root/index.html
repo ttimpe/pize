@@ -142,7 +142,11 @@
         <input type="number" name="distance" id="distance">
         <button id="driveButton">DRIVE</button>
     </div>
-
+    <div class="radio-simulation">
+        <label for="distance">Weisung</label>
+        <input type="text" name="weisung" id="weisung" maxlength="16">
+        <button id="sendWeisungButton">SENDEN</button>
+    </div>
     <script>
         const eventsDiv = document.getElementById('events_body');
         const groupSelector = document.getElementById('groupSelector');
@@ -154,6 +158,9 @@
 
         const kmhField = document.getElementById('speed');
         const distanceField = document.getElementById('distance');
+
+        const sendWeisungButton = document.getElementById('sendWeisungButton')
+        const weisungInput = document.getElementById('weisung')
 
         const websocket = new WebSocket(`ws://${window.location.hostname}:1815`);
 
@@ -208,6 +215,19 @@
                     'value': {
                         speed: parseInt(kmhField.value),
                         distance: parseInt(distanceField.value)
+                    }
+                } 
+            };
+             
+               
+                console.log(payload)
+                websocket.send(JSON.stringify(payload))
+            })
+      sendWeisungButton.addEventListener('click', () => {
+                var payload = { 'channel': 'simulation', 'data': {
+                    'criteria': 'WEISUNG',
+                    'value': {
+                        "text": weisungInput.value
                     }
                 } 
             };

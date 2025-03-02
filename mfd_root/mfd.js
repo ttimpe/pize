@@ -14,7 +14,7 @@ setInterval(async () => {
 
 
 
-    const response = await fetch("http://192.168.2.222:2000/api/tripData")
+    const response = await fetch("/api/tripData")
     if (!response.ok) {
         console.log('Error connecting to backend')
     } else {

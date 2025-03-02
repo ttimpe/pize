@@ -15,6 +15,8 @@ class DeviceConfig {
     announcement_distance_before_next_stop: number
     line_number_in_ds009: boolean
     query_device_status: boolean
+    messages?: string[]
+    
 }
 
 export { DeviceConfig }

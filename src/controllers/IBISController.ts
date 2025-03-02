@@ -207,6 +207,9 @@ class IBISController {
                             break;
                         case 'KBB':
                             break;
+                        case 'WEISUNG':
+                            Util.log('Weisung anzeigen: ', messageObject['data']['value']['text'])
+                            break;
                         case 'DRIVING':
                             // value reading
                             const value = messageObject['data']['value'];
