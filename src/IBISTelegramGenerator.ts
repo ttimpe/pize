@@ -4,7 +4,7 @@ import './extensions/Number'
 
 import { IBISTerminalMode } from "./models/devices/Terminal/IBISTerminalMode";
 import { IBISTelegram } from "./extensions/IBISTelegram";
-class TelegramGenerator {
+class IBISTelegramGenerator {
 
     /// DS001
     // DS001 - Liniennummer
@@ -546,4 +546,4 @@ class TelegramGenerator {
 
 
 }
-export { TelegramGenerator }
+export { IBISTelegramGenerator as TelegramGenerator }

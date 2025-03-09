@@ -33,7 +33,7 @@ let portString: string
 let rl: any
 
 let websocket: WebSocketServer;
-
+let isConnectedToITCS: boolean = false
 
 
 function main() {

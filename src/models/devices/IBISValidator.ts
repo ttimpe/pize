@@ -1,6 +1,6 @@
 import { IBISController } from "../../controllers/IBISController";
 import { IBISTelegram } from "../../extensions/IBISTelegram";
-import { TelegramGenerator } from "../../TelegramGenerator";
+import { TelegramGenerator } from "../../IBISTelegramGenerator";
 import { Util } from "../../util";
 
 class IBISValidator {

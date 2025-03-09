@@ -1,4 +1,4 @@
-import { TelegramGenerator } from "../../TelegramGenerator"
+import { TelegramGenerator } from "../../IBISTelegramGenerator"
 import { IBISController } from "../../controllers/IBISController"
 import { IBISTelegram } from "../../extensions/IBISTelegram"
 import { Util } from "../../util"

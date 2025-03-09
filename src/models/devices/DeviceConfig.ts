@@ -1,3 +1,4 @@
+import { DeviceRadioConfiguration } from "./DeviceRadioConfiguration"
 import { GPIOPinoutConfiguration } from "./GPIOPinoutConfiguration"
 import { IBISTerminalConfiguration } from "./Terminal/IBISTerminalConfiguration"
 
@@ -16,7 +17,7 @@ class DeviceConfig {
     line_number_in_ds009: boolean
     query_device_status: boolean
     messages?: string[]
-    
+    RADIO?: DeviceRadioConfiguration
 }
 
 export { DeviceConfig }

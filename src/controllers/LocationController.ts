@@ -6,7 +6,7 @@ import { StopDistance } from "../models/database/StopDistance";
 import { Stop } from "../models/database/Stop";
 import { DeviceConfig } from '../models/devices/DeviceConfig';
 import { Util } from "../util";
-import { TelegramGenerator } from "../TelegramGenerator";
+import { TelegramGenerator } from "../IBISTelegramGenerator";
 
 class LocationController {
     private latitude: number

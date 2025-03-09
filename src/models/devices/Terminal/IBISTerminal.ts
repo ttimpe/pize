@@ -6,7 +6,7 @@ import { IBISTerminalKeyAction } from './IBISTerminalKeyAction';
 
 
 import { IBISController } from '../../../controllers/IBISController';
-import {TelegramGenerator } from '../../../TelegramGenerator';
+import {TelegramGenerator } from '../../../IBISTelegramGenerator';
 import {IBISTerminalMode } from './IBISTerminalMode';
 import {IBISTerminalConfiguration } from './IBISTerminalConfiguration';
 import {IBISTelegram } from '../../../extensions/IBISTelegram';
@@ -372,17 +372,19 @@ class IBISTerminal {
        
 
         let linie = '   '
-        let kurs = this.ibisController.kurs.toString().padStart(2, ' ')
+        let kurs = this.ibisController.kurs.toString().padStart(2, '0')
         let ziel = '   '
         let hst = '   '
         let richtung = 'Z'
-        let abweichung = '+0.0'
+        
+        let abweichung = '    '
+        abweichung = ' K' + this.deviceConfig.RADIO.channels.voice.toString() + ' ';
 
         if (this.ibisController.linie) {
-            linie = this.ibisController.linie.number.padStart(3, ' ')
+            linie = this.ibisController.linie.number.padStart(3, '0')
         }
         if (this.ibisController.ziel) {
-            ziel = this.ibisController.ziel.number.toString().padStart(3, ' ')
+            ziel = this.ibisController.ziel.number.toString().padStart(3, '0')
         }
         if (this.ibisController.route && this.ibisController.route.stops[this.ibisController.stopIndex] != undefined) {
             hst = this.ibisController.route.stops[this.ibisController.stopIndex].stop.number.toString().padStart(3, '0')

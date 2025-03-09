@@ -3,7 +3,7 @@ import { Destination } from './../models/database/Destination';
 import { SpecialCharacter } from './../models/database/SpecialCharacter';
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline'
-import { TelegramGenerator } from '../TelegramGenerator';
+import { TelegramGenerator } from '../IBISTelegramGenerator';
 import { Vehicle } from '../Vehicle';
 import { IBISTerminal } from '../models/devices/Terminal/IBISTerminal';
 import { DeviceConfig } from '../models/devices/DeviceConfig';
@@ -65,7 +65,7 @@ class IBISController {
 
     private websocket: WebSocketServer
 
-
+    
     
     get upcomingStop(): RouteStop {
         if (this.route && this.route.stops.length > 0) {
