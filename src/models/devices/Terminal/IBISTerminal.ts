@@ -377,6 +377,8 @@ class IBISTerminal {
         let hst = '   '
         let richtung = 'Z'
         
+        /* Abweichung nur, wenn in RBL angemeldet */
+
         let abweichung = '    '
         abweichung = ' K' + this.deviceConfig.RADIO.channels.voice.toString() + ' ';
 
@@ -398,15 +400,18 @@ class IBISTerminal {
         }
         // Statusfeld überprüfen. Falls wir eine Meldung absenden oder abgesendet haben, Status anzeigen
         if (this.statusOverrideText) {
+            Util.log("Status text")
             if (this.stausOverrideBlinking) {
                 this.setText(1, this.statusOverrideText, IBISTerminalMode.BLINKING_FUNCTION_NO_RECEIVE)
             } else {
                 this.setText(1, this.statusOverrideText, IBISTerminalMode.FUNCTION_NO_RECEIVE)
             }
         } else {
+            Util.log("Kein Statustext")
+            // Normal Line & Kurs anzeigen
             this.setText(1, linie + kurs, IBISTerminalMode.FUNCTION_NO_RECEIVE)
         }
-        // Regulären Text nicht blinkend darstellen
+        // restlichen Text nicht blinkend darstellen
         this.setText(1, ziel + richtung + hst + abweichung, IBISTerminalMode.FUNCTION_NO_RECEIVE, 3)
         
       }
