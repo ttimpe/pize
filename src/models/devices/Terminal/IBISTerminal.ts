@@ -753,13 +753,13 @@ private promptForSpecialCharacter() {
         this.updateSecondLine()
 
         if (this.ibisController.route != undefined) {
-            this.setText(0, this.ibisController.route.stops[0].stop.information.shortName.toUpperCase());
+            this.setText(0, this.ibisController.route.stops[0].stop.information.shortName.toUpperCase().padEnd(16));
             setTimeout(() => {
-                this.setText(0, this.ibisController.route.stops[this.ibisController.route.stops.length - 1].stop.information.shortName.toUpperCase())
+                this.setText(0, this.ibisController.route.stops[this.ibisController.route.stops.length - 1].stop.information.shortName.toUpperCase().padEnd(16))
                 setTimeout(() => {
                     this.setDisplayMode(TerminalDisplayMode.None);
-                }, 1000);
-            }, 1000);
+                }, 500);
+            }, 500);
            
         }
     }
