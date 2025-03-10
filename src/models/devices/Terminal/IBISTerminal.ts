@@ -101,7 +101,7 @@ class IBISTerminal {
     private initTerminal() {
         // clear screen, ignore inputs before this
         this.setText(0,''.padEnd(16))
-        this.setText(1,''.padEnd(16))
+       this.updateSecondLine()
 
        this.setDisplayMode(TerminalDisplayMode.LinieKurs)
     }
