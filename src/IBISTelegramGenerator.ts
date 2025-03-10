@@ -443,14 +443,12 @@ class IBISTelegramGenerator {
     // DS044a - Terminal A - Text
 
     static DS044a(mode: IBISTerminalMode, posx: number, posy:number, text: string): IBISTelegram {
-        text = text.padEnd(16, ' ')
         return 'mC' + mode + text.length.toIBISHexString() + posy.toString() + posx.toString() + text
     }
 
     // DS044b - Terminal B - Text
 
     static DS044b(mode: IBISTerminalMode, posx: number, posy:number, text: string): IBISTelegram {
-        text = text.padEnd(16, ' ')
         return 'tC' + mode + text.length.toString(16) + posy.toString() + posx.toString() + text
     }
 
