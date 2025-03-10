@@ -366,7 +366,7 @@ class IBISTerminal {
     
    clearFirstLine() {
     this.mode = IBISTerminalMode.FUNCTION
-    this.setText(0, " ".repeat(16))
+    this.setText(0, " ".padEnd(16))
    }
     updateSecondLine() {
        
@@ -412,7 +412,7 @@ class IBISTerminal {
             this.setText(1, linie + kurs, IBISTerminalMode.FUNCTION_NO_RECEIVE)
         }
         // restlichen Text nicht blinkend darstellen
-        this.setText(1, ziel + richtung + hst + abweichung, IBISTerminalMode.FUNCTION_NO_RECEIVE, 3)
+        this.setText(1, ziel + richtung + hst + abweichung, IBISTerminalMode.FUNCTION_NO_RECEIVE, 4)
         
       }
     // Statusfeld setzen
@@ -724,7 +724,7 @@ private promptForSpecialCharacter() {
         if (this.ibisController.upcomingStop != null) {
             this.setText(0, this.ibisController.upcomingStop.stop.information.shortName.toUpperCase())
         } else {
-            this.setText(0, '')
+            this.setText(0, ''.padEnd(16))
         }
         this.updateSecondLine()
     }
