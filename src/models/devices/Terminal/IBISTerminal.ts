@@ -285,7 +285,7 @@ class IBISTerminal {
     private showDateTime() {
         let d = new Date()
         let outputString = d.toLocaleDateString('de', { dateStyle: "short" }) + '   ' + d.toLocaleTimeString('de', { timeStyle: "short" })
-        this.setText(0, outputString)
+        this.setText(0, outputString.padEnd(16))
         setTimeout(() => {
             if (this.currentDisplayMode == TerminalDisplayMode.DatumUhrzeit) {
                 this.setDisplayMode(TerminalDisplayMode.None)
@@ -449,12 +449,12 @@ promptForLinieKurs() {
 promptForBesetzgrad() {
     let action = this.getAction(IBISTerminalKeyAction.BESETZGRAD)
     this.mode = IBISTerminalMode.DIGITS
-    this.setText(0, action.textLine1)
+    this.setText(0, action.textLine1.padEnd(16))
 }
 promptForStopNumber() {
     let action = this.getAction(IBISTerminalKeyAction.HALTESTELLE)
     this.mode = IBISTerminalMode.DIGITS
-    this.setText(0, action.textLine1)
+    this.setText(0, action.textLine1.padEnd(16))
 }
 
 promptForDirection() {
@@ -465,7 +465,7 @@ promptForDirection() {
         outputText = action.textLine1.split(':')[0] + ":" + this.ibisController.richtung.toString();
     }
 
-    this.setText(0, outputText)
+    this.setText(0, outputText.padEnd(16))
 }
 promptForRoute() {
     let action = this.getAction(IBISTerminalKeyAction.ROUTE)
@@ -475,7 +475,7 @@ promptForRoute() {
         outputText = action.textLine1.split(':')[0] + ":" + this.ibisController.route.route_id.padStart(3, '0');
     }
 
-    this.setText(0, outputText)
+    this.setText(0, outputText.padEnd(16))
 }
 promptForDestination() {
     let action = this.getAction(IBISTerminalKeyAction.ZIEL)
@@ -485,7 +485,7 @@ promptForDestination() {
         outputText = action.textLine1.split(':')[0] + ":" + this.ibisController.ziel.number.toString().padStart(3, '0');
     }
 
-    this.setText(0, outputText)
+    this.setText(0, outputText.padEnd(16))
 }
 setWeicheLinks() {
 
@@ -501,20 +501,20 @@ setAnsageStumm() {
 }
 showMeldung() {
     this.mode = IBISTerminalMode.BLINKING_FUNCTION
-    this.setText(0, this.currentMeldung,IBISTerminalMode.BLINKING_FUNCTION)
+    this.setText(0, this.currentMeldung.padEnd(16),IBISTerminalMode.BLINKING_FUNCTION)
 
 }
 setAnsageAussen() {
     let action = this.getAction(IBISTerminalKeyAction.ANSAGE_AUSSEN)
     this.mode = IBISTerminalMode.FUNCTION
     let outputText = action.textLine1
-    this.setText(0, outputText)
+    this.setText(0, outputText.padEnd(16))
 }
 setAnsageInnen() {
     let action = this.getAction(IBISTerminalKeyAction.ANSAGE_INNEN)
     this.mode = IBISTerminalMode.FUNCTION
     let outputText = action.textLine1
-    this.setText(0, outputText)
+    this.setText(0, outputText.padEnd(16))
 }
 
 setLStAnFG() {
@@ -528,7 +528,7 @@ setUnfall() {
 promptForMessage() {
     let action = this.getAction(IBISTerminalKeyAction.MELDUNG)
     this.mode = IBISTerminalMode.DIGITS
-    this.setText(0, action.textLine1)
+    this.setText(0, action.textLine1.padEnd(16))
 }
 skipStop() {
 
@@ -729,7 +729,7 @@ private promptForSpecialCharacter() {
     showError() {
         this.mode = IBISTerminalMode.BLINKING_FUNCTION;
         this.playSound(4);
-        this.setText(0, this.errors[this.errors.length - 1])
+        this.setText(0, this.errors[this.errors.length - 1].padEnd(16))
     }
 
     playSound(soundNumber: number) {
@@ -745,7 +745,7 @@ private promptForSpecialCharacter() {
 
     onSetHaltestelle() {
         if (this.currentDisplayMode == TerminalDisplayMode.None) {
-            this.setText(0, this.ibisController.upcomingStop.stop.information.shortName.toUpperCase()) 
+            this.setText(0, this.ibisController.upcomingStop.stop.information.shortName.toUpperCase().padEnd(16)) 
         }
         this.updateSecondLine()
     }
