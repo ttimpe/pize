@@ -412,7 +412,7 @@ class IBISTerminal {
             this.setText(1, linie + kurs, IBISTerminalMode.FUNCTION_NO_RECEIVE)
         }
         // restlichen Text nicht blinkend darstellen
-        this.setText(1, ziel + richtung + hst + abweichung, IBISTerminalMode.FUNCTION_NO_RECEIVE, 4)
+        this.setText(1, ziel + richtung + hst + abweichung, IBISTerminalMode.FUNCTION_NO_RECEIVE, 3)
         
       }
     // Statusfeld setzen
