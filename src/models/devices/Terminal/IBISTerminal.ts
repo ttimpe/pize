@@ -614,7 +614,9 @@ private setRichtung(number: string) {
     this.ibisController.setRichtung(parseInt(number))
     this.setDisplayMode(TerminalDisplayMode.None)
 }
+
 /* Weisung anzeigen, 10 Sekunden */
+
 private showWeisung() {
     this.setText(0, this.currentWeisung.padEnd(16), IBISTerminalMode.FUNCTION)
     setTimeout(() => {
@@ -622,6 +624,16 @@ private showWeisung() {
         this.setDisplayMode(TerminalDisplayMode.None)
 }, 10000)
 }
+
+
+
+
+public setWeisung(weisung: string) {
+    this.currentWeisung = weisung
+    this.setDisplayMode(TerminalDisplayMode.Weisung)
+}
+
+
 
 private setMeldung(number: string) {
     Util.log('Zeige Meldung Nr.', number)

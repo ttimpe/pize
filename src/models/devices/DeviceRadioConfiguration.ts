@@ -3,6 +3,7 @@ class DeviceRadioChannelConfiguration {
     data: number
 }
 class DeviceRadioConfiguration {
+    enabled: boolean
     channels: DeviceRadioChannelConfiguration
 }
 export { DeviceRadioConfiguration, DeviceRadioChannelConfiguration }
