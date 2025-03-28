@@ -11,6 +11,7 @@ import { StopInformation } from './models/database/StopInformation';
 import { Announcement } from './models/database/Announcement';
 import { Line } from './models/database/Line';
 import { IBISController } from './controllers/IBISController';
+
 import { Vehicle } from './Vehicle';
 import { SpecialCharacter } from './models/database/SpecialCharacter';
 
@@ -25,6 +26,7 @@ import { Util } from './util';
 import { AudioController } from './controllers/AudioController';
 import bodyParser, { BodyParser } from 'body-parser'
 import { WebSocketServer } from 'ws';
+import { RadioController } from './controllers/RadioController';
 
 
 
@@ -100,6 +102,13 @@ function main() {
   if (deviceConfig.MFD == true) {
     let mfdController = new MFDController(ibisController, app);
   }
+
+  if (deviceConfig.RADIO.enabled == true) {
+    let radioController = new RadioController('vehicle')
+    ibisController.radioController = radioController
+    radioController.startListening()
+  }
+
 
   //if (deviceConfig.use_gpio == true && deviceConfig.GPIO_PINOUT != undefined) {
     let locationController = new LocationController(ibisController);

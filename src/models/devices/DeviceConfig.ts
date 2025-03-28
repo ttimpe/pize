@@ -10,6 +10,7 @@ class DeviceConfig {
     validators: boolean[]
     signs: boolean[]
     UESTRA_LVA: number[]
+    DS021_STOP_NAME?: number[]
     terminal_config: IBISTerminalConfiguration
     use_gpio?: boolean
     GPIO_PINOUT?: GPIOPinoutConfiguration

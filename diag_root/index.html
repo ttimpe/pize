@@ -11,6 +11,9 @@
             padding: 0;
             background-color: #f4f4f4;
         }
+        .container {
+            display: flex;
+        }
         #events {
             width: 50vw;
             border: 1px solid #ccc;
@@ -70,6 +73,7 @@
 </head>
 <body>
     <h1>Event Viewer</h1>
+    <div class="container">
     <div id="events">
         <div id="events_header">
             <div>Zeit</div>
@@ -87,7 +91,6 @@
         </select>
         <input type="text" id="messageInput" placeholder="Type a message" />
         <button id="sendButton">Send</button>
-    </div>
     <div class="io-checkboxes">
         <table>
             <thead>
@@ -146,7 +149,12 @@
         <label for="distance">Weisung</label>
         <input type="text" name="weisung" id="weisung" maxlength="16">
         <button id="sendWeisungButton">SENDEN</button>
+
+        <label for="radio-telegram-bitfield">FFSK-Bitfolge</label>
+        <input type="text" id="radio-telegram-bitfield">
+        <button id="sendBitsButton">SEND</button>
     </div>
+</div>
     <script>
         const eventsDiv = document.getElementById('events_body');
         const groupSelector = document.getElementById('groupSelector');
@@ -161,6 +169,12 @@
 
         const sendWeisungButton = document.getElementById('sendWeisungButton')
         const weisungInput = document.getElementById('weisung')
+
+
+        const bitsField = document.getElementById('radio-telegram-bitfield');
+        const sendBitsButton = document.getElementById('sendBitsButton')
+
+
 
         const websocket = new WebSocket(`ws://${window.location.hostname}:1815`);
 
@@ -190,6 +204,21 @@
             // logEvent(`Sent to ${group}: ${message}`);
             messageInput.value = '';
         });
+
+        sendBitsButton.addEventListener('click', () => {
+            const bitsString = bitsField.value
+            var payload = { 'channel': 'simulation', 'data': {
+                    'criteria': 'RADIO',
+                    'value': {
+                        "bits": bitsString
+                    }
+                } 
+            };
+             
+               
+                console.log(payload)
+                websocket.send(JSON.stringify(payload))
+        })
 
         setButtons.forEach (button => {
             button.addEventListener('click', (e) => {

@@ -23,6 +23,7 @@ import { Util } from '../util';
 import { LocationController } from './LocationController';
 import { Trip } from '../models/database/Trip';
 import { WebSocket, WebSocketServer } from 'ws';
+import { RadioController } from './RadioController';
 
 
 class IBISController {
@@ -48,6 +49,7 @@ class IBISController {
     private deviceConfig: DeviceConfig = require('../../device_config.json')
     public audioController: AudioController
     public locationController: LocationController
+    public radioController?: RadioController
     public linie?: Line
     public kurs: number = 0
     public sonderzeichen?: SpecialCharacter
@@ -62,7 +64,6 @@ class IBISController {
     private HAGstatus?: number
 
     // Websocket
-
     private websocket: WebSocketServer
 
     
@@ -219,6 +220,11 @@ class IBISController {
                                 this.locationController.simulateDrive(speed, distance)
                 
                             break;
+                        case 'RADIO':
+                            const radioValue = messageObject['data']['value'];
+                            const bits = radioValue['bits']
+                            this.radioController.playFFSKBits(bits);
+                            break;
                     }
                     break;
                 // TODO: Zugbus    
@@ -342,21 +348,23 @@ class IBISController {
             }
         }
     }
-
+    public sendToWebsocket(payload: string) {
+        this.websocket.clients.forEach(client => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(payload)
+            }
+        });
+    }
     onReceiveTelegram(telegram: IBISTelegram) {
         // Switch status telegram per device / terminal
         // Pass terminal keys to each terminal, change terminal state
 
         Util.log('in >', telegram.substring(1))
                // Also send telegram to websocket for debug
-this.websocket.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({
-            'channel': 'WBED',
-            data: telegram
+        this.sendToWebsocket(JSON.stringify({
+                'channel': 'WBED',
+                data: telegram
         }))
-    }
-});
         if (this.aTerminal) {
             this.aTerminal.onReceiveTelegram(telegram.substring(1))
         }
@@ -667,8 +675,19 @@ this.websocket.clients.forEach(client => {
     private sendStopData() {
             // Haltestellenname
             this.sendTelegram(TelegramGenerator.DS003c(this.stopName))
+
+
           // Haltestellenname
           this.sendTelegram(TelegramGenerator.DS009c(this.stopName))
+
+
+          // Sonderoption DS021_STOP_NAME - Haltestellenname in DS021
+          if (this.deviceConfig.DS021_STOP_NAME) {
+            for (var i=0; i<this.deviceConfig.DS021_STOP_NAME.length; i++) {
+                this.sendTelegram(TelegramGenerator.DS021(this.deviceConfig.DS021_STOP_NAME[i], this.stopName))
+
+            }
+          }
           // Haltestellennummer 4 stellig
          // this.sendTelegram(TelegramGenerator.DS010(this.upcomingStop.stop.number))
           // Haltestellennummer Perlenschnur        
