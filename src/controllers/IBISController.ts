@@ -685,7 +685,7 @@ this.websocket.clients.forEach(client => {
           if (this.deviceConfig.DS021_STOP_NAME) {
             for (var i=0; i<this.deviceConfig.DS021_STOP_NAME.length; i++) {
                 this.sendTelegram(TelegramGenerator.DS021(this.deviceConfig.DS021_STOP_NAME[i], this.stopName))
-
+                this.sendTelegram(TelegramGenerator.DS021a(this.deviceConfig.DS021_STOP_NAME[i], this.stopName))
             }
           }
           // Haltestellennummer 4 stellig

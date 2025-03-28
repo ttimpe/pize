@@ -294,7 +294,7 @@ class IBISTelegramGenerator {
 
     // DS021 - Text Ziel, Fahrweg
     static DS021(adresse: number, text: string): IBISTelegram {
-        return 'aA' + adresse.toIBISHexString() + Math.round(text.length / 16).toIBISHexString() + text
+        return 'aA' + adresse.toIBISHexString() + Math.round(text.length / 16).toIBISHexString() + text + '\n\n' + "".padStart(text.length)
     }
 
     // DS021a - Streckenverlaufsanzeigen - Haltestellennamen und Umsteigehinweise
