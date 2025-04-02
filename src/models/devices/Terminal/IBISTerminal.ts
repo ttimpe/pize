@@ -67,7 +67,7 @@ class IBISTerminal {
         // Number returned from the terminal
         Util.log('received')
 
-        if (telegram.startsWith(this.terminalLetter + '?')) {
+        if (telegram.startsWith(this.terminalLetter + '?') && telegram.length > 2) {
             this.isActive = true;
             Util.log('got number')
             this.onNumber(telegram.substring(2))
