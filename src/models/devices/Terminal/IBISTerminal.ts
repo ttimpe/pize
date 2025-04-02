@@ -436,9 +436,9 @@ class IBISTerminal {
         if (this.statusOverrideText) {
             Util.log("Status text")
             if (this.statusOverrideBlinking) {
-                this.setText(1, this.statusOverrideText, IBISTerminalMode.BLINKING_FUNCTION)
+                this.setText(1, this.statusOverrideText, IBISTerminalMode.BLINKING_FUNCTION_NO_RECEIVE)
             } else {
-                this.setText(1, this.statusOverrideText, IBISTerminalMode.FUNCTION)
+                this.setText(1, this.statusOverrideText, IBISTerminalMode.FUNCTION_NO_RECEIVE)
             }
         } else {
             Util.log("Kein Statustext")
