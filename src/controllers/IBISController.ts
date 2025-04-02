@@ -706,8 +706,8 @@ this.websocket.clients.forEach(client => {
           // Sonderoption DS021_STOP_NAME - Haltestellenname in DS021
           if (this.deviceConfig.DS021_STOP_NAME) {
             for (var i=0; i<this.deviceConfig.DS021_STOP_NAME.length; i++) {
-                this.sendTelegram(TelegramGenerator.DS021(this.deviceConfig.DS021_STOP_NAME[i], this.stopName))
-                this.sendTelegram(TelegramGenerator.DS021a(this.deviceConfig.DS021_STOP_NAME[i], this.stopName))
+                this.sendTelegram(TelegramGenerator.DS021(this.deviceConfig.DS021_STOP_NAME[i], this.route.stops[this.stopIndex].stop.information.shortName))
+                this.sendTelegram(TelegramGenerator.DS021a(this.deviceConfig.DS021_STOP_NAME[i], this.route.stops[this.stopIndex].stop.information.shortName))
             }
           }
           // Haltestellennummer 4 stellig
