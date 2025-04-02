@@ -382,9 +382,9 @@ class IBISTerminal {
        
         let telegram: IBISTelegram
         if (this.isPrimary) {
-            telegram = TelegramGenerator.DS044a(this.mode, x, lineNumber, text) 
+            telegram = TelegramGenerator.DS044a(mode, x, lineNumber, text) 
         } else {
-            telegram = TelegramGenerator.DS044b(this.mode, x, lineNumber, text) 
+            telegram = TelegramGenerator.DS044b(mode, x, lineNumber, text) 
         }
         this.ibisController.sendTelegram(telegram)
         this.ibisController.sendTelegram(telegram)
