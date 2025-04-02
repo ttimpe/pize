@@ -738,7 +738,7 @@ this.websocket.clients.forEach(client => {
     }
 
     sendSprechwunsch() {
-
+        
     }
     sendUnfall() {
         

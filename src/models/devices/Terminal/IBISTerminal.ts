@@ -188,10 +188,14 @@ class IBISTerminal {
                 if (key == '/') {
                     this.onPressDelete()
                 }
+                if (key == '?') {
+            // Taste Quittierung gedrückt
+                    this.onPressQuittierung()
+        }
             }
         }
         } else {
-            // Taste Quittierung gedrückt
+   
 
             
             
@@ -209,6 +213,26 @@ class IBISTerminal {
             }
         } else {
             this.setDisplayMode(TerminalDisplayMode.None)
+        }
+    }
+
+    private onPressQuittierung() {
+        if (this.currentDisplayMode == TerminalDisplayMode.MeldungBestaetigen) {
+            // TODO: Meldungsnummern
+            this.statusOverrideText = '-ML0-'
+            this.stausOverrideBlinking = true
+            this.setDisplayMode(TerminalDisplayMode.None)
+
+    
+        }
+        if (this.currentDisplayMode == TerminalDisplayMode.Fehler) {
+            this.errors.pop()
+            if (this.errors.length > 0) {
+                this.showError();
+            } else {
+                this.setDisplayMode(this.previousDisplayMode)
+
+            }
         }
     }
     private onPressWeicheLinks() {
@@ -275,6 +299,7 @@ class IBISTerminal {
 
     private onPressSprechwunsch() {
         // TODO: Unterscheidung Datenfunk / Sprechfunk
+        Util.log('Sprechwunsch')
         this.statusOverrideText = '-VLS-'
         this.updateSecondLine()
         this.ibisController.sendSprechwunsch()
