@@ -450,7 +450,7 @@ class IBISTerminal {
         
       }
     // Statusfeld setzen
-    private setStatus(statusText?: string, isBlinking: boolean = false) {
+    private setStatus(statusText: string, isBlinking: boolean) {
     //this.setText(1, )
         this.statusOverrideText = statusText
         this.statusOverrideBlinking = isBlinking
