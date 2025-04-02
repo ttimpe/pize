@@ -219,8 +219,7 @@ class IBISTerminal {
     private onPressQuittierung() {
         if (this.currentDisplayMode == TerminalDisplayMode.MeldungBestaetigen) {
             // TODO: Meldungsnummern
-            this.statusOverrideText = '-ML0-'
-            this.statusOverrideBlinking = true
+            this.setStatus('-ML0-', true)
             this.setDisplayMode(TerminalDisplayMode.None)
 
     
@@ -262,8 +261,7 @@ class IBISTerminal {
         this.setDisplayMode(TerminalDisplayMode.LStAnFG)
     }
     private onPressUnfall() {
-        this.statusOverrideText = '-VLS-'
-        this.updateSecondLine()
+        this.setStatus('-UNF-', true)
         this.ibisController.sendUnfall()
     }
     private onPressHstWiederholen() {
@@ -300,8 +298,8 @@ class IBISTerminal {
     private onPressSprechwunsch() {
         // TODO: Unterscheidung Datenfunk / Sprechfunk
         Util.log('Sprechwunsch')
-        this.statusOverrideText = '-VLS-'
-        this.updateSecondLine()
+        this.setStatus('-SPR-', true)
+
         this.ibisController.sendSprechwunsch()
     }
 
@@ -460,6 +458,8 @@ class IBISTerminal {
 
  private setBesetzgrad(number: string) {
     Util.log('set besetzgrad')
+    const bg = parseInt(number)
+    this.setStatus('-BG'+bg + '-', true)
 
     this.setDisplayMode(TerminalDisplayMode.None)
 
@@ -539,6 +539,8 @@ promptZuglaenge() {
     let outputText = "ZUGLÄNGE      :";
     if (this.ibisController.zuglaenge) {
         outputText += this.ibisController.zuglaenge.toString()
+    } else {
+        outputText += " ";
     }
     this.setText(0, outputText)
 }
