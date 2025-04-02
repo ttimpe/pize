@@ -20,7 +20,7 @@ class IBISTerminal {
     private lines: string[] = ['', '']
     private previousDisplayMode = TerminalDisplayMode.None;
     private statusOverrideText?: string;
-    private stausOverrideBlinking: boolean = false
+    private statusOverrideBlinking: boolean = false
     private currentMeldung: string = ''
     private currentWeisung: string = ''
     mode: IBISTerminalMode = IBISTerminalMode.FUNCTION
@@ -220,7 +220,7 @@ class IBISTerminal {
         if (this.currentDisplayMode == TerminalDisplayMode.MeldungBestaetigen) {
             // TODO: Meldungsnummern
             this.statusOverrideText = '-ML0-'
-            this.stausOverrideBlinking = true
+            this.statusOverrideBlinking = true
             this.setDisplayMode(TerminalDisplayMode.None)
 
     
@@ -436,7 +436,7 @@ class IBISTerminal {
         // Statusfeld überprüfen. Falls wir eine Meldung absenden oder abgesendet haben, Status anzeigen
         if (this.statusOverrideText) {
             Util.log("Status text")
-            if (this.stausOverrideBlinking) {
+            if (this.statusOverrideBlinking) {
                 this.setText(1, this.statusOverrideText, IBISTerminalMode.BLINKING_FUNCTION_NO_RECEIVE)
             } else {
                 this.setText(1, this.statusOverrideText, IBISTerminalMode.FUNCTION_NO_RECEIVE)
@@ -454,7 +454,7 @@ class IBISTerminal {
     private setStatus(statusText?: string, isBlinking: boolean = false) {
     //this.setText(1, )
         this.statusOverrideText = statusText
-        this.stausOverrideBlinking = isBlinking
+        this.statusOverrideBlinking = isBlinking
         this.updateSecondLine()
     }
 
