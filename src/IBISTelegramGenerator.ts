@@ -60,7 +60,7 @@ class IBISTelegramGenerator {
     // DS003a - Außenanzeigen Text
 
     static DS003a(text: string): IBISTelegram {
-        return 'zA' + Math.round(text.length / 16).toIBISHexString() + text.toIBISUppercase()
+        return 'zA' + Math.ceil(text.length / 16).toIBISHexString() + text.toIBISUppercase()
     }
 
     // DS003b - Ziel für ZUB / Fahrstraßenanforderung
@@ -70,7 +70,7 @@ class IBISTelegramGenerator {
 
     // DS003c - Haltestellenname
     static DS003c(name: string): IBISTelegram {
-        return 'zI' + Math.round(name.length / 4).toIBISHexString() + name.toIBISUppercase()
+        return 'zI' + Math.ceil(name.length / 4).toIBISHexString() + name.toIBISUppercase()
     }
 
     // DS003d - Routennummer für ZUB / Fahrstraßenanforderung
@@ -294,17 +294,17 @@ class IBISTelegramGenerator {
 
     // DS021 - Text Ziel, Fahrweg
     static DS021(adresse: number, text: string): IBISTelegram {
-        return 'aA' + adresse.toIBISHexString() + Math.round(text.length / 16).toIBISHexString() + text + '\n\n' + " ".repeat(text.length - 1)
+        return 'aA' + adresse.toIBISHexString() + Math.ceil(text.length / 16).toIBISHexString() + text + '\n\n' + " ".repeat(text.length - 1)
     }
 
     // DS021a - Streckenverlaufsanzeigen - Haltestellennamen und Umsteigehinweise
     static DS021a(adresse: number, text: string): IBISTelegram {
-        return 'aL' + adresse.toIBISHexString() + Math.round(text.length / 16).toIBISHexString().padStart(2, '0') + text
+        return 'aL' + adresse.toIBISHexString() + Math.ceil(text.length / 16).toIBISHexString().padStart(2, '0') + text
     }
 
     // DS021b - Haltestellenname und Umsteigehinweise
     static DS021b(text: string): IBISTelegram {
-        return 'aA' + Math.round(text.length / 16).toIBISHexString().padStart(3, '0') + text
+        return 'aA' + Math.ceil(text.length / 16).toIBISHexString().padStart(3, '0') + text
     }
 
     // DS021c - Perlenschnur ?
