@@ -294,12 +294,12 @@ class IBISTelegramGenerator {
 
     // DS021 - Text Ziel, Fahrweg
     static DS021(adresse: number, text: string): IBISTelegram {
-        return 'aA' + adresse.toIBISHexString() + Math.ceil(text.length / 16).toIBISHexString() + text + '\n\n' + " ".repeat(text.length - 1)
+        return 'aA' + adresse.toIBISHexString() + (Math.ceil(text.length / 16) + 1).toIBISHexString() + text + '\n\n' + " ".repeat(text.length - 1)
     }
 
     // DS021a - Streckenverlaufsanzeigen - Haltestellennamen und Umsteigehinweise
     static DS021a(adresse: number, text: string): IBISTelegram {
-        return 'aL' + adresse.toIBISHexString() + Math.ceil(text.length / 16).toIBISHexString().padStart(2, '0') + text
+        return 'aL' + adresse.toIBISHexString() + (Math.ceil(text.length / 16) + 1).toIBISHexString().padStart(2, '0') + text
     }
 
     // DS021b - Haltestellenname und Umsteigehinweise
