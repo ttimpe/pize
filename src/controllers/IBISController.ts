@@ -103,8 +103,9 @@ class IBISController {
             let stopName = this.route.stops[this.stopIndex].stop.information.shortName;
             // Fix for signs that don't support DS001
             if (this.deviceConfig.line_number_in_ds009 == false) {
+                Util.log('No line in DS009')
                 return stopName;
-            }
+            } else {
             
             let lineString = this.linie.number
             if (this.sonderzeichen) {
@@ -126,6 +127,7 @@ class IBISController {
             
             
             return output;
+        }
         }
         return ''
     }
