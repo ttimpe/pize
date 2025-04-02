@@ -388,9 +388,10 @@ class IBISTerminal {
         }
         this.ibisController.sendTelegram(telegram)
         this.ibisController.sendTelegram(telegram)
+        /*
         this.ibisController.sendTelegram(telegram)
         this.ibisController.sendTelegram(telegram)
-
+*/
    //     this.lastTextSentTimestamp = new Date()
     }
 
