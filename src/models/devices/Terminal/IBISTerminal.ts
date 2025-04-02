@@ -28,6 +28,7 @@ class IBISTerminal {
 
     // TEIN
     public isActive: boolean = false
+    public firstActivation: boolean = true
      // active function definition
     currentDisplayMode :TerminalDisplayMode = TerminalDisplayMode.None
     
@@ -190,7 +191,8 @@ class IBISTerminal {
             }
         }
         } else {
-            // Key is Q, Quittierung
+            // Taste Quittierung gedrückt
+
             
             
         }
@@ -236,7 +238,9 @@ class IBISTerminal {
         this.setDisplayMode(TerminalDisplayMode.LStAnFG)
     }
     private onPressUnfall() {
-        this.setDisplayMode(TerminalDisplayMode.Unfall)
+        this.statusOverrideText = '-VLS-'
+        this.updateSecondLine()
+        this.ibisController.sendUnfall()
     }
     private onPressHstWiederholen() {
         this.ibisController.repeatStopAnnouncement();
@@ -262,9 +266,20 @@ class IBISTerminal {
         }
        
     }
+    /* Sprechwunsch:
+        - Im Datenfunkbetrieb blinkend -SPR- bis quittiert von VZ
+        - Sobald quittiert von VZ -SPR- konstant
+        - Wenn Sprechverbindung aufgebaut -VLS- konstant
+        - Im Sprechfunkbetrieb direkt -VLS- konstant
+    */
+
     private onPressSprechwunsch() {
-        Util.log('Method not implemented.');
+        // TODO: Unterscheidung Datenfunk / Sprechfunk
+        this.statusOverrideText = '-VLS-'
+        this.updateSecondLine()
+        this.ibisController.sendSprechwunsch()
     }
+
     private onPressMeldung() {
         this.setDisplayMode(TerminalDisplayMode.Meldung)
     }
@@ -317,6 +332,9 @@ class IBISTerminal {
                 break
             case TerminalDisplayMode.LinieKurs:
                 this.setLinieKurs(numberString)
+                if (this.firstActivation == true) {
+                    this.setDisplayMode(TerminalDisplayMode.Zuglaenge)
+                }
                 break
             case TerminalDisplayMode.Route:
                 this.setRoute(numberString)
@@ -327,6 +345,8 @@ class IBISTerminal {
             case TerminalDisplayMode.Ziel:
                 this.setZiel(numberString)
                 break
+            case TerminalDisplayMode.Zuglaenge:
+                this.setZuglaenge(numberString);
         }
     }
 
@@ -487,6 +507,16 @@ promptForDestination() {
 
     this.setText(0, outputText.padEnd(16))
 }
+
+// Abfrage der Zuglänge, nur bei ersten aufrüsten
+promptZuglaenge() {
+    this.mode = IBISTerminalMode.DIGITS
+    let outputText = "ZUGLÄNGE      :";
+    if (this.ibisController.zuglaenge) {
+        outputText += this.ibisController.zuglaenge.toString()
+    }
+    this.setText(0, outputText)
+}
 setWeicheLinks() {
 
 }
@@ -607,6 +637,9 @@ private setDisplayMode(displayMode: TerminalDisplayMode) {
         case TerminalDisplayMode.Weisung:
             this.showWeisung()
             break
+        case TerminalDisplayMode.Zuglaenge:
+            this.promptZuglaenge()
+            break
     }
 }
 
@@ -685,6 +718,14 @@ private setMeldung(number: string) {
       
     }
     this.setDisplayMode(TerminalDisplayMode.None)
+}
+
+private setZuglaenge(laenge: string) {
+    let zuglaenge = parseInt(laenge)
+    this.ibisController.setZuglaenge(zuglaenge)
+    // Zuglaenge gesetzt, fertig mit ersten aufrüsten
+    this.firstActivation = false
+    this.setDisplayMode(TerminalDisplayMode.None)    
 }
 
  private async setSonderzeichen(number: string) {

@@ -21,5 +21,6 @@ export enum TerminalDisplayMode {
     Haltestelle = 19,
     Fehler = 20,
     MeldungBestaetigen = 21,
-    Weisung = 22    
+    Weisung = 22,  
+    Zuglaenge = 23
 }

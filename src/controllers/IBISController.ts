@@ -52,6 +52,8 @@ class IBISController {
     public radioController?: RadioController
     public linie?: Line
     public kurs: number = 0
+    public zuglaenge: number = 0
+    
     public sonderzeichen?: SpecialCharacter
 
     public currentSign?: IBISSign
@@ -544,6 +546,7 @@ this.websocket.clients.forEach(client => {
     }
 
     async setRoute(routeNumber: number): Promise<boolean> {
+        if (routeNumber != 0) {
         if (this.linie) {
             const route = await Route.findOne({
                 where: {
@@ -584,12 +587,29 @@ this.websocket.clients.forEach(client => {
             }
         }
         return false
+        } else {
+            // Route 0 gesetzt, mit Route 0 sind Pfeiltasten für LSA aktiv, sonst nicht.
+            this.route = undefined;
+            if (this.aTerminal && this.aTerminal.isActive) {
+                this.aTerminal.onSetRoute();
+            }
+            if (this.bTerminal && this.bTerminal.isActive) {
+                this.bTerminal.onSetRoute();
+            }
+            if (this.locationController) {
+                this.locationController.onSetRoute()
+            }
+            return true
+        }
     }
     
     setRichtung(direction: number) {
         this.richtung = direction
     }
 
+    setZuglaenge(laenge: number) {
+        this.zuglaenge = laenge
+    }
     async setZiel(destinationNumber: number): Promise<boolean> {
         const destination = await Destination.findOne({
             where: {
@@ -715,6 +735,13 @@ this.websocket.clients.forEach(client => {
             this.sonderzeichen = null;
             return true;
         }
+    }
+
+    sendSprechwunsch() {
+
+    }
+    sendUnfall() {
+        
     }
 
 
