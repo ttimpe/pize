@@ -44,8 +44,9 @@ class LocationController {
 
     onSetRoute() {
         this.impulsesSinceReset = 0;
-        this.arriveAtStop(this.ibisController.route.stops[0])
-
+        if (this.ibisController.route) {
+            this.arriveAtStop(this.ibisController.route.stops[0])
+        }
 
     }
     async arriveAtStop(routeStop: RouteStop) {
