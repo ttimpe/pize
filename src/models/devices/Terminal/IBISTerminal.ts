@@ -13,7 +13,7 @@ import {IBISTelegram } from '../../../extensions/IBISTelegram';
 import { Util } from '../../../util';
 import { AudioController } from '../../../controllers/AudioController';
 import { DeviceConfig } from '../DeviceConfig';
-import { Line } from 'node-libgpiod';
+import { Meldung } from '../../database/Meldung';
 
 class IBISTerminal {
     private isPrimary: boolean = true
@@ -21,7 +21,7 @@ class IBISTerminal {
     private previousDisplayMode = TerminalDisplayMode.None;
     private statusOverrideText?: string;
     private statusOverrideBlinking: boolean = false
-    private currentMeldung: string = ''
+    private currentMeldung?: Meldung
     private currentWeisung: string = ''
     mode: IBISTerminalMode = IBISTerminalMode.FUNCTION
     private deviceConfig: DeviceConfig = require('../../../device_config.json')
@@ -152,13 +152,13 @@ class IBISTerminal {
                                 this.onPressZiel()
                                 break
                             case IBISTerminalKeyAction.WEICHE_LINKS:
-                                this.onPressWeicheLinks()
+                                this.onPressFahrtrichtungLinks()
                                 break
                             case IBISTerminalKeyAction.WEICHE_GERADE:
-                                this.onPressWeicheGerade()
+                                this.onPressFahrtrichtungGerade()
                                 break
                             case IBISTerminalKeyAction.WEICHE_RECHTS:
-                                this.onPressWeicheRechts()
+                                this.onPressFahrtrichtungRechts()
                                 break
                             case IBISTerminalKeyAction.ANSAGE_STUMM:
                                 this.onPressAnsageStumm()
@@ -219,7 +219,7 @@ class IBISTerminal {
     private onPressQuittierung() {
         if (this.currentDisplayMode == TerminalDisplayMode.MeldungBestaetigen) {
             // TODO: Meldungsnummern
-            this.setStatus('-ML0-', true)
+            this.setStatus('-ML' + this.currentMeldung.number +'-', true)
             this.setDisplayMode(TerminalDisplayMode.None)
 
     
@@ -234,9 +234,11 @@ class IBISTerminal {
             }
         }
     }
-    private onPressWeicheLinks() {
+    private onPressFahrtrichtungLinks() {
         // Set Weiche Links on vehicle
-        this.setDisplayMode(TerminalDisplayMode.WeicheLinks)
+        if (!this.ibisController.route) {
+            this.setDisplayMode(TerminalDisplayMode.FahrtrichtungLinks)
+        }
     }
     private onPressZiel() {
         this.setDisplayMode(TerminalDisplayMode.Ziel)
@@ -247,11 +249,15 @@ class IBISTerminal {
     private onPressLinieKurs() {
         this.setDisplayMode(TerminalDisplayMode.LinieKurs)
     }
-    private onPressWeicheGerade() {
-        this.setDisplayMode(TerminalDisplayMode.WeicheGerade)
+    private onPressFahrtrichtungGerade() {
+        if (!this.ibisController.route) {
+            this.setDisplayMode(TerminalDisplayMode.FahrtrichtungGerade)
+        }
     }
-    private onPressWeicheRechts() {
-        this.setDisplayMode(TerminalDisplayMode.WeicheRechts)
+    private onPressFahrtrichtungRechts() {
+        if (!this.ibisController.route) {
+            this.setDisplayMode(TerminalDisplayMode.FahrtrichtungRechts)
+        }
     }
     private onPressAnsageStumm() {
         this.ibisController.toggleAnnouncementsMuted();
@@ -390,7 +396,6 @@ class IBISTerminal {
         this.ibisController.sendTelegram(telegram)
         this.ibisController.sendTelegram(telegram)
         this.ibisController.sendTelegram(telegram)
-   //     this.lastTextSentTimestamp = new Date()
     }
 
 
@@ -423,12 +428,21 @@ class IBISTerminal {
         if (this.ibisController.route && this.ibisController.route.stops[this.ibisController.stopIndex] != undefined) {
             hst = this.ibisController.route.stops[this.ibisController.stopIndex].stop.number.toString().padStart(3, '0')
         } 
+        // Richtungstext: H - Hin, R - Rück, Z - RaZzia
         if (this.ibisController.richtung) {
-            if (this.ibisController.richtung == 1) {
-                richtung = 'H'
-            } else {
-                richtung = 'R'
+            switch (this.ibisController.richtung) {
+                case 1:
+                    richtung = 'H'
+                    break;
+                case 2:
+                    richtung = 'R'
+                    break;
+                default:
+                    richtung = 'Z'
+                    break;
             }
+           
+            
         }
         // Statusfeld überprüfen. Falls wir eine Meldung absenden oder abgesendet haben, Status anzeigen
         if (this.statusOverrideText) {
@@ -448,7 +462,7 @@ class IBISTerminal {
         
       }
     // Statusfeld setzen
-    private setStatus(statusText: string, isBlinking: boolean) {
+    public setStatus(statusText: string, isBlinking: boolean) {
     //this.setText(1, )
         this.statusOverrideText = statusText
         this.statusOverrideBlinking = isBlinking
@@ -557,7 +571,7 @@ setAnsageStumm() {
 }
 showMeldung() {
     this.mode = IBISTerminalMode.BLINKING_FUNCTION
-    this.setText(0, this.currentMeldung.padEnd(16),IBISTerminalMode.BLINKING_FUNCTION)
+    this.setText(0, this.currentMeldung.stringValue.padEnd(16),IBISTerminalMode.BLINKING_FUNCTION)
 
 }
 setAnsageAussen() {
@@ -627,13 +641,13 @@ private setDisplayMode(displayMode: TerminalDisplayMode) {
         case TerminalDisplayMode.None:
             this.showNormalMode()
             break
-        case TerminalDisplayMode.WeicheLinks:
+        case TerminalDisplayMode.FahrtrichtungLinks:
             this.setWeicheLinks()
             break
-        case TerminalDisplayMode.WeicheGerade:
+        case TerminalDisplayMode.FahrtrichtungGerade:
             this.setWeicheGerade()
             break
-        case TerminalDisplayMode.WeicheRechts:
+        case TerminalDisplayMode.FahrtrichtungRechts:
             this.setWeicheRechts()
             break
         case TerminalDisplayMode.AnsageStumm:
@@ -677,7 +691,9 @@ private setRichtung(number: string) {
 /* Weisung anzeigen, 10 Sekunden */
 
 private showWeisung() {
+    
     this.setText(0, this.currentWeisung.padEnd(16), IBISTerminalMode.FUNCTION)
+    this.playSound(this.deviceConfig.terminal_config.sounds.WEISUNG)
     setTimeout(() => {
         this.currentWeisung = ''
         this.setDisplayMode(TerminalDisplayMode.None)
@@ -694,13 +710,19 @@ public setWeisung(weisung: string) {
 
 
 
-private setMeldung(number: string) {
+private async setMeldung(number: string) {
     Util.log('Zeige Meldung Nr.', number)
     let meldungNumber = parseInt(number)
-    Util.log(this.deviceConfig)
-    let meldungen = this.deviceConfig.messages
-    this.currentMeldung = meldungen[meldungNumber]
-    Util.log('Meldung: ', meldungen[meldungNumber])
+    
+
+    let meldung = await Meldung.findOne({
+        where: {
+            'number': meldungNumber
+        }
+    })
+
+    this.currentMeldung = meldung
+    Util.log('Meldung: ', meldung.stringValue)
     this.setDisplayMode(TerminalDisplayMode.MeldungBestaetigen)
     /* TODO:
     Meldung anzeigen zur Kontrolle, muss von FP bestätigt werden
@@ -807,7 +829,7 @@ private promptForSpecialCharacter() {
     }
     showError() {
         this.mode = IBISTerminalMode.BLINKING_FUNCTION;
-        this.playSound(4);
+        this.playSound(this.deviceConfig.terminal_config.sounds.FEHLER);
         this.setText(0, this.errors[this.errors.length - 1].padEnd(16))
     }
 

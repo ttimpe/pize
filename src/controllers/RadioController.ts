@@ -40,6 +40,7 @@ class RadioController {
     private receivedBytes: number[] = [];
     private mode: RadioMode;
 
+    
     private ibisController?: IBISController
 
     private radix40Table = " ABCDEFGHIJKLMNOPQRSTUVWXYZ:.=0123456789";

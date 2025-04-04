@@ -2,7 +2,7 @@ import { RouteStop } from '../models/database/RouteStop';
 import { Announcement } from './../models/database/Announcement';
 import PlaySound from 'play-sound';
 import { Util } from "../util"
-import { Chip, Line as ChipLine } from "node-libgpiod";
+import { Gpio } from 'onoff';
 import { DeviceConfig } from '../models/devices/DeviceConfig';
 
 class AudioController {
@@ -10,20 +10,27 @@ class AudioController {
     announcementsMuted: boolean = false;
     lastAnnouncement?: Announcement
     private deviceConfig: DeviceConfig = require('../../device_config.json')
-    private chip: Chip
-    private ansageInnenLine: ChipLine
-    private ansageAussenLine: ChipLine
+    private ansageInnenPin: Gpio
+    private ansageAussenPin: Gpio
 
     constructor() {
+        // Für Meister GLS-Verstärker: GPIO-Pins für Ansage innen und Ansage außen per GPIO
+
         if (this.deviceConfig.use_gpio == true) {
-        this.chip = new Chip(0)
-        this.ansageInnenLine = new ChipLine(this.chip, this.deviceConfig.GPIO_PINOUT.FLE);
-        this.ansageAussenLine = new ChipLine(this.chip, this.deviceConfig.GPIO_PINOUT.PLE);
+        
+            this.ansageInnenPin = new Gpio(this.deviceConfig.GPIO_PINOUT.FLE, 'out')
+            this.ansageAussenPin = new Gpio(this.deviceConfig.GPIO_PINOUT.PLE, 'out')
+            this.ansageAussenPin.write(Gpio.HIGH, (err) => {
+                if (err) {
+                    Util.log('SetAnsageAussen pin failed')
+                }
+            });
+            this.ansageInnenPin.write(Gpio.HIGH, (err) => {
+                if (err) {
+                    Util.log('Set AnsageInnen pin failed', err)
+                }
+            })
 
-        // Set initial state for pins, active LOW
-
-        this.ansageInnenLine.requestOutputMode(1)
-        this.ansageAussenLine.requestOutputMode(1)
         }
 
     }
@@ -83,20 +90,49 @@ class AudioController {
     // Aktiv bei setzen auf GND
     async setAnsageInnen() {
         if (this.deviceConfig.use_gpio == true) {
-        this.ansageAussenLine.setValue(1)
-        this.ansageInnenLine.setValue(0)
+            this.ansageAussenPin.write(Gpio.HIGH, (err) => {
+                if (err) {
+                    Util.log('AnsageAussen Pin failed')
+                } else {
+                    this.ansageInnenPin.write(Gpio.LOW, (err) => {
+                        if (err) {
+                            Util.log('AnsageInnen failed')
+                        }
+                    })
+                }
+            })
+   
         }
     }
     async setAnsageAussen() {
         if (this.deviceConfig.use_gpio == true) {
-        this.ansageInnenLine.setValue(1)
-        this.ansageAussenLine.setValue(0)
+            this.ansageInnenPin.write(Gpio.HIGH, (err) => {
+                if (err) {
+                    Util.log('AnsageInnen Pin failed')
+                } else {
+                    this.ansageAussenPin.write(Gpio.LOW, (err) => {
+                        if (err) {
+                            Util.log('AnsageAussen failed')
+                        }
+                    })
+                }
+            })
+   
         }
     }
     async unsetAnsage() {
         if (this.deviceConfig.use_gpio == true) {
-            this.ansageInnenLine.setValue(1)
-            this.ansageAussenLine.setValue(1)
+            this.ansageInnenPin.write(Gpio.HIGH, (err) => {
+                if (err) {
+                    Util.log('AnsageInnen Pin failed')
+                }
+            })
+            this.ansageAussenPin.write(Gpio.HIGH, (err) => {
+                if (err) {
+                    Util.log('AnsageAussen Pin failed')
+                }
+            })
+
         } 
     }
     

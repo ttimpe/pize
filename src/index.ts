@@ -27,6 +27,7 @@ import { AudioController } from './controllers/AudioController';
 import bodyParser, { BodyParser } from 'body-parser'
 import { WebSocketServer } from 'ws';
 import { RadioController } from './controllers/RadioController';
+import { Meldung } from './models/database/Meldung';
 
 
 
@@ -64,7 +65,8 @@ function main() {
     StopInformation,
     Announcement,
     SpecialCharacter,
-    StopDistance
+    StopDistance,
+    Meldung
   ])
   // Init terminal(s)
   

@@ -341,7 +341,7 @@ class IBISTelegramGenerator {
 
     // DS034 - Sende Haltestellenname
     static DS034(name: string): IBISTelegram {
-        return 'hC'+name
+        return 'hC' + name
     }
 
     // DS035 - Sende Haltestellendaten

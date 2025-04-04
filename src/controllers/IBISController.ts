@@ -1,3 +1,4 @@
+import { Gpio } from 'onoff';
 import { StopDistance } from './../models/database/StopDistance';
 import { Destination } from './../models/database/Destination';
 import { SpecialCharacter } from './../models/database/SpecialCharacter';
@@ -68,6 +69,7 @@ class IBISController {
     // Websocket
     private websocket: WebSocketServer
 
+    private ueberfallSet: boolean
     
     
     get upcomingStop(): RouteStop {
@@ -93,6 +95,7 @@ class IBISController {
     public richtung: number = 0
 
     private telegramSendQueue:IBISTelegram[] = []
+
 
 
     
@@ -236,6 +239,35 @@ class IBISController {
         });
     });
        
+
+    if (this.deviceConfig.use_gpio == true) {
+
+            const ueberfallLine = new Gpio(this.deviceConfig.GPIO_PINOUT.UEB, 'in', 'both')
+
+            
+            
+            // Set initial state for pins, active LOW
+    
+        }
+    }
+
+    private onUeberfall(err: Error | null, value: number) {
+        if (err) {
+            Util.log('Error:', err);
+            return;
+        }
+        if (value == 1 && !this.ueberfallSet) {
+            this.ueberfallSet = true
+
+            if (this.aTerminal) {
+                this.aTerminal.setStatus('-----', true);
+                this.aTerminal.updateSecondLine()
+            }
+            if (this.bTerminal) {
+                this.bTerminal.setStatus('-----', true);
+                this.bTerminal.updateSecondLine()
+            }
+        }
     }
 
     // Aktivierte Anzeigen loopen und registrieren
@@ -531,6 +563,8 @@ this.websocket.clients.forEach(client => {
 
     
     async setLine(lineNumber: string): Promise<boolean> {
+        if (parseInt(lineNumber) > 0) { 
+        // Linie in DV suchen
         const line = await Line.findOne({
             where: {
                 number: lineNumber
@@ -545,6 +579,9 @@ this.websocket.clients.forEach(client => {
             return true
         }
         return false
+        } else {
+            // Abmeldung bei Linie 0
+        }
     }
 
     async setRoute(routeNumber: number): Promise<boolean> {
