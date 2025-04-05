@@ -33,10 +33,12 @@
     width: 22mm;
     height: 22mm;
 }
-.terminal button.arrow-button .text {
+.terminal button.arrow-button .text, .terminal button.arrow-button .arrow {
     font-size: 22mm;
     text-align: middle;
     line-height: 22mm;
+    color: yellow;
+    text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
 }
 .terminal .button-red {
     background: red;
@@ -45,7 +47,7 @@
     background-color: yellow;
 }
 .terminal .button-blue {
-    background: blue;
+    background: lightblue;
 }
 .terminal .number-block {
     width: 75mm;
