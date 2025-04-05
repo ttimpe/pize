@@ -1,0 +1,118 @@
+.terminal {
+    background: black;
+    width: 225mm;
+    height:100mm;
+    position: absolute;
+    border-radius: 4mm;;
+}
+.terminal button {
+    width:22mm;
+    height:22mm;
+    font-family: Helvetica;
+    font-weight: bold;
+    position: relative;
+    border-radius: 4mm;
+    border: 0;
+    margin: 0.5mm;
+    box-shadow: inset 0 0 0 1mm rgba(0,0,0,0.4);
+}
+.terminal button * {
+    pointer-events: none;
+} 
+.terminal button .number {
+    font-size: 20pt;
+    position: absolute;
+    bottom: 2mm;
+    left: 2mm;
+}
+.terminal button .text {
+    position: absolute;
+    top: 2mm;
+    left:2mm;
+    text-align: left;
+    width: 22mm;
+    height: 22mm;
+}
+.terminal button.arrow-button .text {
+    font-size: 22mm;
+    text-align: middle;
+    line-height: 22mm;
+}
+.terminal .button-red {
+    background: red;
+}
+.terminal .button-yellow {
+    background-color: yellow;
+}
+.terminal .button-blue {
+    background: blue;
+}
+.terminal .number-block {
+    width: 75mm;
+    position: absolute;
+    right:0;
+    top:0;
+}
+.terminal .function-button .text {
+    display: inline-flex;
+  align-items: center;
+  top:0;
+}
+.terminal .function-block {
+    width: 145mm;
+    top: 50mm;
+    position: absolute;
+
+}
+.terminal .display-border {
+    width: 145mm;
+    height:44mm;
+    border-radius: 4mm;
+    left:2mm;
+    top: 2mm;
+    position: absolute;
+    background-color: lightgray;
+}
+.terminal .display-inner {
+    background: lime;
+    border-radius: 3mm;
+    font-size: 24pt;
+    position: absolute;
+    font-family: monospace;
+    height: 40mm;
+    left: 6mm;
+    top: 4mm;
+}
+.terminal .display-labels {
+    bottom:0;
+    position: absolute;
+    font-family: Helvetica;
+    font-weight: bold;
+    font-size:10pt;
+    padding: 2mm;
+}
+
+.terminal .display-labels span {
+    display: inline-block;
+    position: relative;
+}
+.terminal .display-labels span:before {
+    display: inline-block;
+    position: absolute;
+    content: ' ';
+    top: -100%;
+    width: 100%;
+    border-bottom: 4px solid black;
+    border-left: 4px solid black;
+    height: 2mm;
+}
+.terminal .display-labels span:last-child:before {
+    border-right: 4px solid black;
+
+}
+.terminal #display-canvas {
+    background-color: #32CD32;
+    padding: 4mm;
+    margin: 2mm;
+    border-radius: 2mm;
+}

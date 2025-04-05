@@ -70,6 +70,8 @@
         }
         
     </style>
+    <link rel="stylesheet" href="terminal.css">
+
 </head>
 <body>
     <h1>Event Viewer</h1>
@@ -154,7 +156,113 @@
         <input type="text" id="radio-telegram-bitfield">
         <button id="sendBitsButton">SEND</button>
     </div>
+
+
+    <div class="terminal">
+        <div class="display">
+            <div class="display-border">
+                <canvas id="display-canvas"></canvas>
+    
+                <div class="display-labels">
+                    <span style="width: 155px;">Linie/Kurs</span>
+                    <span style="width: 80px;">Ziel</span>
+                    <span style="width: 30px;">R</span>
+                    <span style="width: 80px;">Haltest.</span>
+                    <span style="width: 130px;">Abweich.</span>
+                </div>
+    
+            </div>
+        </div>
+        
+        <div class="function-block">
+            <button class="function-button">
+                <span class="text">Anz.</span>
+            </button>
+            <button class="arrow-button">
+                <span class="text">⇦</span>
+            </button>
+            <button class="arrow-button">
+                <span class="text">⇑</span>
+            </button>
+            <button class="arrow-button">
+                <span class="text">⇨</span>
+            </button>
+            <button class="function-button button-blue">
+                <span class="text">Ansage<br>Stumm</span>
+            </button>
+            <button class="function-button button-blue">
+                <span class="text">Ansage<br>Aussen</span>
+            </button>
+            <button class="function-button">
+                <span class="text">Anz.</span>
+            </button>
+            <button class="function-button button-blue" data-number="*">
+                <span class="text">Sprech-<br>wunsch</span>
+            </button>
+            <button class="function-button button-blue">
+                <span class="text">Leitst.<br>an<br>Fahrgast</span>
+            </button>
+            <button class="function-button button-red">
+                <span class="text">Unfall</span>
+            </button>
+            <button class="function-button button-blue">
+                <span class="text">Haltest.<br>wiederh.</span>
+            </button>
+            <button class="function-button button-blue">
+                <span class="text">Ansage Innen</span>
+            </button>
+        </div>
+        <div class="number-block">
+            <button class="number-button" data-number="7">
+                <span class="number">7</span>
+                <span class="text">Linie-<br>Kurs</span>
+            </button>
+                <button class="number-button" data-number="8">
+                    <span class="number">8</span>
+                    <span class="text">Route</span>
+                </button>
+                <button class="number-button" data-number="9">
+                    <span class="number">9</span>
+                    <span class="text">Ziel-<br>Sonderz.</span>
+                </button>
+                <button class="number-button" data-number="4">
+                    <span class="number">4</span>
+                    <span class="text">Haltest.<br>Nr.</span>
+                </button>
+                <button class="number-button" data-number="5">
+                    <span class="number">5</span>
+                    <span class="text">Richtung</span>
+                </button>
+                <button class="number-button" data-number="6">
+                    <span class="number">6</span>
+                    <span class="text">Meldung</span></button>
+                    <button class="number-button" data-number="1">
+                        <span class="number">1</span>
+                        <span class="text">Beset-<br>zung</span>
+                    </button>
+                    <button class="number-button" data-number="2">
+                        <span class="number">2</span>
+                        <span class="text">Uhrzeit<br>Datum</span>
+                    </button>
+                    <button class="number-button" data-number="3">
+                        <span class="number">3</span>
+                        <span class="text">Nächste<br>Haltest.</span>
+                    </button>
+                        <button class="function-button button-yellow" data-number="/">
+                            <span class="text">Löschen</span>
+                        </button>
+                        <button class="number-button" data-number="0">
+                            <span class="number">0</span>
+                            <span class="text">Stop</span>
+                        </button>
+                        <button class="function-button button-yellow" data-number="?">
+                            <span class="text">Eingabe<br>Quitt.</span>
+                        </button>
+        </div>
+       
+    </div> 
 </div>
+<script src="terminal.js"></script>
     <script>
         const eventsDiv = document.getElementById('events_body');
         const groupSelector = document.getElementById('groupSelector');
@@ -183,7 +291,12 @@
         };
 
         websocket.onmessage = (event) => {
-            logEvent(`${event.data}`);
+            logEvent(`${event.data}`)
+            const obj = JSON.parse(event.data);
+            if (obj.channel == 'WBSD') {
+                console.log('Sending to terminal', obj)
+                onReceiveTelegram(obj['data'])
+            }
         };
 
         websocket.onclose = () => {
@@ -312,5 +425,6 @@
         }
         }
     </script>
+    
 </body>
 </html>
