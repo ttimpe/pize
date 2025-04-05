@@ -158,7 +158,11 @@
     </div>
 
 
-    <div class="terminal">
+    <div class="terminal" draggable="true">
+        <div class="terminal-header">
+            <span id="logo-siemens">SIEMENS</span>
+            <span id="logo-hpw">HPW</span>
+        </div>
         <div class="display">
             <div class="display-border">
                 <canvas id="display-canvas"></canvas>
@@ -175,42 +179,42 @@
         </div>
         
         <div class="function-block">
-            <button class="function-button">
+            <button class="arrow-button brightness-button" id="increase-brightness-button">
                 <span class="text">Anz.</span>
                 <span class="arrow">⬆</span>
             </button>
-            <button class="arrow-button">
-                <span class="text">⬅</span>
+            <button class="function-button arrow-button" data-number=":">
+                <span class="arrow">⬅</span>
             </button>
-            <button class="arrow-button">
-                <span class="text">⬆</span>
+            <button class="function-button arrow-button" data-number=";">
+                <span class="arrow">⬆</span>
             </button>
-            <button class="arrow-button">
-                <span class="text">➡</span>
+            <button class="function-button arrow-button" data-number="<">
+                <span class="arrow">➡</span>
             </button>
-            <button class="function-button button-blue">
+            <button class="function-button button-blue" data-number="=">
                 <span class="text">Ansage<br>Stumm</span>
             </button>
-            <button class="function-button button-blue">
+            <button class="function-button button-blue" data-number=">">
                 <span class="text">Ansage<br>Aussen</span>
             </button>
-            <button class="function-button">
+            <button class="arrow-button brightness-button" id="decrease-brightness-button">
                 <span class="text">Anz.</span>
                 <span class="arrow">⬇</span>
             </button>
             <button class="function-button button-blue" data-number="*">
                 <span class="text">Sprech-<br>wunsch</span>
             </button>
-            <button class="function-button button-blue">
+            <button class="function-button button-blue" data-number="+">
                 <span class="text">Leitst.<br>an<br>Fahrgast</span>
             </button>
-            <button class="function-button button-red">
+            <button class="function-button button-red" data-number=",">
                 <span class="text">Unfall</span>
             </button>
-            <button class="function-button button-blue">
+            <button class="function-button button-blue" data-number="-">
                 <span class="text">Haltest.<br>wiederh.</span>
             </button>
-            <button class="function-button button-blue">
+            <button class="function-button button-blue" data-number=".">
                 <span class="text">Ansage Innen</span>
             </button>
         </div>

@@ -1,9 +1,22 @@
 .terminal {
-    background: black;
+    background: #222;
     width: 225mm;
-    height:100mm;
+    height: 110mm;
     position: absolute;
-    border-radius: 4mm;;
+    border-radius: 4mm;
+    box-shadow: 2mm 2mm 4mm #111;
+    border: 2mm solid #333;
+
+}
+.terminal .terminal-header {
+    height: 5mm;
+    font-family: Helvetica;
+    font-weight: bold;
+    display: flex;
+    color: white;
+    padding: 2mm;
+    padding-bottom: 0;
+    justify-content: space-between;
 }
 .terminal button {
     width:22mm;
@@ -33,12 +46,35 @@
     width: 22mm;
     height: 22mm;
 }
-.terminal button.arrow-button .text, .terminal button.arrow-button .arrow {
+.terminal button.brightness-button .text {
+    width: 11mm;
+    left: 2mm;
+    line-height: 18mm;
+}
+
+ .terminal button.arrow-button .arrow {
     font-size: 22mm;
     text-align: middle;
     line-height: 22mm;
     color: yellow;
+    position: absolute;
+    height: 22mm;
+    top:0;
+    left:0;
     text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -2px black;
+}
+.terminal #increase-brightness-button .arrow {
+    color: white;
+}
+.terminal #decrease-brightness-button .arrow {
+    color: black;
+}
+.terminal button.brightness-button .arrow {
+    width: 11mm;
+    left: 9mm;
+    position: absolute;
+    top:0;
+    font-size: 16mm !important;
 }
 .terminal .button-red {
     background: red;
@@ -53,7 +89,7 @@
     width: 75mm;
     position: absolute;
     right:0;
-    top:0;
+    top:9mm;
 }
 .terminal .function-button .text {
     display: inline-flex;
@@ -62,9 +98,13 @@
 }
 .terminal .function-block {
     width: 145mm;
-    top: 50mm;
+    top: 53mm;
+    left:2mm;
     position: absolute;
 
+}
+.terminal .display {
+    position: relative;
 }
 .terminal .display-border {
     width: 145mm;
@@ -74,6 +114,7 @@
     top: 2mm;
     position: absolute;
     background-color: lightgray;
+
 }
 .terminal .display-inner {
     background: lime;
