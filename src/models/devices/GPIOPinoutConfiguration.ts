@@ -5,5 +5,7 @@ class GPIOPinoutConfiguration {
     FLE: number
     PLE: number
     UEB: number
+    KKA: number
+    KKB: number
 }
 export { GPIOPinoutConfiguration }

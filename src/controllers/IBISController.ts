@@ -73,6 +73,8 @@ class IBISController {
     
     private tuerkontaktStatus: number
     
+    private kupplungA: boolean
+    private kupplungB: boolean
     
     get upcomingStop(): RouteStop {
         if (this.route && this.route.stops.length > 0) {
@@ -250,11 +252,43 @@ class IBISController {
             // Türkontakt, hier beide Richtung da Tür auf/zu
             const tuerkontaktPin = new Gpio(this.deviceConfig.GPIO_PINOUT.TK, 'in', 'both')
 
+            const kupplungAPin = new Gpio(this.deviceConfig.GPIO_PINOUT.KKA, 'in', 'both')
+            const kupplungBPin = new Gpio(this.deviceConfig.GPIO_PINOUT.KKB, 'in', 'both')
         
             ueberfallPin.watch(this.onUeberfall);
             wegimpulsPin.watch(this.onWegimpuls);
             tuerkontaktPin.watch(this.onTuerkontakt)
+            kupplungAPin.watch(this.onKupplungA)
+            kupplungBPin.watch(this.onKupplungB)
         }
+    }
+
+    private onKupplungA(err: Error | null, value: number) {
+        if (err) {
+            Util.log('GPIO-Fehler Kupplung A', err)
+            return;
+        }
+        if (value == 1) {
+            // Kupplung A aktiv
+            this.kupplungA = true
+        } else {
+            this.kupplungA = false
+        }
+        this.onChangeKupplung()
+    }
+
+    private onKupplungB(err: Error | null, value: number) {
+        if (err) {
+            Util.log('GPIO-Fehler Kupplung B', err)
+            return;
+        } 
+        if (value == 1) {
+            // Kupplung A aktiv
+            this.kupplungB = true
+        } else {
+            this.kupplungB = false
+        }
+        this.onChangeKupplung()
     }
 
     private onTuerkontakt(err: Error | null, value: number) {
@@ -297,6 +331,10 @@ class IBISController {
                 this.bTerminal.updateSecondLine()
             }
         }
+    }
+
+    private onChangeKupplung() {
+        Util.log('Kupplungsstatus geändert, neue Zuglänge')
     }
 
     // Aktivierte Anzeigen loopen und registrieren
