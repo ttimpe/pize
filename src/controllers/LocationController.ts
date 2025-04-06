@@ -19,7 +19,7 @@ class LocationController {
 
 
     possibleNextStopDistances: StopDistance[] = []
-    private deviceConfig: DeviceConfig = require('../device_config.json')
+    private deviceConfig: DeviceConfig = require('../../device_config.json')
 
     constructor(ibisController: IBISController) {
         this.ibisController = ibisController
@@ -50,9 +50,11 @@ class LocationController {
 
     }
     async arriveAtStop(routeStop: RouteStop) {
-        this.impulsesSinceReset = 0;
-        this.ibisController.arriveAtStop(routeStop);
-        this.possibleNextStopDistances = await this.getPossibleNextStops(routeStop)
+        if (routeStop) {
+            this.impulsesSinceReset = 0;
+            this.ibisController.arriveAtStop(routeStop);
+            this.possibleNextStopDistances = await this.getPossibleNextStops(routeStop)
+        }
     }
 
 
