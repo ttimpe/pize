@@ -71,6 +71,8 @@ class IBISController {
 
     private ueberfallSet: boolean
     
+    private tuerkontaktStatus: number
+    
     
     get upcomingStop(): RouteStop {
         if (this.route && this.route.stops.length > 0) {
@@ -241,19 +243,46 @@ class IBISController {
        
 
     if (this.deviceConfig.use_gpio == true) {
+            // Überfall-Taster
+            const ueberfallPin = new Gpio(this.deviceConfig.GPIO_PINOUT.UEB, 'in', 'falling')
+            // Wegimpuls
+            const wegimpulsPin = new Gpio(this.deviceConfig.GPIO_PINOUT.WI, 'in', 'falling')
+            // Türkontakt, hier beide Richtung da Tür auf/zu
+            const tuerkontaktPin = new Gpio(this.deviceConfig.GPIO_PINOUT.TK, 'in', 'both')
 
-            const ueberfallLine = new Gpio(this.deviceConfig.GPIO_PINOUT.UEB, 'in', 'both')
+        
+            ueberfallPin.watch(this.onUeberfall);
+            wegimpulsPin.watch(this.onWegimpuls);
+            tuerkontaktPin.watch(this.onTuerkontakt)
+        }
+    }
 
-            
-            
-            // Set initial state for pins, active LOW
-    
+    private onTuerkontakt(err: Error | null, value: number) {
+        if (err) {
+            Util.log('GPIO-Fehler Türkontakt', err)
+            return;
+        }
+        if (this.tuerkontaktStatus != value) {
+            this.tuerkontaktStatus = value
+            Util.log('Türkontakt geändert:', value)
+            // Wenn Tür wieder geschlossen und Fzg Haltestellenfangradius verlassen, nächste Hst
+            // Wenn Tür geöffnet wurde, Zählerstände merken
+        }
+    }
+
+    private onWegimpuls(err: Error | null, value: number) {
+        if (err) {
+            Util.log('GPIO-Fehler Wegimpuls', err)
+            return;
+        }
+        if (value == 1) {
+            this.locationController.wiInterrupt()
         }
     }
 
     private onUeberfall(err: Error | null, value: number) {
         if (err) {
-            Util.log('Error:', err);
+            Util.log('GPIO-Fehler Überfall:', err);
             return;
         }
         if (value == 1 && !this.ueberfallSet) {
@@ -282,7 +311,6 @@ class IBISController {
     private registerUestraLVAs() {
         for (let i=0; i < this.deviceConfig.UESTRA_LVA.length; i++) {
 
-            
                 this.uestraLVAs.push(new UestraLVA(this, this.deviceConfig.UESTRA_LVA[i] as IBISAddress));
     
         } 

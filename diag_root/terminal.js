@@ -141,13 +141,13 @@ const FONT = {
   ],
   // Umlauts and others
   'Ä': [
-    '01010','01110','10001','11111','10001','10001','10001'
+    '01010','0000','01110','10001','11111','10001','10001'
   ],
   'Ö': [
     '01010','01110','10001','10001','10001','10001','01110'
   ],
   'Ü': [
-    '01010','10001','10001','10001','10001','10001','01110'
+    '01010','00000','10001','10001','10001','10001','01110'
   ],
   'ä': [
     '01010','00000','01110','00001','01111','10001','01111'
@@ -192,9 +192,30 @@ const FONT = {
     '00000','00000','00000','00100','00000','00100','00000'
   ],
   "*": [
-    '00000', '10101', '011100', '00100', '01110', '10101', '00000'
+    '00000', '00100', '10101', '01110', '10101', '00100', '00000'
   ]
 };
+
+const umlautMap = {
+    "ä": "{",
+    "ö": "|",
+    "ü": "}",
+    "ß": "~",
+    "Ä": "[",
+    "Ö": "\\",
+    "Ü": "]"
+  };
+  
+  function encodeUmlautChar(char) {
+    return umlautMap[char] ?? char;
+  }
+  const reverseUmlautMap = Object.fromEntries(
+    Object.entries(umlautMap).map(([k, v]) => [v, k])
+  );
+  
+  function decodeUmlautChar(char) {
+    return reverseUmlautMap[char] ?? char;
+  }
 
 let inNumberMode = false;
 let numberBuffer = ''
@@ -284,7 +305,7 @@ function render(timestamp) {
 // Utility to set characters
 function setChar(char, row, col, blink = false) {
   if (row >= 0 && row < DISPLAY_ROWS && col >= 0 && col < DISPLAY_COLS) {
-    display[row][col] = char;
+    display[row][col] = decodeUmlautChar(char);
     blinking[row][col] = blink;
   }
 }
