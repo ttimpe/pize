@@ -988,7 +988,15 @@ class RadioController {
 
     public startListening() {
         const stream = this.mic.startRecording();
-        setInterval(this.funkrueckfallTimer, 30 * 1000)
+        setInterval(() => {
+                const date = new Date()
+                if (date.getTime() - this.lastReceivedTelegramTime.getTime() > 30 * 1000) {
+                    this.ibisController.setFunkrueckfall()
+                } else {
+                    // Immernoch im Datenfunk
+                    
+                }
+        }, 30 * 1000)
         stream.on('data', (chunk: Buffer) => {
             const int16Array = new Int16Array(chunk.buffer);
             const float32Array = new Float32Array(int16Array.length);
@@ -1001,15 +1009,7 @@ class RadioController {
         console.log("Listening for FFSK signals...");
     }
 
-    private funkrueckfallTimer() {
-        const date = new Date()
-        if (date.getTime() - this.lastReceivedTelegramTime.getTime() > 30 * 1000) {
-            this.ibisController.setFunkrueckfall()
-        } else {
-            // Immernoch im Datenfunk
-            
-        }
-    }
+
 
 
 
