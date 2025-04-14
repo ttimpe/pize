@@ -96,19 +96,22 @@ class LocationController {
     queryIRIS() {
     }
     simulateDrive(speed: number, distance: number) {
-        const impulsesNeeded = distance / 1000 * this.IMPULSES_PER_KILOMETER
-        var count = 0;
-
+        const impulsesNeeded = distance / 1000 * this.IMPULSES_PER_KILOMETER;
+        const totalSeconds = (distance / speed) * 3600; // total time in seconds
+        const intervalMs = (totalSeconds / impulsesNeeded) * 1000; // time between impulses in ms
+    
+        let count = 0;
+    
         let interval = setInterval(() => {
-            if (count == impulsesNeeded) {
+            if (count >= impulsesNeeded) {
                 clearInterval(interval);
                 return;
             } else {
-                this.wiInterrupt()
+                this.wiInterrupt();
                 count++;
             }
-        })
-
+        }, intervalMs);
     }
+    
 }
 export { LocationController }
