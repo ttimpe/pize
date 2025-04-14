@@ -71,11 +71,15 @@ class IBISController {
 
     private ueberfallSet: boolean
     
-    private tuerkontaktStatus: number
+    private tuerkriteriumStatus: boolean
     
     private kupplungA: boolean
     private kupplungB: boolean
     
+    // 0: Datenfunk, 1: Datenfunk gestört, 2: Funkrückfall
+    public funkmodus: number
+    
+
     get upcomingStop(): RouteStop {
         if (this.route && this.route.stops.length > 0) {
             return this.route.stops[this.stopIndex]
@@ -214,10 +218,16 @@ class IBISController {
                     Util.log(messageObject);
                     switch (messageObject['data']['criteria']) {
                         case 'TK':
+                            // Türkriterium
+                            this.onTuerkriterium(messageObject['data']['value'])
                             break;
                         case 'KBA':
+                            // Kupplung A Status
+                            this.onKupplungA(messageObject['data']['value'])
                             break;
                         case 'KBB':
+                            // Kupplung B Status
+                            this.onKupplungB(messageObject['data']['value'])
                             break;
                         case 'WEISUNG':
                             Util.log('Weisung anzeigen: ', messageObject['data']['value']['text'])
@@ -255,56 +265,47 @@ class IBISController {
             const kupplungAPin = new Gpio(this.deviceConfig.GPIO_PINOUT.KKA, 'in', 'both')
             const kupplungBPin = new Gpio(this.deviceConfig.GPIO_PINOUT.KKB, 'in', 'both')
         
-            ueberfallPin.watch(this.onUeberfall);
-            wegimpulsPin.watch(this.onWegimpuls);
-            tuerkontaktPin.watch(this.onTuerkontakt)
-            kupplungAPin.watch(this.onKupplungA)
-            kupplungBPin.watch(this.onKupplungB)
+            ueberfallPin.watch(this.interruptUeberfall);
+            wegimpulsPin.watch(this.interruptWegimpuls);
+            tuerkontaktPin.watch(this.interruptTuerkriterium)
+            kupplungAPin.watch(this.interruptKupplungA)
+            kupplungBPin.watch(this.interruptKupplungB)
         }
     }
 
-    private onKupplungA(err: Error | null, value: number) {
+    
+
+
+    private interruptKupplungA(err: Error | null, value: number) {
         if (err) {
             Util.log('GPIO-Fehler Kupplung A', err)
             return;
         }
-        if (value == 1) {
-            // Kupplung A aktiv
-            this.kupplungA = true
-        } else {
-            this.kupplungA = false
-        }
-        this.onChangeKupplung()
+        this.onKupplungA(value > 0)
     }
 
-    private onKupplungB(err: Error | null, value: number) {
+
+
+
+    private interruptKupplungB(err: Error | null, value: number) {
         if (err) {
             Util.log('GPIO-Fehler Kupplung B', err)
             return;
         } 
-        if (value == 1) {
-            // Kupplung A aktiv
-            this.kupplungB = true
-        } else {
-            this.kupplungB = false
-        }
-        this.onChangeKupplung()
+        this.onKupplungB(value > 0)
+  
     }
 
-    private onTuerkontakt(err: Error | null, value: number) {
+    private interruptTuerkriterium(err: Error | null, value: number) {
         if (err) {
-            Util.log('GPIO-Fehler Türkontakt', err)
+            Util.log('GPIO-Fehler Türkriterium', err)
             return;
         }
-        if (this.tuerkontaktStatus != value) {
-            this.tuerkontaktStatus = value
-            Util.log('Türkontakt geändert:', value)
-            // Wenn Tür wieder geschlossen und Fzg Haltestellenfangradius verlassen, nächste Hst
-            // Wenn Tür geöffnet wurde, Zählerstände merken
-        }
+        this.onTuerkriterium(value > 0)
+      
     }
 
-    private onWegimpuls(err: Error | null, value: number) {
+    private interruptWegimpuls(err: Error | null, value: number) {
         if (err) {
             Util.log('GPIO-Fehler Wegimpuls', err)
             return;
@@ -314,12 +315,24 @@ class IBISController {
         }
     }
 
-    private onUeberfall(err: Error | null, value: number) {
+    private interruptUeberfall(err: Error | null, value: number) {
         if (err) {
             Util.log('GPIO-Fehler Überfall:', err);
             return;
         }
-        if (value == 1 && !this.ueberfallSet) {
+        this.onUeberfall();
+        
+    }
+
+
+
+
+    private onChangeKupplung() {
+        Util.log('Kupplungsstatus geändert, neue Zuglänge')
+    }
+
+
+    private onUeberfall() {
             this.ueberfallSet = true
 
             if (this.aTerminal) {
@@ -330,12 +343,34 @@ class IBISController {
                 this.bTerminal.setStatus('-----', true);
                 this.bTerminal.updateSecondLine()
             }
+    }
+    private onTuerkriterium(value: boolean) {
+        if (this.tuerkriteriumStatus != value) {
+            this.tuerkriteriumStatus = value
+            Util.log('Türkriterium geändert:', value)
+            // Wenn Tür wieder geschlossen und Fzg Haltestellenfangradius verlassen, nächste Hst
+            // Wenn Tür geöffnet wurde, Zählerstände merken
         }
     }
-
-    private onChangeKupplung() {
-        Util.log('Kupplungsstatus geändert, neue Zuglänge')
+    private onKupplungA(value: boolean) {
+        if (value) {
+            // Kupplung A aktiv
+            this.kupplungA = true
+        } else {
+            this.kupplungA = false
+        }
+        this.onChangeKupplung()
     }
+    private onKupplungB(value: boolean) {
+        if (value) {
+            // Kupplung A aktiv
+            this.kupplungB = true
+        } else {
+            this.kupplungB = false
+        }
+        this.onChangeKupplung()
+    }
+
 
     // Aktivierte Anzeigen loopen und registrieren
     private registerSigns() {
@@ -647,6 +682,7 @@ this.websocket.clients.forEach(client => {
         return false
         } else {
             // Abmeldung bei Linie 0
+            this.onAbmeldung()
         }
     }
 
@@ -708,6 +744,15 @@ this.websocket.clients.forEach(client => {
         }
     }
     
+    onAbmeldung() {
+        if (this.aTerminal && this.aTerminal.isActive) {
+            this.aTerminal.onAbmeldung();
+        }
+        if (this.bTerminal && this.bTerminal.isActive) {
+            this.bTerminal.onAbmeldung();
+        }
+    }
+
     setRichtung(direction: number) {
         this.richtung = direction
     }
@@ -848,7 +893,13 @@ this.websocket.clients.forEach(client => {
     sendUnfall() {
         
     }
-
+    // Funkrückfall setzen:
+    // Kanalnummer statt Fahrplanabweichung zeigen,
+    // Sprechtaste zum FuG durchschalten mit Fünftonfolge
+    // Direkt verbinden, also -VLS- statisch anzeigen
+    setFunkrueckfall() {
+        this.funkmodus = 2;
+    }
 
 }
 export { IBISController }

@@ -414,10 +414,13 @@ class IBISTerminal {
         let hst = '   '
         let richtung = 'Z'
         
-        /* Abweichung nur, wenn in RBL angemeldet */
+        /* Abweichung nur, wenn in RBL angemeldet, ansonsten leer */
 
         let abweichung = '    '
-        abweichung = ' K' + this.deviceConfig.RADIO.channels.voice.toString() + ' ';
+        // Wenn im funkrückfall, Kanal anzeigen
+        if (this.ibisController.funkmodus == 2) {
+            abweichung = ' K' + this.deviceConfig.RADIO.channels.voice.toString() + ' ';
+        }
 
         if (this.ibisController.linie) {
             linie = this.ibisController.linie.number.padStart(3, '0')
@@ -874,5 +877,8 @@ private promptForSpecialCharacter() {
         this.updateSecondLine()
     }
 
+    onAbmeldung() {
+        // Abmeldung, eventuell "ABMELDUNG... blinkedn anzeigen"
+    }
 }
 export { IBISTerminal }

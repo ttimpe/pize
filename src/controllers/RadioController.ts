@@ -1,9 +1,12 @@
 import Speaker from 'speaker';
 import FFT from 'fft.js';
 import { Readable } from 'stream';
-import Mic  from 'node-microphone';
+import Mic from 'node-microphone';
 import crc from 'crc';
 import { IBISController } from './IBISController';
+import { Util } from '../util';
+import { Gpio } from 'onoff';
+import { DeviceConfig } from '../models/devices/DeviceConfig';
 
 const SAMPLE_RATE = 8000;
 const BIT_RATE = 2400;
@@ -39,13 +42,23 @@ class RadioController {
     private receivedBits: number[] = [];
     private receivedBytes: number[] = [];
     private mode: RadioMode;
+    private deviceConfig: DeviceConfig = require('../../device_config.json')
 
-    
+    private K1Pin: Gpio;
+    private K2Pin: Gpio;
+    private K4Pin: Gpio;
+    private K8Pin: Gpio;
+    private DSPin: Gpio;
+    private STASTPin: Gpio;
+
+
     private ibisController?: IBISController
 
     private radix40Table = " ABCDEFGHIJKLMNOPQRSTUVWXYZ:.=0123456789";
 
     private fft: FFT = new FFT(FFT_SIZE)
+
+    private lastReceivedTelegramTime: Date = new Date()
     constructor(mode: RadioMode, ibisController?: IBISController) {
         this.mode = mode;
         this.speaker = new Speaker({
@@ -55,7 +68,24 @@ class RadioController {
         });
         this.mic = new Mic({ rate: SAMPLE_RATE, channels: 1 });
 
+
         this.ibisController = ibisController
+
+        // If GPIO
+        if (this.deviceConfig.use_gpio) {
+            this.K1Pin = new Gpio(this.deviceConfig.GPIO_PINOUT.K1, 'out');
+            this.K2Pin = new Gpio(this.deviceConfig.GPIO_PINOUT.K2, 'out');
+            this.K4Pin = new Gpio(this.deviceConfig.GPIO_PINOUT.K4, 'out');
+            this.K8Pin = new Gpio(this.deviceConfig.GPIO_PINOUT.K8, 'out');
+            this.DSPin = new Gpio(this.deviceConfig.GPIO_PINOUT.DS, 'out');
+            this.STASTPin = new Gpio(this.deviceConfig.GPIO_PINOUT.STAST, 'out');
+            // Sendetastung aus
+            this.STASTPin.writeSync(Gpio.HIGH)
+            // Setze auf Datenkanal, Timeout nach X Sekunden, dann Rückfall auf Sprache
+            this.setRadioChannel(this.deviceConfig.RADIO.channels.data)
+
+        }
+      
     }
     private encodeRadix40(text: string): number[] {
         const radix40Table = " ABCDEFGHIJKLMNOPQRSTUVWXYZ:.=0123456789";
@@ -88,7 +118,7 @@ class RadioController {
     private generateFFSKSignal(data: number[]): Float32Array {
         const samples: number[] = [];
         const symbolDuration = SAMPLE_RATE / BIT_RATE;
-        
+
         for (const bit of data.flatMap(byte => [...byte.toString(2).padStart(8, '0')].map(Number))) {
             const frequency = bit ? FREQ_SPACE : FREQ_MARK;
             for (let i = 0; i < symbolDuration; i++) {
@@ -148,14 +178,14 @@ class RadioController {
         const mode = 0b0010;
         const byte1 = (mode << 4) | ((bk & 0b11) << 2) | ((fahrzeugadresse >> 8) & 0b11);
         const byte2 = fahrzeugadresse & 0xFF;
-        const byte3 = ((innenLautsprecher ? 1 : 0) << 7) | ((mikrofonSender ? 1 : 0) << 6) | 
-                      ((loescheAnzeige ? 1 : 0) << 5) | ((sprachDatenKanal ? 1 : 0) << 4) | (kanalnummer & 0b1111);
+        const byte3 = ((innenLautsprecher ? 1 : 0) << 7) | ((mikrofonSender ? 1 : 0) << 6) |
+            ((loescheAnzeige ? 1 : 0) << 5) | ((sprachDatenKanal ? 1 : 0) << 4) | (kanalnummer & 0b1111);
         const byte4 = ((anweisungSetzen ? 1 : 0) << 7) | ((quittierung ? 1 : 0) << 6) |
-                      ((funktion & 0b11) << 4) | (anweisungsnummer & 0b1111);
+            ((funktion & 0b11) << 4) | (anweisungsnummer & 0b1111);
         const infoBytes = [byte1, byte2, byte3, byte4];
         this.sendCallTelegram(CallTelegram.C02, infoBytes);
     }
-    
+
     public sendCallTelegram_C03(
         liniennummer: number, innenLautsprecher: boolean, mikrofonSender: boolean,
         loescheAnzeige: boolean, sprachDatenKanal: boolean, kanalnummer: number,
@@ -164,10 +194,10 @@ class RadioController {
         const mode = 0b0011;
         const byte1 = (mode << 4) | ((liniennummer >> 8) & 0x0F);
         const byte2 = liniennummer & 0xFF;
-        const byte3 = ((innenLautsprecher ? 1 : 0) << 7) | ((mikrofonSender ? 1 : 0) << 6) | 
-                      ((loescheAnzeige ? 1 : 0) << 5) | ((sprachDatenKanal ? 1 : 0) << 4) | (kanalnummer & 0b1111);
+        const byte3 = ((innenLautsprecher ? 1 : 0) << 7) | ((mikrofonSender ? 1 : 0) << 6) |
+            ((loescheAnzeige ? 1 : 0) << 5) | ((sprachDatenKanal ? 1 : 0) << 4) | (kanalnummer & 0b1111);
         const byte4 = ((anweisungSetzen ? 1 : 0) << 7) | ((quittierung ? 1 : 0) << 6) |
-                      ((funktion & 0b11) << 4) | (anweisungsnummer & 0b1111);
+            ((funktion & 0b11) << 4) | (anweisungsnummer & 0b1111);
         const infoBytes = [byte1, byte2, byte3, byte4];
         this.sendCallTelegram(CallTelegram.C03, infoBytes);
     }
@@ -183,14 +213,14 @@ class RadioController {
         const byte2 = fahrzeugadresse & 0xFF;
         const byte3 = ((aa & 0b1111) << 4) | (as & 0b1111);
         const byte4 = ((quittiereDatensatz & 0b1111) << 4) |
-                      ((quittiereUeberfallruf ? 1 : 0) << 3) |
-                      ((quittiereUnfallruf ? 1 : 0) << 2) |
-                      ((quittiereSprechwunsch ? 1 : 0) << 1) |
-                      (quittiereMeldung ? 1 : 0);
+            ((quittiereUeberfallruf ? 1 : 0) << 3) |
+            ((quittiereUnfallruf ? 1 : 0) << 2) |
+            ((quittiereSprechwunsch ? 1 : 0) << 1) |
+            (quittiereMeldung ? 1 : 0);
         const infoBytes = [byte1, byte2, byte3, byte4];
         this.sendCallTelegram(CallTelegram.C04, infoBytes);
     }
-    
+
     public sendCallTelegram_C10(
         bk: number, fahrzeugadresse: number,
         abstand: number, anforderungspunkt: number
@@ -203,9 +233,9 @@ class RadioController {
         const infoBytes = [byte1, byte2, byte3, byte4];
         this.sendCallTelegram(CallTelegram.C10, infoBytes);
     }
-    
 
-    
+
+
     public sendCallTelegram_C13(
         bk: number, fahrzeugadresse: number, c14Anzahl: number,
         logischeNummer: number, setzeAnzeige: boolean,
@@ -239,7 +269,7 @@ class RadioController {
         const byte1 = (mode << 4) | ((bcdLiniennummer >> 8) & 0x0F);
         const byte2 = bcdLiniennummer & 0xFF;
         let zeitOderDatum = 0;
-        
+
         if (abfragetyp & 0b001) {
             const stunden = (timestamp.getHours() & 0b11111) << 8;
             const minuten = (timestamp.getMinutes() & 0b111111);
@@ -250,7 +280,7 @@ class RadioController {
             const jahr = (timestamp.getFullYear() % 10) & 0b1111;
             zeitOderDatum = tag | (monat << 4) | jahr;
         }
-        
+
         const byte3 = ((abfragetyp & 0b111) << 5) | ((zeitOderDatum >> 8) & 0b11111);
         const byte4 = zeitOderDatum & 0xFF;
         const infoBytes = [byte1, byte2, byte3, byte4];
@@ -261,17 +291,17 @@ class RadioController {
     }
 
 
-   
+
     private decodeFFSKSignal(audioBuffer: Float32Array): number[] {
         const bitStream: number[] = [];
         const segmentSize = SAMPLE_RATE / BIT_RATE;
-        
+
         for (let i = 0; i < audioBuffer.length; i += segmentSize) {
             const segment = audioBuffer.slice(i, i + segmentSize);
             const spectrum = this.fft.createComplexArray();
             this.fft.realTransform(spectrum, segment);
             this.fft.completeSpectrum(spectrum);
-            
+
             let peakFreq = 0;
             let maxMagnitude = 0;
             for (let j = 0; j < spectrum.length / 2; j++) {
@@ -286,30 +316,30 @@ class RadioController {
         return bitStream;
     }
 
-    
+
     public processReceivedBits(bits: number[]) {
         this.receivedBits.push(...bits);
-        
+
         while (this.receivedBits.length >= RESPONSE_TELEGRAM_LENGTH) {
             const index = this.findSyncPattern();
             if (index === -1) {
                 this.receivedBits.shift();
                 continue;
             }
-            
+
             let telegramLength = TELEGRAM_LENGTH;
             const telegramType = (this.receivedBits[index + 16] & 0b11110000) >> 4;
             if (this.receivedBits.length >= index + RESPONSE_TELEGRAM_LENGTH && telegramType in ResponseTelegram) {
                 telegramLength = RESPONSE_TELEGRAM_LENGTH;
             }
-            
+
             if (this.receivedBits.length < index + telegramLength) {
                 break;
             }
-            
+
             const telegram = this.receivedBits.slice(index, index + telegramLength);
             this.receivedBits.splice(0, index + telegramLength);
-            
+
             if (telegramLength === TELEGRAM_LENGTH) {
                 if (this.mode === 'vehicle') {
                     this.receiveCallTelegram(telegram);
@@ -370,7 +400,7 @@ class RadioController {
         const startBit = 0b1;
         const lockBit = 0b1;
         const crcBytes = [crc.crc8(Buffer.from(infoBytes)), crc.crc8(Buffer.from(infoBytes.concat(lockBit)))];
-        
+
         const telegram = [
             ...BIT_SYNC,
             ...FRAME_SYNC,
@@ -381,7 +411,7 @@ class RadioController {
             lockBit,
             ...crcBytes[1].toString(2).padStart(8, '0').split('').map(Number)
         ];
-        
+
         this.transmit(telegram);
     }
 
@@ -396,7 +426,7 @@ class RadioController {
         const mode = 0b0001;
         const byte1 = (mode << 4) | ((fahrereingabe ? 1 : 0) << 3) | (fahrzeuglaenge & 0b111);
         let byte2, byte3;
-        
+
         if (fahrereingabe) {
             byte2 = ((ortsmarke / 1000) % 10) << 4 | ((ortsmarke / 100) % 10);
             byte3 = ((ortsmarke / 10) % 10) << 4 | (ortsmarke % 10);
@@ -409,9 +439,9 @@ class RadioController {
                 byte3 = zaehlerstand & 0xFF;
             }
         }
-        
+
         this.sendResponseTelegram(ResponseTelegram.R01, [byte1, byte2, byte3]);
-    }    
+    }
     public sendResponseTelegram_R02(meldungsart1: number, meldung1: number, meldungsart2: number, meldung2: number) {
         const mode = 0b0010;
         const byte1 = (mode << 4) | 0b0000; // 4 reservierte Bits = 0
@@ -425,7 +455,7 @@ class RadioController {
         const mode = 0b0011;
         const byte1 = (mode << 4) | ((fahrereingabe ? 1 : 0) << 3) | (fahrzeugposition & 0b111);
         let byte2, byte3;
-        
+
         if (fahrereingabe) {
             byte2 = 0x00; // 8 x 0, wenn Fahrereingabe aktiv
             byte3 = ((aussteiger % 10) | ((aussteiger / 10) % 10) << 4) & 0xFF; // BCD-kodiert, rechtsbündig
@@ -433,7 +463,7 @@ class RadioController {
             byte2 = einsteiger & 0xFF;
             byte3 = aussteiger & 0xFF;
         }
-        
+
         this.sendResponseTelegram(ResponseTelegram.R03, [byte1, byte2, byte3]);
     }
 
@@ -459,8 +489,8 @@ class RadioController {
     public sendResponseTelegram_R06(fahrzeugnummer: number, wagennummer: number, betriebskennung: number, fahrzeugadresse: number) {
         const mode = 0b0110;
         const reserviert = 0b0;
-        let byte1 :any, byte2: any, byte3: any;
-        
+        let byte1: any, byte2: any, byte3: any;
+
         if (wagennummer === 0b1111) {
             byte1 = (mode << 4) | (reserviert << 3) | (fahrzeugnummer & 0b111);
             byte2 = ((betriebskennung & 0b11) << 6) | ((fahrzeugadresse >> 8) & 0b111111);
@@ -470,7 +500,7 @@ class RadioController {
             byte2 = ((wagennummer / 10) << 4) | (wagennummer % 10);
             byte3 = 0x00; // Füllt das letzte Byte auf
         }
-        
+
         this.sendResponseTelegram(ResponseTelegram.R06, [byte1, byte2, byte3]);
     }
 
@@ -531,7 +561,7 @@ class RadioController {
         if (data.length !== TELEGRAM_LENGTH) return;
         const mode = (data[15] >> 4) & 0x0F; // Modus aus dem ersten Info-Byte extrahieren
         const callType = mode as CallTelegram;
-        
+
         switch (callType) {
             case CallTelegram.C00:
                 this.handleC00(data);
@@ -566,7 +596,7 @@ class RadioController {
         }
     }
 
-    
+
     private handleC00(data: number[]) {
         const betriebskennziffer = (data[16] & 0b11);
         const fahrzeugadresse = ((data[16] & 0b1111111100) >> 2) | (data[17] << 8);
@@ -576,7 +606,7 @@ class RadioController {
         const zahlenwert = (data[18] & 0b00001111);
 
         console.log(`C00 empfangen - BK: ${betriebskennziffer}, Fahrzeugadresse: ${fahrzeugadresse}, Zeitart: ${zeitart}, Zeitvorzeichen: ${zeitvorzeichen}, Zeitfaktor: ${zeitfaktor}, Zahlenwert: ${zahlenwert}`);
-        
+
     }
 
     private bcdToNumber(bcd: number): number {
@@ -587,7 +617,7 @@ class RadioController {
         const setzeDatenTyp = (data[16] & 0b1111);
         const wert = (data[17] << 4) | (data[18] & 0b1111);
         const decodedValue = this.bcdToNumber(wert);
-        
+
         console.log(`C01 empfangen - Setze Daten Typ: ${setzeDatenTyp}, Wert: ${decodedValue}`);
 
         switch (setzeDatenTyp) {
@@ -722,7 +752,7 @@ class RadioController {
         }
     }
 
-   private handleC04(data: number[]) {
+    private handleC04(data: number[]) {
         const abfragetyp = (data[16] & 0b1111);
         const subtyp = (data[17] & 0b1111);
         const quittierungsbits = (data[18] & 0b1111);
@@ -753,7 +783,7 @@ class RadioController {
         if (meldungQuittierung) console.log("Quittierung für Meldung");
     }
     public handleC05(data: number[]) {
-        
+
     }
     public handleC06(data: number[]) {
 
@@ -762,7 +792,7 @@ class RadioController {
 
     }
     public handleC08(data: number[]) {
-        
+
     }
 
     public handleC09(data: number[]) {
@@ -777,7 +807,7 @@ class RadioController {
         console.log(`C10 empfangen - BK: ${betriebskennziffer}, Fahrzeugadresse: ${fahrzeugadresse}, Abstand: ${abstand * 10}m, Anforderungspunkt: ${anforderungspunkt}`);
     }
     public handleC11(data: number[]) {
-        
+
     }
     public handleC12(data: number[]) {
 
@@ -804,11 +834,11 @@ class RadioController {
     private handleC14(data: number[]) {
         const teiltextkennung = (data[16] & 0b10000000) >> 7;
         const textBits = ((data[16] & 0b01111111) << 20) | (data[17] << 12) | (data[18] << 4) | ((data[19] & 0b11110000) >> 4);
-        
+
         const zeichen1 = this.decodeRadix40((textBits / (40 * 40)) % 40);
         const zeichen2 = this.decodeRadix40((textBits / 40) % 40);
         const zeichen3 = this.decodeRadix40(textBits % 40);
-        
+
         console.log(`C14 empfangen - Teiltextkennung: ${teiltextkennung}, Text: ${zeichen1}${zeichen2}${zeichen3}`);
     }
     private decodeBCD(value: number): number {
@@ -844,7 +874,7 @@ class RadioController {
     private verarbeiteDatum(tag: number, monat: number, jahr: number) {
         console.log(`Verarbeite Datum: ${tag}.${monat}.20${jahr}`);
     }
-    
+
 
     // Leitstellenempfang
 
@@ -952,12 +982,13 @@ class RadioController {
         const fahrermeldung = data[16] & 0b00001111;
         const betriebskennung = (data[17] & 0b11000000) >> 6;
         const fahrzeugadresse = ((data[17] & 0b00111111) << 8) | data[18];
-        
+
         console.log(`R15 empfangen - Überfallruf: ${ueberfallruf}, Unfallruf: ${unfallruf}, Sprechwunsch: ${sprechwunsch}, Anmeldung: ${anmeldung}, Fahrermeldung: ${fahrermeldung}, Betriebskennung: ${betriebskennung}, Fahrzeugadresse: ${fahrzeugadresse}`);
     }
 
     public startListening() {
         const stream = this.mic.startRecording();
+        setInterval(this.funkrueckfallTimer, 30 * 1000)
         stream.on('data', (chunk: Buffer) => {
             const int16Array = new Int16Array(chunk.buffer);
             const float32Array = new Float32Array(int16Array.length);
@@ -965,19 +996,50 @@ class RadioController {
                 float32Array[i] = int16Array[i] / 32767;
             }
             this.receivedBits.push(...this.decodeFFSKSignal(float32Array));
-            
+
         });
         console.log("Listening for FFSK signals...");
+    }
+
+    private funkrueckfallTimer() {
+        const date = new Date()
+        if (date.getTime() - this.lastReceivedTelegramTime.getTime() > 30 * 1000) {
+            this.ibisController.setFunkrueckfall()
+        } else {
+            // Immernoch im Datenfunk
+            
+        }
     }
 
 
 
 
-   
+
 
     public stopListening() {
         this.mic.stopRecording();
         console.log("Stopped listening to FFSK signals.");
+    }
+
+    private setRadioChannel(channel: number) {
+        if (channel > 0 && channel < 17) {
+            const kanalNummer = 1; // Bereich 1–16
+            const wert = kanalNummer - 1;
+            const K1 = (wert >> 3) & 1;
+            const K2 = (wert >> 2) & 1;
+            const K4 = (wert >> 1) & 1;
+            const K8 = wert & 1;
+            if (this.deviceConfig.use_gpio) {
+                this.K1Pin.writeSync(K1 ? Gpio.LOW : Gpio.HIGH)
+                this.K2Pin.writeSync(K1 ? Gpio.LOW : Gpio.HIGH)
+                this.K4Pin.writeSync(K1 ? Gpio.LOW : Gpio.HIGH)
+                this.K8Pin.writeSync(K1 ? Gpio.LOW : Gpio.HIGH)
+                Util.log('GPIO Pins für Funkkanal gesetzt')
+            }
+        } else {
+            Util.log('Funkkanal außerhalb von 1-16')
+            return false;
+        }
     }
 }
 
