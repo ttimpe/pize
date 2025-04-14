@@ -229,6 +229,9 @@ class IBISController {
                             // Kupplung B Status
                             this.onKupplungB(messageObject['data']['value'])
                             break;
+                        case 'UEB':
+                            this.onUeberfall();
+                            break;
                         case 'WEISUNG':
                             Util.log('Weisung anzeigen: ', messageObject['data']['value']['text'])
                             this.aTerminal.setWeisung(messageObject['data']['value']['text'])
