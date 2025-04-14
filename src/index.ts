@@ -106,7 +106,7 @@ function main() {
   }
 
   if (deviceConfig.RADIO.enabled == true) {
-    let radioController = new RadioController('vehicle')
+    let radioController = new RadioController('vehicle', ibisController)
     ibisController.radioController = radioController
     radioController.startListening()
   }
