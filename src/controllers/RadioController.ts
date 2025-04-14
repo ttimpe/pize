@@ -58,7 +58,7 @@ class RadioController {
 
     private fft: FFT = new FFT(FFT_SIZE)
 
-    private lastReceivedTelegramTime: Date = new Date()
+    private lastReceivedTelegramTime: Date
     constructor(mode: RadioMode, ibisController?: IBISController) {
         this.mode = mode;
         this.speaker = new Speaker({
@@ -67,7 +67,7 @@ class RadioController {
             sampleRate: SAMPLE_RATE
         });
         this.mic = new Mic({ rate: SAMPLE_RATE, channels: 1 });
-
+        this.lastReceivedTelegramTime = new Date()
 
         this.ibisController = ibisController
 
