@@ -94,6 +94,12 @@ class LocationController {
     }
 
     queryIRIS() {
+        if (this.deviceConfig.IRIS_A) {
+
+        }
+        if (this.deviceConfig.IRIS_B) {
+            
+        }
     }
     simulateDrive(speed: number, distance: number) {
         const impulsesNeeded = distance / 1000 * this.IMPULSES_PER_KILOMETER;

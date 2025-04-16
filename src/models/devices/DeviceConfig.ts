@@ -19,6 +19,8 @@ class DeviceConfig {
     query_device_status: boolean
     messages?: string[]
     RADIO?: DeviceRadioConfiguration
+    IRIS_A?: boolean
+    IRIS_B?: boolean
 }
 
-export { DeviceConfig }
+export { DeviceConfig }https://www.fortec-power.de/thumbnail/22/bb/fa/1675340445/N78-1C_1920x1920.png

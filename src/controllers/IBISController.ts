@@ -312,6 +312,8 @@ class IBISController {
         if (err) {
             Util.log('GPIO-Fehler Wegimpuls', err)
             return;
+        } else {
+            Util.log('Wegimpuls-Interrupt')
         }
         if (value == 1) {
             this.locationController.wiInterrupt()
@@ -637,6 +639,9 @@ this.websocket.clients.forEach(client => {
             if (this.deviceConfig.external_announcements) {
                 this.queryHAG();
             }
+
+            // Ortung per IRIS
+
       }
 
       tick30Seconds() {
