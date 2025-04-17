@@ -241,7 +241,7 @@ class IBISController {
                             const value = messageObject['data']['value'];
                             const speed = parseInt(value['speed'])
                             const distance = parseInt(value['distance'])
-                                this.locationController.simulateDrive(speed, distance)
+                            this.locationController.simulateDrive(speed, distance)
                 
                             break;
                         case 'RADIO':
@@ -317,6 +317,7 @@ class IBISController {
             Util.log('Wegimpuls-Interrupt')
         }
         if (value == 1) {
+            Util.log(this)
             this.locationController.wiInterrupt()
         }
     }
