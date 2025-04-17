@@ -23,4 +23,4 @@ class DeviceConfig {
     IRIS_B?: boolean
 }
 
-export { DeviceConfig }https://www.fortec-power.de/thumbnail/22/bb/fa/1675340445/N78-1C_1920x1920.png
+export { DeviceConfig }

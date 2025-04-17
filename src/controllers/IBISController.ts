@@ -261,7 +261,7 @@ class IBISController {
             // Überfall-Taster
             const ueberfallPin = new Gpio(this.deviceConfig.GPIO_PINOUT.UEB, 'in', 'falling')
             // Wegimpuls
-            const wegimpulsPin = new Gpio(this.deviceConfig.GPIO_PINOUT.WI, 'in', 'falling')
+            const wegimpulsPin = new Gpio(this.deviceConfig.GPIO_PINOUT.WI, 'in', 'both')
             // Türkontakt, hier beide Richtung da Tür auf/zu
             const tuerkontaktPin = new Gpio(this.deviceConfig.GPIO_PINOUT.TK, 'in', 'both')
 
@@ -309,6 +309,7 @@ class IBISController {
     }
 
     private interruptWegimpuls(err: Error | null, value: number) {
+        Util.log('WI')
         if (err) {
             Util.log('GPIO-Fehler Wegimpuls', err)
             return;
