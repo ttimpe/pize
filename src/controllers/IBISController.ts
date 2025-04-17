@@ -144,6 +144,15 @@ class IBISController {
     }
     constructor(portString: string, interval: number, websocket: WebSocketServer, locationController: LocationController) {
         this.locationController = locationController
+
+
+        this.interruptKupplungA = this.interruptKupplungA.bind(this);
+        this.interruptKupplungB = this.interruptKupplungB.bind(this);
+        this.interruptTuerkriterium = this.interruptTuerkriterium.bind(this);
+        this.interruptWegimpuls = this.interruptWegimpuls.bind(this);
+        this.interruptUeberfall = this.interruptUeberfall.bind(this);
+
+
         this.serialPort = new SerialPort({
             path: portString,
             baudRate: 1200,
