@@ -142,8 +142,8 @@ class IBISController {
         }
         return ''
     }
-    constructor(portString: string, interval: number, websocket: WebSocketServer) {
-        
+    constructor(portString: string, interval: number, websocket: WebSocketServer, locationController: LocationController) {
+        this.locationController = locationController
         this.serialPort = new SerialPort({
             path: portString,
             baudRate: 1200,

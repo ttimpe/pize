@@ -98,8 +98,9 @@ function main() {
   
 
   const audioController = new AudioController()
+  let locationController = new LocationController(ibisController);
 
-  ibisController = new IBISController(portString, 10, websocket)
+  ibisController = new IBISController(portString, 10, websocket, locationController)
   ibisController.audioController = audioController
   if (deviceConfig.MFD == true) {
     let mfdController = new MFDController(ibisController, app);
@@ -113,8 +114,6 @@ function main() {
 
 
   //if (deviceConfig.use_gpio == true && deviceConfig.GPIO_PINOUT != undefined) {
-    let locationController = new LocationController(ibisController);
-    ibisController.locationController = locationController;
   //}
   app.use('/tfs', express.static('diag_root'));
 
