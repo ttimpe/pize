@@ -98,9 +98,10 @@ function main() {
   
 
   const audioController = new AudioController()
-  let locationController = new LocationController(ibisController);
+  let locationController = new LocationController();
 
   ibisController = new IBISController(portString, 10, websocket, locationController)
+  locationController.ibisController = ibisController
   ibisController.audioController = audioController
   if (deviceConfig.MFD == true) {
     let mfdController = new MFDController(ibisController, app);

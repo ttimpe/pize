@@ -15,14 +15,15 @@ class LocationController {
     impulsesSinceReset: number
     private IMPULSES_PER_KILOMETER = 4000;
     private FANGRADIUS = 10;
-    private ibisController: IBISController
+    ibisController: IBISController
 
 
     possibleNextStopDistances: StopDistance[] = []
     private deviceConfig: DeviceConfig = require('../../device_config.json')
 
-    constructor(ibisController: IBISController) {
-        this.ibisController = ibisController
+
+    constructor() {
+        
         
     }
 
