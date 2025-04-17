@@ -17,10 +17,12 @@ class LocationController {
     private FANGRADIUS = 10;
     ibisController: IBISController
 
+    private announcementAlreadyPlayed: boolean = false
 
     possibleNextStopDistances: StopDistance[] = []
     private deviceConfig: DeviceConfig = require('../../device_config.json')
 
+    
 
     constructor() {
         
@@ -55,6 +57,7 @@ class LocationController {
             this.impulsesSinceReset = 0;
             this.ibisController.arriveAtStop(routeStop);
             this.possibleNextStopDistances = await this.getPossibleNextStops(routeStop)
+            this.announcementAlreadyPlayed = false;
         }
     }
 
@@ -79,8 +82,9 @@ class LocationController {
         Util.log("distance to next stop: ", distanceToNextStop)
         if (distanceToNextStop <= this.FANGRADIUS) {
             this.arriveAtStop(this.ibisController.upcomingStop);
-        } else if (distanceToNextStop <= this.deviceConfig.announcement_distance_before_next_stop) {
+        } else if (distanceToNextStop <= this.deviceConfig.announcement_distance_before_next_stop && this.announcementAlreadyPlayed == false) {
             this.ibisController.playAnnouncementForRouteStop(this.ibisController.upcomingStop)
+            this.announcementAlreadyPlayed = true
 
         }
     }
