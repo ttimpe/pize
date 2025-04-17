@@ -318,15 +318,11 @@ class IBISController {
     }
 
     private interruptWegimpuls(err: Error | null, value: number) {
-        Util.log('WI')
         if (err) {
             Util.log('GPIO-Fehler Wegimpuls', err)
             return;
-        } else {
-            Util.log('Wegimpuls-Interrupt')
-        }
+        } 
         if (value == 1) {
-            Util.log(this)
             this.locationController.wiInterrupt()
         }
     }
