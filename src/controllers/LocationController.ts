@@ -151,6 +151,7 @@ class LocationController {
         })[0]
         if (nextStop == undefined) {
             Util.log('NO NEXT STOP FOUND')
+            return false
         }
 
         let distanceToNextStop = nextStop.distance - traveledMetersSinceLastStop;
