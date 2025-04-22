@@ -851,7 +851,6 @@ this.websocket.clients.forEach(client => {
 
     arriveAtStop(routeStop: RouteStop) {
         // Find stop index based on id
-        this.stopIndex = (routeStop.sequence_number + 1);
         this.setHaltestelle(this.route.stops[this.stopIndex]);
 
     }

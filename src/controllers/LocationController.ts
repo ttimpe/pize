@@ -7,6 +7,8 @@ import { Stop } from "../models/database/Stop";
 import { DeviceConfig } from '../models/devices/DeviceConfig';
 import { Util } from "../util";
 import { TelegramGenerator } from "../IBISTelegramGenerator";
+import { Route } from "../models/database/Route";
+import { Op } from "sequelize";
 
 class LocationController {
     private latitude: number
@@ -44,11 +46,84 @@ class LocationController {
     obInterrupt() {
         
     }
+    async checkStopDistancesForRouteObject(route: Route): Promise<boolean> {
+         // Ensure route.stops is loaded
+    // Ensure route.stops is loaded
+    if (!route.stops) {
+        await route.reload({
+          include: [{
+            model: RouteStop,
+            required: true
+          }]
+        })
+      }
+    
+      if (!route.stops || route.stops.length < 2) {
+        Util.log(`⚠️ Route "${route.route_id}" has fewer than 2 stops.`)
+        return false
+      }
+    
+      // Sort by sequence
+      const sortedStops = route.stops.sort((a, b) => a.sequence_number - b.sequence_number)
+      const consecutivePairs = []
+    
+      for (let i = 0; i < sortedStops.length - 1; i++) {
+        consecutivePairs.push({
+          origin_stop_id: sortedStops[i].stop_id,
+          destination_stop_id: sortedStops[i + 1].stop_id
+        })
+      }
+    
+      // Load existing StopDistance entries
+      const existing = await StopDistance.findAll({
+        where: {
+          [Op.or]: consecutivePairs
+        }
+      })
+    
+      const existingKeys = new Set(
+        existing.map(e => `${e.origin_stop_id}-${e.destination_stop_id}`)
+      )
+    
+      const missing = consecutivePairs.filter(({ origin_stop_id, destination_stop_id }) =>
+        !existingKeys.has(`${origin_stop_id}-${destination_stop_id}`)
+      )
+    
+      if (missing.length === 0) {
+        Util.log(`✅ Route "${route.route_id}": all consecutive StopDistance entries are present.`)
+        return true
+      }
+    
+      // Load missing stops for nicer output
+      const stopIds = Array.from(new Set(missing.flatMap(p => [p.origin_stop_id, p.destination_stop_id])))
+      const stops = await Stop.findAll({
+        where: {
+          id: stopIds
+        }
+      })
+    
+      const stopMap = new Map(stops.map(stop => [stop.id, stop.name]))
+    
+      Util.log(`❌ Route "${route.route_id}" is missing ${missing.length} consecutive StopDistance entries:`)
+      for (const { origin_stop_id, destination_stop_id } of missing) {
+        const originName = stopMap.get(origin_stop_id) || origin_stop_id
+        const destinationName = stopMap.get(destination_stop_id) || destination_stop_id
+        Util.log(`  • ${originName} → ${destinationName}`)
+      }
+    
+      return false
+      }
+      
+      
 
-    onSetRoute() {
+    async onSetRoute() {
         this.impulsesSinceReset = 0;
         if (this.ibisController.route) {
+            await this.checkStopDistancesForRouteObject(this.ibisController.route)
+
             this.arriveAtStop(this.ibisController.route.stops[0])
+            // Überprüfen, ob Abstände alle existieren:
+
         }
 
     }
