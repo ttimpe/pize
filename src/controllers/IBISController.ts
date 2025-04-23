@@ -850,11 +850,14 @@ this.websocket.clients.forEach(client => {
     }
 
     arriveAtStop(routeStop: RouteStop) {
-        // Find stop index based on id
-        this.setHaltestelle(this.route.stops[this.stopIndex]);
-
+        const index = this.route.stops.findIndex(s => s.stop_id == routeStop.stop_id);
+        if (index >= 0 && index + 1 < this.route.stops.length) {
+            this.stopIndex = index + 1;
+            this.setHaltestelle(this.route.stops[this.stopIndex]);
+        } else {
+            Util.log('End of route reached or stop not found.');
+        }
     }
-
 
     private sendStopData() {
             // Haltestellenname
