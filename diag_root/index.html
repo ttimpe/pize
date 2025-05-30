@@ -103,6 +103,10 @@
             </thead>
             <tbody>
                 <tr>
+                    <td>Sendebus anhalten</td>
+                    <td><input type="checkbox" name="WBSD_STOP" class="set-criteria-button checkbox"></td>
+                </tr>
+                <tr>
                     <td>Türkriterium</td>
                     <td><input type="checkbox" disabled></td>
                     <td>
@@ -357,7 +361,10 @@
                     'value': null
                 } };
                 var value = null;
-
+                if (e.target.classList.contains('checkbox')) {
+                    console.log('Checkbox', e.target.checked)
+                    payload['data']['value'] = e.target.checked
+                }
                 if (e.target.classList.contains('button-on') == true) {
                     payload['data']['value'] = true
                 } else if (e.target.classList.contains('button-off') == true) {

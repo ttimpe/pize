@@ -79,6 +79,7 @@ class IBISController {
     // 0: Datenfunk, 1: Datenfunk gestört, 2: Funkrückfall
     public funkmodus: number
     
+    private timersInterrupted: boolean = false
 
     get upcomingStop(): RouteStop {
         if (this.route && this.route.stops.length > 0) {
@@ -177,10 +178,12 @@ class IBISController {
         this.registerSigns()
         this.registerUestraLVAs()
         this.registerValidators()
-
+        if (this.timersInterrupted == false) {
         this.tick10Seconds()
         this.tick60Seconds()
+        }
         this.timer = setInterval(() => {
+            if (this.timersInterrupted == false) {
             this.tick1Second()
             let d = new Date()
             if (d.getSeconds() % 10 == 0) {
@@ -192,6 +195,7 @@ class IBISController {
             if (d.getSeconds() % 60 == 0) {
                 this.tick60Seconds()
             }
+        }
         }, 1000)
 
 
@@ -257,6 +261,9 @@ class IBISController {
                             const radioValue = messageObject['data']['value'];
                             const bits = radioValue['bits']
                             this.radioController.playFFSKBits(bits);
+                            break;
+                        case 'WBSD_STOP':
+                            this.timersInterrupted = messageObject['data']['value'];
                             break;
                     }
                     break;
