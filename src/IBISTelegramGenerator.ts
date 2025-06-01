@@ -100,7 +100,7 @@ class IBISTelegramGenerator {
 
     // DS004 - Entwertermerkmale
     static DS004(zone: number, kurzstrecke: number, richtung: number) {
-        return 'e' + zone.toString().padStart(3, '0') + kurzstrecke.toString().padStart(2, '0') + richtung;
+        return 'e' + zone.toString().padStart(2, '0').substring(0, 2) + kurzstrecke.toString().padStart(2, '0') + richtung;
     }
 
     // DS004a - Entwertermerkmale erweitert
