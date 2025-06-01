@@ -636,11 +636,14 @@ this.websocket.clients.forEach(client => {
           
         }
 
+        this.sendTelegram(TelegramGenerator.DS004a(0));
+
         // Entwerter
         if (this.linie && this.route && this.richtung) {
             this.sendTelegram(TelegramGenerator.DS004(parseInt(this.linie.number), this.upcomingStop.stop.number, this.richtung));
             // Erweitert für KVRG
-            this.sendTelegram(TelegramGenerator.DS004a(2000));
+        } else {
+            this.sendTelegram(TelegramGenerator.DS004(0,0,0));
         }
         if (this.deviceConfig.query_device_status) {
             if (this.signs.length > 0) {
