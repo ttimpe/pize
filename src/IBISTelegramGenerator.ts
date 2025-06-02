@@ -4,6 +4,7 @@ import './extensions/Number'
 
 import { IBISTerminalMode } from "./models/devices/Terminal/IBISTerminalMode";
 import { IBISTelegram } from "./extensions/IBISTelegram";
+import { Util } from "./util";
 class IBISTelegramGenerator {
 
     /// DS001
@@ -295,6 +296,7 @@ class IBISTelegramGenerator {
     // DS021 - Text Ziel, Fahrweg
     static DS021(adresse: number, text: string): IBISTelegram {
         const num_blocks = Math.ceil(text.length / 16)
+        Util.log('Number of blocks is', num_blocks)
         return 'aA' + adresse.toIBISHexString() + num_blocks.toIBISHexString() + text.padEnd(num_blocks * 16)
     }
 
