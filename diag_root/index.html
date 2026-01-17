@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,9 +12,11 @@
             padding: 0;
             background-color: #f4f4f4;
         }
+
         .container {
             display: flex;
         }
+
         #events {
             width: 50vw;
             border: 1px solid #ccc;
@@ -23,6 +26,7 @@
             display: flex;
             flex-direction: column;
         }
+
         #events_header {
             display: flex;
             background-color: #f8f8f8;
@@ -31,12 +35,14 @@
             z-index: 1;
             border-bottom: 1px solid #ccc;
         }
+
         #events_header div {
             flex: 1;
             padding: 10px;
             font-weight: bold;
             text-align: left;
         }
+
         #events_body {
             overflow-y: auto;
             max-height: 60vh;
@@ -44,217 +50,296 @@
             display: flex;
             flex-direction: column;
         }
+
         .event_row {
             display: flex;
             padding: 10px;
             border-bottom: 1px solid #ccc;
         }
+
         .event_row div {
             flex: 1;
             text-align: left;
         }
+
         #controls {
             margin-top: 20px;
             gap: 10px;
             align-items: center;
         }
-        select, button, input {
+
+        select,
+        button,
+        input {
             padding: 10px;
             font-size: 16px;
         }
+
         .channel-wbsd {
             background: white;
         }
+
         .channel-wbed {
             background: yellow;
         }
-        
     </style>
     <link rel="stylesheet" href="terminal.css">
 
 </head>
+
 <body>
     <h1>Event Viewer</h1>
     <div class="container">
-    <div id="events">
-        <div id="events_header">
-            <div>Zeit</div>
-            <div>Kanal</div>
-            <div>Telegramm</div>
-        </div>
-        <div id="events_body">
-            <!-- Event rows will go here -->
-        </div>
-    </div>
-    <div id="controls">
-        <select id="groupSelector">
-            <option value="WBSD">WBSD</option>
-            <option value="WBED">WBED</option>
-        </select>
-        <input type="text" id="messageInput" placeholder="Type a message" />
-        <button id="sendButton">Send</button>
-    <div class="io-checkboxes">
-        <table>
-            <thead>
-                <th>Kriterium</th>
-                <th>Zustand</th>
-                <th>Override</th>
-                <th>Reset</th>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Sendebus anhalten</td>
-                    <td><input type="checkbox" name="WBSD_STOP" class="set-criteria-button checkbox"></td>
-                </tr>
-                <tr>
-                    <td>Türkriterium</td>
-                    <td><input type="checkbox" disabled></td>
-                    <td>
-                        <button class="set-criteria-button button-on" name="TK">AN</button>
-                        <button class="set-criteria-button button-off" name="TK">AUS</button>
-                    </td>
-                    <td>
-                        <button class="set-criteria-button button-reset" name="TK">RESET</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Kupplung A</td>
-                    <td><input type="checkbox" disabled></td>
-                    <td>
-                        <button class="set-criteria-button button-on" name="KBA">AN</button>
-                        <button class="set-criteria-button button-off" name="KBA">AUS</button>
-                    </td>
-                    <td>
-                        <button class="set-criteria-button button-reset" name="KBA">RESET</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Kupplung B</td>
-                    <td><input type="checkbox" disabled></td>
-                    <td>
-                        <button class="set-criteria-button button-on" name="KBB">AN</button>
-                        <button class="set-criteria-button button-off" name="KBB">AUS</button>
-                    </td>
-                    <td>
-                        <button class="set-criteria-button button-reset" name="RESET">RESET</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Überfall</td>
-                    <td></td>
-                    <td>
-                        <button class="set-criteria-button button-on" name="UEB">UEB</button>
-                    </td>
-                    <td>
-                    </td>
-                </tr>
-               
-                
-            </tbody>
-        </table>
-    </div>
-    <div class="driving-simulation">
-        <label for="speed">km/h: </label>
-        <input type="number" name="speed" id="speed">
-        <label for="distance">Wegstrecke (m)</label>
-        <input type="number" name="distance" id="distance">
-        <button id="driveButton">DRIVE</button>
-    </div>
-    <div class="radio-simulation">
-        <label for="distance">Weisung</label>
-        <input type="text" name="weisung" id="weisung" maxlength="16">
-        <button id="sendWeisungButton">SENDEN</button>
-
-        <label for="radio-telegram-bitfield">FFSK-Bitfolge</label>
-        <input type="text" id="radio-telegram-bitfield">
-        <button id="sendBitsButton">SEND</button>
-    </div>
-
-
-    <div class="terminal" draggable="true">
-        <div class="terminal-header">
-            <span id="logo-siemens">SIEMENS</span>
-            <span id="logo-hpw">HPW</span>
-        </div>
-        <div class="display">
-            <div class="display-border">
-                <canvas id="display-canvas"></canvas>
-    
-                <div class="display-labels">
-                    <span style="width: 155px;">Linie/Kurs</span>
-                    <span style="width: 80px;">Ziel</span>
-                    <span style="width: 30px;">R</span>
-                    <span style="width: 80px;">Haltest.</span>
-                    <span style="width: 130px;">Abweich.</span>
-                </div>
-    
+        <div id="events">
+            <div id="events_header">
+                <div>Zeit</div>
+                <div>Kanal</div>
+                <div>Telegramm</div>
+            </div>
+            <div id="events_body">
+                <!-- Event rows will go here -->
             </div>
         </div>
-        
-        <div class="function-block">
-            <button class="arrow-button brightness-button" id="increase-brightness-button">
-                <span class="text">Anz.</span>
-                <span class="arrow">⬆</span>
-            </button>
-            <button class="function-button arrow-button" data-number=":">
-                <span class="arrow">⬅</span>
-            </button>
-            <button class="function-button arrow-button" data-number=";">
-                <span class="arrow">⬆</span>
-            </button>
-            <button class="function-button arrow-button" data-number="<">
-                <span class="arrow">➡</span>
-            </button>
-            <button class="function-button button-blue" data-number="=">
-                <span class="text">Ansage<br>Stumm</span>
-            </button>
-            <button class="function-button button-blue" data-number=">">
-                <span class="text">Ansage<br>Aussen</span>
-            </button>
-            <button class="arrow-button brightness-button" id="decrease-brightness-button">
-                <span class="text">Anz.</span>
-                <span class="arrow">⬇</span>
-            </button>
-            <button class="function-button button-blue" data-number="*">
-                <span class="text">Sprech-<br>wunsch</span>
-            </button>
-            <button class="function-button button-blue" data-number="+">
-                <span class="text">Leitst.<br>an<br>Fahrgast</span>
-            </button>
-            <button class="function-button button-red" data-number=",">
-                <span class="text">Unfall</span>
-            </button>
-            <button class="function-button button-blue" data-number="-">
-                <span class="text">Haltest.<br>wiederh.</span>
-            </button>
-            <button class="function-button button-blue" data-number=".">
-                <span class="text">Ansage Innen</span>
-            </button>
-        </div>
-        <div class="number-block">
-            <button class="number-button" data-number="7">
-                <span class="number">7</span>
-                <span class="text">Linie-<br>Kurs</span>
-            </button>
-                <button class="number-button" data-number="8">
-                    <span class="number">8</span>
-                    <span class="text">Route</span>
-                </button>
-                <button class="number-button" data-number="9">
-                    <span class="number">9</span>
-                    <span class="text">Ziel-<br>Sonderz.</span>
-                </button>
-                <button class="number-button" data-number="4">
-                    <span class="number">4</span>
-                    <span class="text">Haltest.<br>Nr.</span>
-                </button>
-                <button class="number-button" data-number="5">
-                    <span class="number">5</span>
-                    <span class="text">Richtung</span>
-                </button>
-                <button class="number-button" data-number="6">
-                    <span class="number">6</span>
-                    <span class="text">Meldung</span></button>
+        <div id="controls">
+            <select id="groupSelector">
+                <option value="WBSD">WBSD</option>
+                <option value="WBED">WBED</option>
+            </select>
+            <input type="text" id="messageInput" placeholder="Type a message" />
+            <button id="sendButton">Send</button>
+            <div class="io-checkboxes">
+                <table>
+                    <thead>
+                        <th>Kriterium</th>
+                        <th>Zustand</th>
+                        <th>Override</th>
+                        <th>Reset</th>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Sendebus anhalten</td>
+                            <td><input type="checkbox" name="WBSD_STOP" class="set-criteria-button checkbox"></td>
+                        </tr>
+                        <tr>
+                            <td>Türkriterium</td>
+                            <td><input type="checkbox" disabled></td>
+                            <td>
+                                <button class="set-criteria-button button-on" name="TK">AN</button>
+                                <button class="set-criteria-button button-off" name="TK">AUS</button>
+                            </td>
+                            <td>
+                                <button class="set-criteria-button button-reset" name="TK">RESET</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Kupplung A</td>
+                            <td><input type="checkbox" disabled></td>
+                            <td>
+                                <button class="set-criteria-button button-on" name="KBA">AN</button>
+                                <button class="set-criteria-button button-off" name="KBA">AUS</button>
+                            </td>
+                            <td>
+                                <button class="set-criteria-button button-reset" name="KBA">RESET</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Kupplung B</td>
+                            <td><input type="checkbox" disabled></td>
+                            <td>
+                                <button class="set-criteria-button button-on" name="KBB">AN</button>
+                                <button class="set-criteria-button button-off" name="KBB">AUS</button>
+                            </td>
+                            <td>
+                                <button class="set-criteria-button button-reset" name="RESET">RESET</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Überfall</td>
+                            <td></td>
+                            <td>
+                                <button class="set-criteria-button button-on" name="UEB">UEB</button>
+                            </td>
+                            <td>
+                            </td>
+                        </tr>
+
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="driving-simulation">
+                <label for="speed">km/h: </label>
+                <input type="number" name="speed" id="speed">
+                <label for="distance">Wegstrecke (m)</label>
+                <input type="number" name="distance" id="distance">
+                <button id="driveButton">DRIVE</button>
+            </div>
+            <div class="radio-simulation">
+                <label for="distance">Weisung</label>
+                <input type="text" name="weisung" id="weisung" maxlength="16">
+                <button id="sendWeisungButton">SENDEN</button>
+
+                <label for="radio-telegram-bitfield">FFSK-Bitfolge</label>
+                <input type="text" id="radio-telegram-bitfield">
+                <button id="sendBitsButton">SEND</button>
+            </div>
+
+            <div class="debug-table">
+                <h3>IBIS Debug Values</h3>
+                <table border="1" style="border-collapse: collapse; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Wert</th>
+                            <th>Aktuell</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Ziel-Nr</td>
+                            <td id="debug-ziel">-</td>
+                        </tr>
+                        <tr>
+                            <td>Hst-Nr (Entwerter)</td>
+                            <td id="debug-entwerter">-</td>
+                        </tr>
+                        <tr>
+                            <td>Ortsmarke (Ort-Nr)</td>
+                            <td id="debug-ort">-</td>
+                        </tr>
+                        <tr>
+                            <td>Wegzähler</td>
+                            <td id="debug-weg">-</td>
+                        </tr>
+                        <tr>
+                            <td>Route</td>
+                            <td id="debug-route">-</td>
+                        </tr>
+                        <tr>
+                            <td>Richtung</td>
+                            <td id="debug-richtung">-</td>
+                        </tr>
+                        <tr>
+                            <td>Linie</td>
+                            <td id="debug-linie">-</td>
+                        </tr>
+                        <tr>
+                            <td>Distanz von letzter Hst (m)</td>
+                            <td id="debug-dist-last">-</td>
+                        </tr>
+                        <tr>
+                            <td>Distanz zu nächster Hst (m)</td>
+                            <td id="debug-dist-next">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="route-debug-table">
+                <h3>Linienverlauf Debug</h3>
+                <table border="1" style="border-collapse: collapse; width: 100%; font-size: 12px;">
+                    <thead>
+                        <tr>
+                            <th>Seq</th>
+                            <th>ORT_NR</th>
+                            <th>Parent</th>
+                            <th>Name</th>
+                            <th>Distanz (m)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="route-debug-body">
+                        <tr>
+                            <td colspan="6">Keine Route geladen</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div class="terminal" draggable="true">
+                <div class="terminal-header">
+                    <span id="logo-siemens">SIEMENS</span>
+                    <span id="logo-hpw">HPW</span>
+                </div>
+                <div class="display">
+                    <div class="display-border">
+                        <canvas id="display-canvas"></canvas>
+
+                        <div class="display-labels">
+                            <span style="width: 155px;">Linie/Kurs</span>
+                            <span style="width: 80px;">Ziel</span>
+                            <span style="width: 30px;">R</span>
+                            <span style="width: 80px;">Haltest.</span>
+                            <span style="width: 130px;">Abweich.</span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="function-block">
+                    <button class="arrow-button brightness-button" id="increase-brightness-button">
+                        <span class="text">Anz.</span>
+                        <span class="arrow">⬆</span>
+                    </button>
+                    <button class="function-button arrow-button" data-number=":">
+                        <span class="arrow">⬅</span>
+                    </button>
+                    <button class="function-button arrow-button" data-number=";">
+                        <span class="arrow">⬆</span>
+                    </button>
+                    <button class="function-button arrow-button" data-number="<">
+                        <span class="arrow">➡</span>
+                    </button>
+                    <button class="function-button button-blue" data-number="=">
+                        <span class="text">Ansage<br>Stumm</span>
+                    </button>
+                    <button class="function-button button-blue" data-number=">">
+                        <span class="text">Ansage<br>Aussen</span>
+                    </button>
+                    <button class="arrow-button brightness-button" id="decrease-brightness-button">
+                        <span class="text">Anz.</span>
+                        <span class="arrow">⬇</span>
+                    </button>
+                    <button class="function-button button-blue" data-number="*">
+                        <span class="text">Sprech-<br>wunsch</span>
+                    </button>
+                    <button class="function-button button-blue" data-number="+">
+                        <span class="text">Leitst.<br>an<br>Fahrgast</span>
+                    </button>
+                    <button class="function-button button-red" data-number=",">
+                        <span class="text">Unfall</span>
+                    </button>
+                    <button class="function-button button-blue" data-number="-">
+                        <span class="text">Haltest.<br>wiederh.</span>
+                    </button>
+                    <button class="function-button button-blue" data-number=".">
+                        <span class="text">Ansage Innen</span>
+                    </button>
+                </div>
+                <div class="number-block">
+                    <button class="number-button" data-number="7">
+                        <span class="number">7</span>
+                        <span class="text">Linie-<br>Kurs</span>
+                    </button>
+                    <button class="number-button" data-number="8">
+                        <span class="number">8</span>
+                        <span class="text">Route</span>
+                    </button>
+                    <button class="number-button" data-number="9">
+                        <span class="number">9</span>
+                        <span class="text">Ziel-<br>Sonderz.</span>
+                    </button>
+                    <button class="number-button" data-number="4">
+                        <span class="number">4</span>
+                        <span class="text">Haltest.<br>Nr.</span>
+                    </button>
+                    <button class="number-button" data-number="5">
+                        <span class="number">5</span>
+                        <span class="text">Richtung</span>
+                    </button>
+                    <button class="number-button" data-number="6">
+                        <span class="number">6</span>
+                        <span class="text">Meldung</span></button>
                     <button class="number-button" data-number="1">
                         <span class="number">1</span>
                         <span class="text">Beset-<br>zung</span>
@@ -267,187 +352,235 @@
                         <span class="number">3</span>
                         <span class="text">Nächste<br>Haltest.</span>
                     </button>
-                        <button class="function-button button-yellow" data-number="/">
-                            <span class="text">Löschen</span>
-                        </button>
-                        <button class="number-button" data-number="0">
-                            <span class="number">0</span>
-                            <span class="text">Stop</span>
-                        </button>
-                        <button class="function-button button-yellow" data-number="?">
-                            <span class="text">Eingabe<br>Quitt.</span>
-                        </button>
+                    <button class="function-button button-yellow" data-number="/">
+                        <span class="text">Löschen</span>
+                    </button>
+                    <button class="number-button" data-number="0">
+                        <span class="number">0</span>
+                        <span class="text">Stop</span>
+                    </button>
+                    <button class="function-button button-yellow" data-number="?">
+                        <span class="text">Eingabe<br>Quitt.</span>
+                    </button>
+                </div>
+
+            </div>
+            <button id="button-start">Aufrüsten</button>
         </div>
-       
-    </div> 
-    <button id="button-start">Aufrüsten</button>
-</div>
-<script src="terminal.js"></script>
-    <script>
-        const eventsDiv = document.getElementById('events_body');
-        const groupSelector = document.getElementById('groupSelector');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
+        <script src="terminal.js"></script>
+        <script>
+            const eventsDiv = document.getElementById('events_body');
+            const groupSelector = document.getElementById('groupSelector');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
 
-        const setButtons = document.querySelectorAll('.set-criteria-button');
-        const checkboxes = document.querySelectorAll('input[type=checkbox]')
+            const setButtons = document.querySelectorAll('.set-criteria-button');
+            const checkboxes = document.querySelectorAll('input[type=checkbox]')
 
-        const kmhField = document.getElementById('speed');
-        const distanceField = document.getElementById('distance');
+            const kmhField = document.getElementById('speed');
+            const distanceField = document.getElementById('distance');
 
-        const sendWeisungButton = document.getElementById('sendWeisungButton')
-        const weisungInput = document.getElementById('weisung')
+            const sendWeisungButton = document.getElementById('sendWeisungButton')
+            const weisungInput = document.getElementById('weisung')
 
 
-        const bitsField = document.getElementById('radio-telegram-bitfield');
-        const sendBitsButton = document.getElementById('sendBitsButton')
+            const bitsField = document.getElementById('radio-telegram-bitfield');
+            const sendBitsButton = document.getElementById('sendBitsButton')
 
 
 
-        const websocket = new WebSocket(`ws://${window.location.hostname}:1815`);
+            const websocket = new WebSocket(`ws://${window.location.hostname}:1815`);
 
-        websocket.onopen = () => {
-           // logEvent('Connected to WebSocket');
-        };
-
-        websocket.onmessage = (event) => {
-            logEvent(`${event.data}`)
-            const obj = JSON.parse(event.data);
-            if (obj.channel == 'WBSD') {
-                console.log('Sending to terminal', obj)
-                onReceiveTelegram(obj['data'])
-            }
-        };
-
-        websocket.onclose = () => {
-        };
-
-        websocket.onerror = (error) => {
-        };
-
-        sendButton.addEventListener('click', () => {
-            const group = groupSelector.value;
-            const message = messageInput.value;
-            if (message.trim() === '') {
-                return;
-            }
-
-            const payload = JSON.stringify({ 'channel': group, 'data': message });
-            websocket.send(payload);
-            // logEvent(`Sent to ${group}: ${message}`);
-            messageInput.value = '';
-        });
-
-        sendBitsButton.addEventListener('click', () => {
-            const bitsString = bitsField.value
-            var payload = { 'channel': 'simulation', 'data': {
-                    'criteria': 'RADIO',
-                    'value': {
-                        "bits": bitsString
-                    }
-                } 
+            websocket.onopen = () => {
+                // logEvent('Connected to WebSocket');
             };
-             
-               
-                console.log(payload)
-                websocket.send(JSON.stringify(payload))
-        })
 
-        setButtons.forEach (button => {
-            button.addEventListener('click', (e) => {
-                console.log(e.target.name)
-                var payload = { 'channel': 'simulation', 'data': {
-                    'criteria': e.target.name,
-                    'value': null
-                } };
-                var value = null;
-                if (e.target.classList.contains('checkbox')) {
-                    console.log('Checkbox', e.target.checked)
-                    payload['data']['value'] = e.target.checked
+            websocket.onmessage = (event) => {
+                const obj = JSON.parse(event.data);
+                if (obj.channel !== 'DEBUG_VALUES' && obj.channel !== 'ROUTE_DEBUG') {
+                    logEvent(`${event.data}`)
                 }
-                if (e.target.classList.contains('button-on') == true) {
-                    payload['data']['value'] = true
-                } else if (e.target.classList.contains('button-off') == true) {
-                    payload['data']['value'] = false
-                } 
-                console.log(payload)
-                websocket.send(JSON.stringify(payload))
-            })
-        })
-        driveButton.addEventListener('click', () => {
-                var payload = { 'channel': 'simulation', 'data': {
-                    'criteria': 'DRIVING',
-                    'value': {
-                        speed: parseInt(kmhField.value),
-                        distance: parseInt(distanceField.value)
+                if (obj.channel == 'WBSD') {
+                    console.log('Sending to terminal', obj)
+                    onReceiveTelegram(obj['data'])
+                } else if (obj.channel == 'DEBUG_VALUES') {
+                    // Update debug table
+                    const data = obj.data;
+                    document.getElementById('debug-ziel').textContent = data.zielNr || '-';
+                    document.getElementById('debug-entwerter').textContent = data.entwerterHst || '-';
+                    document.getElementById('debug-ort').textContent = data.ortNr || '-';
+                    document.getElementById('debug-weg').textContent = data.wegzaehler;
+                    document.getElementById('debug-route').textContent = data.routeNr || '-';
+                    document.getElementById('debug-richtung').textContent = data.richtung;
+                    document.getElementById('debug-linie').textContent = data.linienNr || '-';
+                    document.getElementById('debug-dist-last').textContent = data.distLastStop || '-';
+                    document.getElementById('debug-dist-next').textContent = data.distNextStop || '-';
+                } else if (obj.channel == 'ROUTE_DEBUG') {
+                    // Update route debug table
+                    const tbody = document.getElementById('route-debug-body');
+                    tbody.innerHTML = '';
+                    if (obj.data && obj.data.stops && obj.data.stops.length > 0) {
+                        obj.data.stops.forEach((stop, idx) => {
+                            const row = document.createElement('tr');
+                            if (idx === obj.data.currentIndex) {
+                                row.style.backgroundColor = '#ffeb3b';
+                            }
+                            if (idx === obj.data.upcomingIndex) {
+                                row.style.backgroundColor = '#4caf50';
+                                row.style.color = 'white';
+                            }
+
+                            row.innerHTML = `
+                                <td>${stop.seq}</td>
+                                <td>${stop.ortNr}</td>
+                                <td>${stop.parentId}</td>
+                                <td>${stop.name}</td>
+                                <td>${stop.distance || '-'}</td>
+                                <td>${stop.status || ''}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="6">Keine Route geladen</td></tr>';
                     }
-                } 
+                }
             };
-             
-               
-                console.log(payload)
-                websocket.send(JSON.stringify(payload))
-            })
-      sendWeisungButton.addEventListener('click', () => {
-                var payload = { 'channel': 'simulation', 'data': {
-                    'criteria': 'WEISUNG',
-                    'value': {
-                        "text": weisungInput.value
+
+            websocket.onclose = () => {
+            };
+
+            websocket.onerror = (error) => {
+            };
+
+            sendButton.addEventListener('click', () => {
+                const group = groupSelector.value;
+                const message = messageInput.value;
+                if (message.trim() === '') {
+                    return;
+                }
+
+                const payload = JSON.stringify({ 'channel': group, 'data': message });
+                websocket.send(payload);
+                // logEvent(`Sent to ${group}: ${message}`);
+                messageInput.value = '';
+            });
+
+            sendBitsButton.addEventListener('click', () => {
+                const bitsString = bitsField.value
+                var payload = {
+                    'channel': 'simulation', 'data': {
+                        'criteria': 'RADIO',
+                        'value': {
+                            "bits": bitsString
+                        }
                     }
-                } 
-            };
-             
-               
+                };
+
+
                 console.log(payload)
                 websocket.send(JSON.stringify(payload))
             })
-      
-    function sanatizeOutputForLog(telegram) {
-        return telegram.replace(/[\x00-\x1F\x7F]/g, (char) => {
-            return `<${char.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase()}>`;
-        });
-    }
-        function logEvent(message) {
-            const messageObject = JSON.parse(message)
-            if (messageObject['channel'] == 'simulation') {
-                // Kriterium in checkbox setzen
-                console.log(checkboxes)
-                
 
-            } else {
-            console.log(message)
-            const eventRow = document.createElement('div');
-            eventRow.classList.add('event_row');
-            eventRow.classList.add('channel-' + messageObject['channel'].toLowerCase())
+            setButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    console.log(e.target.name)
+                    var payload = {
+                        'channel': 'simulation', 'data': {
+                            'criteria': e.target.name,
+                            'value': null
+                        }
+                    };
+                    var value = null;
+                    if (e.target.classList.contains('checkbox')) {
+                        console.log('Checkbox', e.target.checked)
+                        payload['data']['value'] = e.target.checked
+                    }
+                    if (e.target.classList.contains('button-on') == true) {
+                        payload['data']['value'] = true
+                    } else if (e.target.classList.contains('button-off') == true) {
+                        payload['data']['value'] = false
+                    }
+                    console.log(payload)
+                    websocket.send(JSON.stringify(payload))
+                })
+            })
+            driveButton.addEventListener('click', () => {
+                var payload = {
+                    'channel': 'simulation', 'data': {
+                        'criteria': 'DRIVING',
+                        'value': {
+                            speed: parseInt(kmhField.value),
+                            distance: parseInt(distanceField.value)
+                        }
+                    }
+                };
 
-            const eventTimeColumn = document.createElement('div');
-            eventTimeColumn.textContent = new Date().toLocaleTimeString();
 
-            const eventsChannelColumn = document.createElement('div');
-            eventsChannelColumn.textContent = messageObject['channel']
-            
-            const eventDataColumn = document.createElement('div');
-            if (messageObject['channel'] == 'WBED') {
-                messageObject['data'] = messageObject['data'].substring(1)
+                console.log(payload)
+                websocket.send(JSON.stringify(payload))
+            })
+            sendWeisungButton.addEventListener('click', () => {
+                var payload = {
+                    'channel': 'simulation', 'data': {
+                        'criteria': 'WEISUNG',
+                        'value': {
+                            "text": weisungInput.value
+                        }
+                    }
+                };
+
+
+                console.log(payload)
+                websocket.send(JSON.stringify(payload))
+            })
+
+            function sanatizeOutputForLog(telegram) {
+                return telegram.replace(/[\x00-\x1F\x7F]/g, (char) => {
+                    return `<${char.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase()}>`;
+                });
             }
-            eventDataColumn.textContent = sanatizeOutputForLog(messageObject['data'])
+            function logEvent(message) {
+                const messageObject = JSON.parse(message)
+                if (messageObject['channel'] == 'simulation') {
+                    // Kriterium in checkbox setzen
+                    console.log(checkboxes)
 
-            eventRow.appendChild(eventTimeColumn);
-            eventRow.appendChild(eventsChannelColumn);
+
+                } else {
+                    console.log(message)
+                    const eventRow = document.createElement('div');
+                    eventRow.classList.add('event_row');
+                    eventRow.classList.add('channel-' + messageObject['channel'].toLowerCase())
+
+                    const eventTimeColumn = document.createElement('div');
+                    eventTimeColumn.textContent = new Date().toLocaleTimeString();
+
+                    const eventsChannelColumn = document.createElement('div');
+                    eventsChannelColumn.textContent = messageObject['channel']
+
+                    const eventDataColumn = document.createElement('div');
+                    if (messageObject['channel'] == 'WBED') {
+                        messageObject['data'] = messageObject['data'].substring(1)
+                    }
+                    eventDataColumn.textContent = sanatizeOutputForLog(messageObject['data'])
+
+                    eventRow.appendChild(eventTimeColumn);
+                    eventRow.appendChild(eventsChannelColumn);
 
 
-            eventRow.appendChild(eventDataColumn);
+                    eventRow.appendChild(eventDataColumn);
 
-            const atBottom = eventsDiv.scrollHeight - eventsDiv.scrollTop === eventsDiv.clientHeight;
+                    const atBottom = eventsDiv.scrollHeight - eventsDiv.scrollTop === eventsDiv.clientHeight;
 
-            // Only scroll to bottom if already at the bottom
-            eventsDiv.appendChild(eventRow);
-            if (atBottom) {
-                eventsDiv.scrollTop = eventsDiv.scrollHeight;
+                    // Only scroll to bottom if already at the bottom
+                    eventsDiv.appendChild(eventRow);
+                    if (atBottom) {
+                        eventsDiv.scrollTop = eventsDiv.scrollHeight;
+                    }
+                }
             }
-        }
-        }
-    </script>
-    
+        </script>
+
 </body>
+
 </html>

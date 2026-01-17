@@ -1,204 +1,225 @@
 import { IBISController } from "./IBISController";
-//import { init } from 'raspi';
-//import { DigitalInput, DigitalOutput, PULL_UP } from 'raspi-gpio';
-import { RouteStop } from "../models/database/RouteStop";
-import { StopDistance } from "../models/database/StopDistance";
-import { Stop } from "../models/database/Stop";
 import { DeviceConfig } from '../models/devices/DeviceConfig';
 import { Util } from "../util";
 import { TelegramGenerator } from "../IBISTelegramGenerator";
-import { Route } from "../models/database/Route";
 import { Op } from "sequelize";
+import { RecSel } from "../models/database/VDV/RecSel";
+import { LidVerlauf } from "../models/database/VDV/LidVerlauf";
 
 class LocationController {
-    private latitude: number
-    private longitude: number
+  private latitude: number
+  private longitude: number
 
-    impulsesSinceReset: number
-    private IMPULSES_PER_KILOMETER = 4000;
-    private FANGRADIUS = 10;
-    ibisController: IBISController
+  impulsesSinceReset: number
+  private IMPULSES_PER_KILOMETER = 4000;
+  private FANGRADIUS = 50; // Increased fangradius for testing
+  ibisController: IBISController
 
-    private announcementAlreadyPlayed: boolean = false
+  private announcementAlreadyPlayed: boolean = false
 
-    possibleNextStopDistances: StopDistance[] = []
-    private deviceConfig: DeviceConfig = require('../../device_config.json')
+  possibleNextStopDistances: RecSel[] = []
+  public currentDistLastStop: number = 0;
+  public currentDistNextStop: number = 0;
+  private deviceConfig: DeviceConfig = require('../../device_config.json')
 
-    
 
-    constructor() {
-        
-        
+
+  constructor() {
+  }
+
+  // Interrupt wenn Wegimpuls
+  wiInterrupt() {
+    // Util.log("wiInterrupt called"); // Verbose logging
+    this.impulsesSinceReset++;
+    this.updateDistances();
+  }
+
+  // Türkontakt Interrupt
+  tkInterrupt() {
+    // Aktuelle Hst zur Basis der aktuellen Position machen
+    this.impulsesSinceReset = 0;
+  }
+  // Ortsbaken-Interupt - OB lesen, Position setzen, WI-Zähler nullen
+  obInterrupt() {
+
+  }
+
+  async onSetRoute() {
+    console.log('[onSetRoute] Called! Resetting impulses and loading distances for first stop.');
+    this.impulsesSinceReset = 0;
+    // VDV: Initialize location logic for first stop
+    if (this.ibisController.currentStops && this.ibisController.currentStops.length > 0) {
+      Util.log(`[onSetRoute] Current stops count: ${this.ibisController.currentStops.length}`);
+      Util.log(`[onSetRoute] First stop: ${this.ibisController.currentStops[0].stop?.recOrt?.ORT_NAME || 'Unknown'} (${this.ibisController.currentStops[0].ORT_NR})`);
+      Util.log("Initializing LocationController for VDV Route: " + (this.ibisController.currentStops[0].stop?.recOrt?.ORT_NAME || 'Unknown'));
+      // Load distances for first stop AND notify IBIS to advance stopIndex to 1 (Next Stop)
+      // This ensures upcomingStop points to Stop 1, which matches the RecSel target from Stop 0
+      await this.arriveAtStop(this.ibisController.currentStops[0], true);
+    } else {
+      console.log('[onSetRoute] No current stops available!');
     }
+  }
 
-    // Interrupt wenn Wegimpuls
-    wiInterrupt() {
-        this.impulsesSinceReset++;
-        this.updateDistances();
-    }
-
-    // Türkontakt Interrupt
-    tkInterrupt() {
-        // Aktuelle Hst zur Basis der aktuellen Position machen
-        this.impulsesSinceReset = 0;
-    }
-    // Ortsbaken-Interupt - OB lesen, Position setzen, WI-Zähler nullen
-    obInterrupt() {
-        
-    }
-    async checkStopDistancesForRouteObject(route: Route): Promise<boolean> {
-         // Ensure route.stops is loaded
-    // Ensure route.stops is loaded
-    if (!route.stops) {
-        await route.reload({
-          include: [{
-            model: RouteStop,
-            required: true
-          }]
-        })
+  async arriveAtStop(routeStop: LidVerlauf, notifyIBIS: boolean = true) {
+    if (routeStop) {
+      if (!(routeStop instanceof LidVerlauf)) {
+        Util.log("LocationController: Invalid stop type (not LidVerlauf). Skipping.");
+        return;
       }
-    
-      if (!route.stops || route.stops.length < 2) {
-        Util.log(`⚠️ Route "${route.route_id}" has fewer than 2 stops.`)
+
+      // Handle LidVerlauf (VDV)
+      const ortName = routeStop.stop?.recOrt?.ORT_NAME || 'Unknown';
+      const ortNr = routeStop.ORT_NR;
+
+      Util.log(`LocationController: Arrived at stop: ${ortName} (${ortNr}). NotifyIBIS: ${notifyIBIS}`);
+      this.impulsesSinceReset = 0;
+      if (notifyIBIS) {
+        this.ibisController.arriveAtStop(routeStop);
+      }
+      this.possibleNextStopDistances = await this.getPossibleNextStops(routeStop)
+      this.announcementAlreadyPlayed = false;
+      this.updateDistances();
+    }
+  }
+
+  updateDistances() {
+    let traveledMetersSinceLastStop = this.impulsesSinceReset / this.IMPULSES_PER_KILOMETER * 1000;
+
+    // Always update distance from last stop
+    this.currentDistLastStop = Math.round(traveledMetersSinceLastStop);
+
+    if (this.ibisController.upcomingStop && this.possibleNextStopDistances.length > 0) {
+      // Find RecSel that points to upcoming stop
+      // Strict VDV Logic
+      const upcomingStop = this.ibisController.upcomingStop;
+
+      if (!(upcomingStop instanceof LidVerlauf)) {
+        // Should not happen if everything is typed correctly, but safe guard
+        this.currentDistNextStop = 0;
+        return false;
+      }
+
+      // Logic for Start (Index 0): Look ahead to Stop 1
+      const isStartStop = this.ibisController.stopIndex === 0;
+      const targetStop = isStartStop && this.ibisController.currentStops.length > 1
+        ? this.ibisController.currentStops[1]
+        : upcomingStop;
+
+      const upcomingOrtNr = targetStop.ORT_NR;
+
+      // Util.log(`[RecSel Debug] Looking for SEL_ZIEL=${upcomingOrtNr} in ${this.possibleNextStopDistances.length} entries`);
+      if (this.possibleNextStopDistances.length > 0) {
+        // Util.log(`[RecSel Debug] Available targets: ${this.possibleNextStopDistances.map(s => s.SEL_ZIEL).join(', ')}`);
+      }
+
+      let nextStop = this.possibleNextStopDistances.find((sel: RecSel) => {
+        // Debugging types
+        // Util.log(`[RecSel Check] Comparing target ${sel.SEL_ZIEL} (Type: ${typeof sel.SEL_ZIEL}) with upcoming ${upcomingOrtNr} (Type: ${typeof upcomingOrtNr})`);
+        return sel.SEL_ZIEL == upcomingOrtNr; // Loose equality just in case
+      });
+
+      if (nextStop == undefined) {
+        Util.log(`[LocationController] No dist match: ORT_NR=${upcomingOrtNr} not in targets [${this.possibleNextStopDistances.map(s => s.SEL_ZIEL).join(',')}]`);
+        Util.log(`[RecSel Debug] ❌ NO MATCH found for ORT_NR ${upcomingOrtNr}`);
+        this.currentDistNextStop = 0;
         return false
       }
-    
-      // Sort by sequence
-      const sortedStops = route.stops.sort((a, b) => a.sequence_number - b.sequence_number)
-      const consecutivePairs = []
-    
-      for (let i = 0; i < sortedStops.length - 1; i++) {
-        consecutivePairs.push({
-          origin_stop_id: sortedStops[i].stop_id,
-          destination_stop_id: sortedStops[i + 1].stop_id
-        })
+
+      let distanceToNextStop = (nextStop.SEL_LAENGE || 0) - traveledMetersSinceLastStop;
+
+      // Update distance to next stop
+      this.currentDistNextStop = Math.round(distanceToNextStop);
+
+      Util.log("distance to next stop: ", distanceToNextStop)
+
+      if (distanceToNextStop <= this.FANGRADIUS) {
+        this.arriveAtStop(this.ibisController.upcomingStop);
+      } else if (distanceToNextStop <= this.deviceConfig.announcement_distance_before_next_stop && this.announcementAlreadyPlayed == false) {
+        this.ibisController.playAnnouncementForRouteStop(this.ibisController.upcomingStop)
+        this.announcementAlreadyPlayed = true
       }
-    
-      // Load existing StopDistance entries
-      const existing = await StopDistance.findAll({
+
+      // Departure Logic (Fangradius) for Start Stop
+      if (isStartStop && nextStop.SEL_LAENGE) {
+        const traveled = (nextStop.SEL_LAENGE || 0) - distanceToNextStop;
+        if (traveled > this.FANGRADIUS) {
+          Util.log(`Departure detected: Traveled ${traveled}m from Start > ${this.FANGRADIUS}m.`);
+          this.ibisController.advanceFromStart();
+        }
+      }
+    } else {
+      // No upcoming stop or no distance data available
+      this.currentDistNextStop = 0;
+    }
+  }
+
+  private async getPossibleNextStops(routeStop: LidVerlauf): Promise<RecSel[]> {
+    if (!routeStop) return [];
+
+    const currentOrtNr = routeStop.ORT_NR;
+
+    try {
+      console.log(`[getPossibleNextStops] Querying RecSel with ORT_NR = ${currentOrtNr}`);
+      let possibleStops = await RecSel.findAll({
         where: {
-          [Op.or]: consecutivePairs
+          ORT_NR: currentOrtNr
         }
-      })
-    
-      const existingKeys = new Set(
-        existing.map(e => `${e.origin_stop_id}-${e.destination_stop_id}`)
-      )
-    
-      const missing = consecutivePairs.filter(({ origin_stop_id, destination_stop_id }) =>
-        !existingKeys.has(`${origin_stop_id}-${destination_stop_id}`)
-      )
-    
-      if (missing.length === 0) {
-        Util.log(`✅ Route "${route.route_id}": all consecutive StopDistance entries are present.`)
-        return true
+      });
+      console.log(`[getPossibleNextStops] Query returned ${possibleStops.length} entries`);
+      if (possibleStops.length > 0) {
+        console.log(`[getPossibleNextStops] SEL_ZIEL values: ${possibleStops.map(s => `${s.SEL_ZIEL} (${s.SEL_LAENGE}m)`).join(', ')}`);
       }
-    
-      // Load missing stops for nicer output
-      const stopIds = Array.from(new Set(missing.flatMap(p => [p.origin_stop_id, p.destination_stop_id])))
-      const stops = await Stop.findAll({
-        where: {
-          id: stopIds
-        }
-      })
-    
-      const stopMap = new Map(stops.map(stop => [stop.id, stop.name]))
-    
-      Util.log(`❌ Route "${route.route_id}" is missing ${missing.length} consecutive StopDistance entries:`)
-      for (const { origin_stop_id, destination_stop_id } of missing) {
-        const originName = stopMap.get(origin_stop_id) || origin_stop_id
-        const destinationName = stopMap.get(destination_stop_id) || destination_stop_id
-        Util.log(`  • ${originName} → ${destinationName}`)
+      Util.log(`Found ${possibleStops.length} possible next stops via REC_SEL for ORT_NR ${currentOrtNr}`)
+      return possibleStops;
+    } catch (e) {
+      console.error("Error fetching RecSel:", e);
+      return [];
+    }
+  }
+
+  queryIRIS() {
+    if (this.deviceConfig.IRIS_A) {
+
+    }
+    if (this.deviceConfig.IRIS_B) {
+
+    }
+  }
+  simulateDrive(speed: number, distance: number) {
+    if (speed <= 0) return;
+
+    // Distance in Meters. Speed in km/h.
+    // 1 impulse per (1000m / IMPULSES_PER_KILOMETER) meters.
+    const metersPerImpulse = 1000 / this.IMPULSES_PER_KILOMETER;
+    const impulsesNeeded = Math.ceil(distance / metersPerImpulse);
+
+    // Speed km/h -> m/s
+    const speedMs = speed / 3.6;
+
+    // Time for TOTAL distance
+    // const totalSeconds = distance / speedMs;
+
+    // Time between impulses (seconds) = metersPerImpulse / speedMs
+    const intervalSeconds = metersPerImpulse / speedMs;
+    const intervalMs = intervalSeconds * 1000;
+
+    Util.log(`Simulating Drive: Distance=${distance}m, Speed=${speed}km/h (${speedMs.toFixed(2)}m/s).`)
+    Util.log(`  -> Impulses Needed: ${impulsesNeeded}, Interval: ${intervalMs.toFixed(2)}ms`);
+
+    let count = 0;
+
+    let interval = setInterval(() => {
+      if (count >= impulsesNeeded) {
+        clearInterval(interval);
+        Util.log("Simulation finished.");
+        return;
+      } else {
+        Util.log(`Simulate pulse ${count}/${impulsesNeeded}`);
+        this.wiInterrupt();
+        count++;
       }
-    
-      return false
-      }
-      
-      
+    }, intervalMs);
+  }
 
-    async onSetRoute() {
-        this.impulsesSinceReset = 0;
-        if (this.ibisController.route) {
-            await this.checkStopDistancesForRouteObject(this.ibisController.route)
-
-            this.arriveAtStop(this.ibisController.route.stops[0])
-            // Überprüfen, ob Abstände alle existieren:
-
-        }
-
-    }
-    async arriveAtStop(routeStop: RouteStop) {
-        if (routeStop) {
-            this.impulsesSinceReset = 0;
-            this.ibisController.arriveAtStop(routeStop);
-            this.possibleNextStopDistances = await this.getPossibleNextStops(routeStop)
-            this.announcementAlreadyPlayed = false;
-        }
-    }
-
-
-
-    updateDistances() {
-        let traveledMetersSinceLastStop = this.impulsesSinceReset / this.IMPULSES_PER_KILOMETER * 1000;
-        if (this.ibisController.route) {
-
-        let nextStop = this.possibleNextStopDistances.filter((stopDistance: StopDistance) => {
-            if (stopDistance.destination_stop_id == this.ibisController.upcomingStop.stop_id) {
-                return true
-            } else {
-                return false
-            }
-        })[0]
-        if (nextStop == undefined) {
-            Util.log('NO NEXT STOP FOUND')
-            return false
-        }
-
-        let distanceToNextStop = nextStop.distance - traveledMetersSinceLastStop;
-        Util.log("distance to next stop: ", distanceToNextStop)
-        if (distanceToNextStop <= this.FANGRADIUS) {
-            this.arriveAtStop(this.ibisController.upcomingStop);
-        } else if (distanceToNextStop <= this.deviceConfig.announcement_distance_before_next_stop && this.announcementAlreadyPlayed == false) {
-            this.ibisController.playAnnouncementForRouteStop(this.ibisController.upcomingStop)
-            this.announcementAlreadyPlayed = true
-
-        }
-    }
-    }
-
-    private async getPossibleNextStops(routeStop: RouteStop) {
-       let possibleStops = await StopDistance.findAll( { where: {
-            origin_stop_id: routeStop.stop.id
-        }})
-        Util.log('possible next stops', possibleStops)
-        return possibleStops;
-    }
-
-    queryIRIS() {
-        if (this.deviceConfig.IRIS_A) {
-
-        }
-        if (this.deviceConfig.IRIS_B) {
-            
-        }
-    }
-    simulateDrive(speed: number, distance: number) {
-        const impulsesNeeded = distance / 1000 * this.IMPULSES_PER_KILOMETER;
-        const totalSeconds = (distance / speed) * 3600; // total time in seconds
-        const intervalMs = (totalSeconds / impulsesNeeded) * 1000; // time between impulses in ms
-    
-        let count = 0;
-    
-        let interval = setInterval(() => {
-            if (count >= impulsesNeeded) {
-                clearInterval(interval);
-                return;
-            } else {
-                this.wiInterrupt();
-                count++;
-            }
-        }, intervalMs);
-    }
-    
 }
 export { LocationController }

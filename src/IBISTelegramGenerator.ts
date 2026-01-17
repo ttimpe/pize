@@ -1,5 +1,4 @@
-import { Line } from "./models/database/Line";
-import  './extensions/String'
+import './extensions/String'
 import './extensions/Number'
 
 import { IBISTerminalMode } from "./models/devices/Terminal/IBISTerminalMode";
@@ -16,7 +15,7 @@ class IBISTelegramGenerator {
     static DS001a(sonderzeichen: number): IBISTelegram {
         return 'lE' + sonderzeichen.toString().padStart(2, '0')
     }
-    
+
     // DS001b - Funkkennung - Linie/Kurs
     static DS001b(lineNumber: number, courseNumber: number): IBISTelegram {
         return 'lF' + lineNumber.toString().padStart(3, '0') + courseNumber.toString().padStart(2, '0')
@@ -29,17 +28,17 @@ class IBISTelegramGenerator {
 
     // DS001d - Liniennummer alphanumerisch - 4 Zeichen
     static DS001d(lineNumber: string): IBISTelegram {
-        return 'lC' + lineNumber.substring(0,4)
+        return 'lC' + lineNumber.substring(0, 4)
     }
-    
+
     // DS001d - Liniennummer alphanumerisch - 8 Zeichen
     static DS001e(lineNumber: string): IBISTelegram {
-        return 'lC' + lineNumber.substring(0,8)
+        return 'lC' + lineNumber.substring(0, 8)
     }
 
     // DS001d - Liniennummer alphanumerisch - 7 Zeichen
     static DS001f(lineNumber: string): IBISTelegram {
-        return 'lC' + lineNumber.substring(0,7)
+        return 'lC' + lineNumber.substring(0, 7)
     }
 
     // DS002 - Kursnummer 2 stellig
@@ -86,7 +85,7 @@ class IBISTelegramGenerator {
 
     // DS003f - Routennummer erweitert auf 6 Zeichen
     static DS003f(route: number): IBISTelegram {
-        return 'zN' + route.toString().padStart(6, '0') 
+        return 'zN' + route.toString().padStart(6, '0')
     }
 
     // DS003g - Liniennummer 4 stellig
@@ -223,7 +222,7 @@ class IBISTelegramGenerator {
     static DS010f(nummer: number, text: string): IBISTelegram {
         return 'xU' + nummer.toIBISHexString().padStart(2, '0') + text.length.toIBISHexString().padStart(2, '0') + text
     }
-    
+
     // DS010g - Anzeige "Nächste Haltestelle"
     static DS010g(): IBISTelegram {
         return 'xN'
@@ -237,7 +236,7 @@ class IBISTelegramGenerator {
     // DS010I - FGI Statusabfrage
     static DS010i(id: number): IBISTelegram {
         return 'xS' + id.toIBISHexString().padStart(2, '0')
-    } 
+    }
 
     // DS011 - Ortscode / Wegzähler
 
@@ -280,8 +279,8 @@ class IBISTelegramGenerator {
 
     // DS013b - Funkgerät Linienkennung 2 Ziffern
     static DS013b(linie: number): IBISTelegram {
-        return 'oCLO' + linie.toString().substring(0,2).padStart(2, '0')
-    } 
+        return 'oCLO' + linie.toString().substring(0, 2).padStart(2, '0')
+    }
 
     // DS020 - Statusabfrage Anzeige
     static DS020(adresse: number): IBISTelegram {
@@ -291,7 +290,7 @@ class IBISTelegramGenerator {
     // DS201 - Versionsabfrage
     static DS0201(adresse: number): IBISTelegram {
         return 'aV' + adresse.toIBISHexString()
-    } 
+    }
 
     // DS021 - Text Ziel, Fahrweg
     static DS021(adresse: number, text: string): IBISTelegram {
@@ -369,7 +368,7 @@ class IBISTelegramGenerator {
     }
 
     // DS038 - ELA Laustärke
-    static DS038(pfad: number, volume:number): IBISTelegram {
+    static DS038(pfad: number, volume: number): IBISTelegram {
         return 'rL' + pfad.toIBISHexString() + volume.toString().padStart(3, '0')
     }
 
@@ -396,7 +395,7 @@ class IBISTelegramGenerator {
 
     // DS039 - Haltestellenansage Text
     static DS039(text: string): IBISTelegram {
-        return 'hA'+text.hexLength() + text
+        return 'hA' + text.hexLength() + text
     }
 
     // DS039a - Haltestellenansage Lautstärke
@@ -416,7 +415,7 @@ class IBISTelegramGenerator {
         return 'mS' + mode
     }
 
-     // DS040b - Terminal B - Eingabe Status
+    // DS040b - Terminal B - Eingabe Status
     static DS040b(mode: IBISTerminalMode): IBISTelegram {
         return 'tS' + mode
     }
@@ -436,23 +435,23 @@ class IBISTelegramGenerator {
     // DS043 - Terminal A - Blinken ein aus
 
     static DS043(mode: IBISTerminalMode, posx: number, posy: number, count: number): IBISTelegram {
-        return 'mA' + mode + (count+1).toIBISHexString() + posy.toIBISHexString() + posx.toIBISHexString()
+        return 'mA' + mode + (count + 1).toIBISHexString() + posy.toIBISHexString() + posx.toIBISHexString()
     }
     // DS043b - Terminal B - Blinken ein aus
 
     static DS043b(mode: IBISTerminalMode, posx: number, posy: number, count: number): IBISTelegram {
-        return 'tA' + mode + (count+1).toIBISHexString() + posy.toIBISHexString() + posx.toIBISHexString()
+        return 'tA' + mode + (count + 1).toIBISHexString() + posy.toIBISHexString() + posx.toIBISHexString()
     }
 
     // DS044a - Terminal A - Text
 
-    static DS044a(mode: IBISTerminalMode, posx: number, posy:number, text: string): IBISTelegram {
+    static DS044a(mode: IBISTerminalMode, posx: number, posy: number, text: string): IBISTelegram {
         return 'mC' + mode + text.length.toIBISHexString() + posy.toString() + posx.toString() + text
     }
 
     // DS044b - Terminal B - Text
 
-    static DS044b(mode: IBISTerminalMode, posx: number, posy:number, text: string): IBISTelegram {
+    static DS044b(mode: IBISTerminalMode, posx: number, posy: number, text: string): IBISTelegram {
         return 'tC' + mode + text.length.toString(16) + posy.toString() + posx.toString() + text
     }
 
@@ -494,7 +493,7 @@ class IBISTelegramGenerator {
 
     // DS046f - Fahrerterminal B Fahrplanabweichung
     static DS046f(mode: IBISTerminalMode, time: number): IBISTelegram {
-        return 'tF'+ mode + time.toString().padStart(5,'0')
+        return 'tF' + mode + time.toString().padStart(5, '0')
     }
 
     // DS050 - Ausweisleser Statusabfrage
@@ -533,18 +532,18 @@ class IBISTelegramGenerator {
     static DS062(richtung: string, zielrichtung: string): IBISTelegram {
         return 'o' + richtung + 'R' + zielrichtung;
     }
-    
+
     // DS063 - Ortung einschalten
     static DS063(richtung: string): IBISTelegram {
         return 'o' + richtung + 'E';
-    } 
+    }
 
     static DS064(richtug: string): IBISTelegram {
         return 'o' + richtug + 'A';
     }
 
-// TODO: Check status replies
-   
+    // TODO: Check status replies
+
 
 
 }

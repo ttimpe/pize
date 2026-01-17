@@ -18,25 +18,25 @@ class IBISValidator {
 
     queryStatus() {
         if (this.status === undefined || this.status == 0) {
-        this.lastStatusQueriedTime = new Date()
-        this.ibisController.sendTelegram(TelegramGenerator.DS070(this.address))
-        setTimeout(() => {
-            Util.log('Last status received time', this.lastStatusReceivedTime);
-            Util.log('Last status queried time', this.lastStatusQueriedTime);
-            if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) <= 6000) {
-                // Is active, have received status
-                Util.log("Entwerter ", this.address, " OK")
+            this.lastStatusQueriedTime = new Date()
+            this.ibisController.sendTelegram(TelegramGenerator.DS070(this.address))
+            setTimeout(() => {
+                Util.log('Last status received time', this.lastStatusReceivedTime);
+                Util.log('Last status queried time', this.lastStatusQueriedTime);
+                if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) <= 6000) {
+                    // Is active, have received status
+                    Util.log("Entwerter ", this.address, " OK")
 
-            } else {
-                // Have not received status, throw error
-                this.ibisController.throwError("ENTWERT.DEF.1: " + this.address.toString().padStart(2, '0'));
-                Util.log("Entwerter ", this.address, " FAIL")
-                this.status = null;
+                } else {
+                    // Have not received status, throw error
+                    this.ibisController.throwError("ENTWERT.DEF.1: " + this.address.toString().padStart(2, '0'));
+                    Util.log("Entwerter ", this.address, " FAIL")
+                    this.status = null;
 
-            }
-            this.ibisController.currentValidator = undefined;
+                }
+                this.ibisController.aktuellerEntwerter = undefined;
 
-        }, 6000);
+            }, 6000);
         }
     }
     onReceiveTelegram(telegram: IBISTelegram) {
@@ -48,6 +48,6 @@ class IBISValidator {
         }
     }
 
- 
+
 }
 export { IBISValidator }

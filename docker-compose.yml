@@ -1,0 +1,14 @@
+services:
+  ibisplusplus:
+    build: .
+    container_name: ibisplusplus
+    network_mode: host
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyAMA0:/dev/ttyAMA0"
+    environment:
+      - PULSE_SERVER=unix:/tmp/pulse/native
+    volumes:
+      - /tmp/pulse:/tmp/pulse
+    stdin_open: true
+    tty: true
