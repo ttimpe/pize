@@ -874,11 +874,17 @@ class IBISTerminal {
     }
 
     throwError(errorText: string) {
-        this.errors.push(errorText)
-        if (this.currentDisplayMode != TerminalDisplayMode.Fehler) {
-            this.setDisplayMode(TerminalDisplayMode.Fehler)
-        }
+        if (!this.errors.includes(errorText)) {
+            this.errors.push(errorText)
 
+            // If already in error mode, just update the text (showError)
+            // If not, switch mode (which saves previous mode)
+            if (this.currentDisplayMode == TerminalDisplayMode.Fehler) {
+                this.showError();
+            } else {
+                this.setDisplayMode(TerminalDisplayMode.Fehler)
+            }
+        }
     }
     showError() {
         this.mode = IBISTerminalMode.BLINKING_FUNCTION;

@@ -51,6 +51,13 @@ class RadioController {
     private DSPin: Gpio;
     private STASTPin: Gpio;
 
+    public updateLocation(ortNr: number, beaconCode: number) {
+        // Send radio telegram (R01 with manual input=false, beacon detected)
+        Util.log(`[RadioController] Reporting location: ORT=${ortNr}, BEACON=${beaconCode}`);
+        // TODO: Implement actual R01 telegram sending if needed
+        // this.sendResponseTelegram_R01(false, 0, beaconCode, 0, false, 0); 
+    }
+
 
     private ibisController?: IBISController
 
@@ -85,7 +92,7 @@ class RadioController {
             this.setRadioChannel(this.deviceConfig.RADIO.channels.data)
 
         }
-      
+
     }
     private encodeRadix40(text: string): number[] {
         const radix40Table = " ABCDEFGHIJKLMNOPQRSTUVWXYZ:.=0123456789";
@@ -989,13 +996,13 @@ class RadioController {
     public startListening() {
         const stream = this.mic.startRecording();
         setInterval(() => {
-                const date = new Date()
-                if (date.getTime() - this.lastReceivedTelegramTime.getTime() > 30 * 1000) {
-                    this.ibisController.setFunkrueckfall()
-                } else {
-                    // Immernoch im Datenfunk
-                    
-                }
+            const date = new Date()
+            if (date.getTime() - this.lastReceivedTelegramTime.getTime() > 30 * 1000) {
+                this.ibisController.setFunkrueckfall()
+            } else {
+                // Immernoch im Datenfunk
+
+            }
         }, 30 * 1000)
         stream.on('data', (chunk: Buffer) => {
             const int16Array = new Int16Array(chunk.buffer);

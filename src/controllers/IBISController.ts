@@ -67,11 +67,19 @@ class IBISController implements IBISControllerInterface {
     public aktuelleAnzeige?: IBISAnzeige
     public aktuellerEntwerter?: IBISEntwerter
 
-    // HAG
 
+    // HAG
     private HAGlastStatusQueriedTime?: Date
     private HAGlastStatusReceivedTime?: Date
     private HAGstatus?: number
+
+    // IRIS
+    private IRIS_A_LastStatusQueriedTime?: Date
+    private IRIS_A_LastStatusReceivedTime?: Date
+    private IRIS_B_LastStatusQueriedTime?: Date
+    private IRIS_B_LastStatusReceivedTime?: Date
+    private IRIS_A_Defect: boolean = false
+    private IRIS_B_Defect: boolean = false
 
     // Websocket
     private websocket: WebSocketServer
@@ -270,6 +278,16 @@ class IBISController implements IBISControllerInterface {
                             case 'WBSD_STOP':
                                 this.timersInterrupted = messageObject['data']['value'];
                                 break;
+                            case 'OBI':
+                                // Ortsbake Interrupt (Simulation)
+                                this.interruptOrtbake();
+                                break;
+                            case 'IRIS_BEACON':
+                                // Direct Beacon Code Injection (Simulation)
+                                const beaconCode = messageObject['data']['value']; // Hex String
+                                Util.log(`[Simulation] IRIS Beacon injected: ${beaconCode}`);
+                                this.locationController.onBeaconDetected(beaconCode, 'SIM');
+                                break;
                         }
                         break;
                     // TODO: Zugbus    
@@ -286,12 +304,16 @@ class IBISController implements IBISControllerInterface {
             // Türkontakt, hier beide Richtung da Tür auf/zu
             const tuerkontaktPin = new Gpio(this.deviceConfig.GPIO_PINOUT.TK, 'in', 'both')
 
+            const obiPin = new Gpio(this.deviceConfig.GPIO_PINOUT.OBI, 'in', 'falling');
+
+
             const kupplungAPin = new Gpio(this.deviceConfig.GPIO_PINOUT.KKA, 'in', 'both')
             const kupplungBPin = new Gpio(this.deviceConfig.GPIO_PINOUT.KKB, 'in', 'both')
 
             ueberfallPin.watch(this.interruptUeberfall);
             wegimpulsPin.watch(this.interruptWegimpuls);
             tuerkontaktPin.watch(this.interruptTuerkriterium)
+            obiPin.watch(this.interruptOrtbake);
             kupplungAPin.watch(this.interruptKupplungA)
             kupplungBPin.watch(this.interruptKupplungB)
         }
@@ -326,7 +348,24 @@ class IBISController implements IBISControllerInterface {
             return;
         }
         this.onTuerkriterium(value > 0)
+    }
 
+    private interruptOrtbake = (err?: Error | null, value?: number) => {
+        if (err) {
+            Util.log('GPIO-Fehler OBI', err)
+            return;
+        }
+        // OBI triggert sofortige Datenabfrage (DS061)
+        Util.log("[GPIO] OBI Interrupt detected -> Requesting Data");
+        // Richtung abhängig von Fahrtrichtung/Terminal? 
+        // Wir fragen einfach das aktive Lesegerät ab oder beide wenn unsicher.
+        // IRIS Logic: C 'A' oder 'B'. Wir nehmen an, wir wissen welche aktiv ist.
+        if (this.deviceConfig.IRIS_A && (!this.IRIS_A_Defect)) {
+            this.sendTelegram(TelegramGenerator.DS061('A'));
+        }
+        if (this.deviceConfig.IRIS_B && (!this.IRIS_B_Defect)) {
+            this.sendTelegram(TelegramGenerator.DS061('B'));
+        }
     }
 
     private interruptWegimpuls(err: Error | null, value: number) {
@@ -435,7 +474,7 @@ class IBISController implements IBISControllerInterface {
         if (this.HAGstatus === undefined || this.HAGstatus == 0) {
             this.sendTelegram(TelegramGenerator.DS030())
             setTimeout(() => {
-                if (this.HAGlastStatusReceivedTime != undefined && (this.HAGlastStatusReceivedTime.getTime() - this.HAGlastStatusQueriedTime.getTime()) <= 6000) {
+                if (this.HAGlastStatusReceivedTime != undefined && (this.HAGlastStatusQueriedTime.getTime()) && (this.HAGlastStatusReceivedTime.getTime() - this.HAGlastStatusQueriedTime.getTime()) <= 6000) {
                     // Is active, have received status
                     Util.log("HAG OK")
                 } else {
@@ -446,6 +485,34 @@ class IBISController implements IBISControllerInterface {
                 }
             }, 6000);
         }
+    }
+
+    private queryIRIS(direction: 'A' | 'B') {
+        const isA = direction === 'A';
+        if (isA ? this.IRIS_A_Defect : this.IRIS_B_Defect) return; // Schon defekt
+
+        if (isA) this.IRIS_A_LastStatusQueriedTime = new Date();
+        else this.IRIS_B_LastStatusQueriedTime = new Date();
+
+        this.sendTelegram(TelegramGenerator.DS060(direction));
+
+        setTimeout(() => {
+            const lastReceived = isA ? this.IRIS_A_LastStatusReceivedTime : this.IRIS_B_LastStatusReceivedTime;
+            const lastQueried = isA ? this.IRIS_A_LastStatusQueriedTime : this.IRIS_B_LastStatusQueriedTime;
+            const hasRecentResponse = lastReceived && lastQueried && (lastReceived.getTime() > lastQueried.getTime());
+
+            if (!hasRecentResponse) {
+                // Defect Detected
+                Util.log(`IRIS ${direction} DEFEKT! Keine Antwort.`);
+                this.throwError(`IRIS ${direction} DEFEKT`);
+                if (isA) this.IRIS_A_Defect = true;
+                else this.IRIS_B_Defect = true;
+            } else {
+                // OK
+                if (isA) this.IRIS_A_Defect = false;
+                else this.IRIS_B_Defect = false;
+            }
+        }, 6000);
     }
 
 
@@ -501,11 +568,27 @@ class IBISController implements IBISControllerInterface {
             if (this.aTerminal.currentDisplayMode == TerminalDisplayMode.None) {
                 this.aTerminal.refreshText()
             }
+            // IRIS Power Management
+            if (this.deviceConfig.IRIS_A) {
+                if (this.aTerminal.isActive) {
+                    this.sendTelegram(TelegramGenerator.DS063('A'));
+                } else {
+                    this.sendTelegram(TelegramGenerator.DS064('A'));
+                }
+            }
         }
         if (this.bTerminal) {
             this.bTerminal.updateSecondLine()
             if (this.bTerminal.currentDisplayMode == TerminalDisplayMode.None) {
                 this.bTerminal.refreshText()
+            }
+            // IRIS Power Management
+            if (this.deviceConfig.IRIS_B) {
+                if (this.bTerminal.isActive) {
+                    this.sendTelegram(TelegramGenerator.DS063('B'));
+                } else {
+                    this.sendTelegram(TelegramGenerator.DS064('B'));
+                }
             }
         }
     }
@@ -545,6 +628,35 @@ class IBISController implements IBISControllerInterface {
         if (telegram.substring(1).match("h[0-9]")) {
             this.HAGlastStatusReceivedTime = new Date()
             this.HAGstatus = parseInt(telegram.substring(2))
+        }
+
+        // IRIS DS160 (Status) - o[A/B][0/1/2]
+        // Example: oA0 (Idle), oA1 (Data), oA2 (Changed)
+        if (telegram.substring(1).match(/^o[AB][012]$/)) {
+            const direction = telegram.substring(2, 3) as 'A' | 'B';
+            const status = parseInt(telegram.substring(3, 4));
+
+            if (direction === 'A') {
+                this.IRIS_A_LastStatusReceivedTime = new Date();
+                this.IRIS_A_Defect = false;
+            } else {
+                this.IRIS_B_LastStatusReceivedTime = new Date();
+                this.IRIS_B_Defect = false;
+            }
+
+            if (status === 1 || status === 2) {
+                // Data available, query it!
+                Util.log(`IRIS ${direction} has data (Status ${status}). Requesting DS061...`);
+                this.sendTelegram(TelegramGenerator.DS061(direction));
+            }
+        }
+
+        // IRIS DS161 (Data) - o[A/B]D[Hex8]
+        // Example: oAD00000FA3
+        if (telegram.substring(1).match(/^o[AB]D[0-9A-Fa-f]{8}$/)) {
+            const direction = telegram.substring(2, 3);
+            const hexCode = telegram.substring(4);
+            this.locationController.onBeaconDetected(hexCode, direction);
         }
 
 
@@ -665,7 +777,12 @@ class IBISController implements IBISControllerInterface {
         }
 
         // Ortung per IRIS
-
+        if (this.deviceConfig.IRIS_A) {
+            this.queryIRIS('A');
+        }
+        if (this.deviceConfig.IRIS_B) {
+            this.queryIRIS('B');
+        }
     }
 
     tick30Seconds() {

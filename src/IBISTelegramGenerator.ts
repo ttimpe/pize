@@ -538,8 +538,9 @@ class IBISTelegramGenerator {
         return 'o' + richtung + 'E';
     }
 
-    static DS064(richtug: string): IBISTelegram {
-        return 'o' + richtug + 'A';
+    // DS064 - Ortung ausschalten
+    static DS064(richtung: string): IBISTelegram {
+        return 'o' + richtung + 'A';
     }
 
     // TODO: Check status replies

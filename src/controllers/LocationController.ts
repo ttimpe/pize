@@ -5,6 +5,8 @@ import { TelegramGenerator } from "../IBISTelegramGenerator";
 import { Op } from "sequelize";
 import { RecSel } from "../models/database/VDV/RecSel";
 import { LidVerlauf } from "../models/database/VDV/LidVerlauf";
+import { RecOm } from "../models/database/VDV/RecOm";
+import { RecOrt } from "../models/database/VDV/RecOrt";
 
 class LocationController {
   private latitude: number
@@ -177,13 +179,51 @@ class LocationController {
     }
   }
 
-  queryIRIS() {
-    if (this.deviceConfig.IRIS_A) {
+  async onBeaconDetected(hexCode: string, direction: string) {
+    try {
+      const ormaCode = parseInt(hexCode, 16);
+      Util.log(`[LocationController] Beacon detected on ${direction}: Hex=${hexCode}, Decimal=${ormaCode}`);
 
-    }
-    if (this.deviceConfig.IRIS_B) {
+      const beacon = await RecOm.findOne({
+        where: { ORMACODE: ormaCode },
+        include: [RecOrt]
+      });
 
+      if (beacon) {
+        Util.log(`[LocationController] Beacon found in DB: ${beacon.ORM_TEXT} (ORT_NR: ${beacon.ORT_NR})`);
+
+        // Update Location
+        // Create a synthetic LidVerlauf-like object or just find the stop in current route
+        // If we have a route active, try to snap to it
+        if (this.ibisController.currentStops.length > 0) {
+          const stopInRoute = this.ibisController.currentStops.find(s => s.ORT_NR === beacon.ORT_NR);
+          if (stopInRoute) {
+            Util.log(`[LocationController] Beacon matches stop in current route! Snapping...`);
+            await this.arriveAtStop(stopInRoute, true);
+          } else {
+            Util.log(`[LocationController] Beacon ORT_NR ${beacon.ORT_NR} not in current route.`);
+            // Still reset impulses? Yes.
+            this.impulsesSinceReset = 0;
+            // Potentially notify radio
+          }
+        } else {
+          this.impulsesSinceReset = 0;
+        }
+
+        if (this.ibisController.radioController) {
+          this.ibisController.radioController.updateLocation(beacon.ORT_NR, ormaCode);
+        }
+
+      } else {
+        Util.log(`[LocationController] Beacon code ${ormaCode} not found in REC_OM.`);
+      }
+    } catch (e) {
+      console.error("[LocationController] Error processing beacon:", e);
     }
+  }
+
+  setReaderPower(on: boolean) {
+    // Controlled by IBISController
   }
   simulateDrive(speed: number, distance: number) {
     if (speed <= 0) return;

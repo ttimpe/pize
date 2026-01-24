@@ -184,6 +184,13 @@
                 <button id="sendBitsButton">SEND</button>
             </div>
 
+            <div class="iris-simulation">
+                <label for="iris-code">IRIS Code (Hex): </label>
+                <input type="text" name="iris-code" id="iris-code" placeholder="00000FA3">
+                <button id="iris-obi-button">OBI (Interrupt)</button>
+                <button id="iris-send-button">Sende Daten</button>
+            </div>
+
             <div class="debug-table">
                 <h3>IBIS Debug Values</h3>
                 <table border="1" style="border-collapse: collapse; width: 100%;">
@@ -387,6 +394,10 @@
             const bitsField = document.getElementById('radio-telegram-bitfield');
             const sendBitsButton = document.getElementById('sendBitsButton')
 
+            const irisCodeInput = document.getElementById('iris-code');
+            const irisObiButton = document.getElementById('iris-obi-button');
+            const irisSendButton = document.getElementById('iris-send-button');
+
 
 
             const websocket = new WebSocket(`ws://${window.location.hostname}:1815`);
@@ -533,6 +544,28 @@
                 console.log(payload)
                 websocket.send(JSON.stringify(payload))
             })
+
+            irisObiButton.addEventListener('click', () => {
+                var payload = {
+                    'channel': 'simulation', 'data': {
+                        'criteria': 'OBI',
+                        'value': true
+                    }
+                };
+                console.log(payload);
+                websocket.send(JSON.stringify(payload));
+            });
+
+            irisSendButton.addEventListener('click', () => {
+                var payload = {
+                    'channel': 'simulation', 'data': {
+                        'criteria': 'IRIS_BEACON',
+                        'value': irisCodeInput.value
+                    }
+                };
+                console.log(payload);
+                websocket.send(JSON.stringify(payload));
+            });
 
             function sanatizeOutputForLog(telegram) {
                 return telegram.replace(/[\x00-\x1F\x7F]/g, (char) => {
