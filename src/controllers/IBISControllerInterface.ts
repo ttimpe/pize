@@ -20,6 +20,12 @@ export interface IBISControllerInterface {
     repeatStopAnnouncement(): void
     skipStop(): void
     getUpcomingStopShortId(): number;
+    executeTestFunction(functionCode: number, terminalKey: 'A' | 'B'): void;
+    setTfsEnabled(enabled: boolean): void;
+
+    setRadioChannel(type: 'voice' | 'data' | 'lsa', channel: number): void;
+    getRadioChannel(type: 'voice' | 'data' | 'lsa'): number;
+    getLocationStatus(): { ortNr: number, weg: number };
 
     // Properties needed by Terminal
     upcomingStop: any // Can be RecOrt or similar structure, keeping any for flexibility during refactor

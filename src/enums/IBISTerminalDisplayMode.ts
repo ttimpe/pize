@@ -21,6 +21,12 @@ export enum TerminalDisplayMode {
     Haltestelle = 19,
     Fehler = 20,
     MeldungBestaetigen = 21,
-    Weisung = 22,  
-    Zuglaenge = 23
+    Weisung = 22,
+    Zuglaenge = 23,
+    TestFunktion = 24,
+    TestMelodie = 25,
+    TestSprachkanal = 26,
+    TestDatenkanal = 27,
+    TestLSAKanal = 28,
+    TestOrtsmarke = 29
 }

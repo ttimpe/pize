@@ -1,16 +1,19 @@
 
 import { RecLid } from './models/database/VDV/RecLid';
 import { RecFrt } from './models/database/VDV/RecFrt';
+import { RecUmlauf } from './models/database/VDV/RecUmlauf';
 import { LidVerlauf } from './models/database/VDV/LidVerlauf';
 import { RecOrt } from './models/database/VDV/RecOrt';
 import { RecHp } from './models/database/VDV/RecHp';
+import { RecZnr } from './models/database/VDV/RecZnr';
+import { RecAnr } from './models/database/VDV/RecAnr';
 import { BasisVersion } from './models/database/VDV/BasisVersion';
 import { Sequelize } from 'sequelize-typescript';
 
 const sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: '../ifesx-backend/test.sqlite3',
-    models: [RecLid, RecFrt, LidVerlauf, RecOrt, RecHp, BasisVersion]
+    storage: './test.sqlite3',
+    models: [RecLid, RecFrt, RecUmlauf, LidVerlauf, RecOrt, RecHp, RecZnr, RecAnr, BasisVersion]
 });
 
 async function checkData() {
@@ -18,8 +21,8 @@ async function checkData() {
 
     console.log("Checking Line 1...");
     // Try finding Line 1 (as "1" or "001")
-    let line = await RecLid.findOne({ where: { STR_LID: '1' } });
-    if (!line) line = await RecLid.findOne({ where: { STR_LID: '001' } });
+    let line = await RecLid.findOne({ where: { LI_NR: 1 } });
+    // if (!line) line = await RecLid.findOne({ where: { STR_LID: '001' } });
 
     if (line) {
         console.log(`Found Line: ${line.STR_LID} (ID: ${line.LID_NR})`);

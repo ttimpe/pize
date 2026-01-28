@@ -10,6 +10,7 @@ import { IBISValidator as IBISEntwerter } from '../models/devices/IBISValidator'
 import { AudioController } from './AudioController';
 import { IBISTelegram } from '../extensions/IBISTelegram';
 import { TerminalDisplayMode } from '../enums/IBISTerminalDisplayMode';
+import { IBISTestFunction } from '../enums/IBISTestFunction';
 import { Util } from '../util';
 import { UestraLVA } from '../models/devices/Signs/UestraLVA';
 import { LocationController } from './LocationController';
@@ -95,6 +96,8 @@ class IBISController implements IBISControllerInterface {
 
     // 0: Datenfunk, 1: Datenfunk gestört, 2: Funkrückfall
     public funkmodus: number
+
+    public tfsEnabled: boolean = false;
 
     private timersInterrupted: boolean = false
 
@@ -287,6 +290,9 @@ class IBISController implements IBISControllerInterface {
                                 const beaconCode = messageObject['data']['value']; // Hex String
                                 Util.log(`[Simulation] IRIS Beacon injected: ${beaconCode}`);
                                 this.locationController.onBeaconDetected(beaconCode, 'SIM');
+                                break;
+                            case 'TFS_TOGGLE':
+                                this.setTfsEnabled(messageObject['data']['value']);
                                 break;
                         }
                         break;
@@ -859,16 +865,10 @@ class IBISController implements IBISControllerInterface {
             // Linie in VDV RecLid suchen
             let line = await RecLid.findOne({
                 where: {
-                    LI_KUERZEL: lineNumber
+                    LI_NR: lineNumber
                 }
             })
 
-            // Fallback: Try padded with zeros (e.g. "1" -> "001") if not found
-            if (!line) {
-                const padded = lineNumber.padStart(3, '0');
-                line = await RecLid.findOne({ where: { LI_KUERZEL: padded } });
-                if (line) Util.log(`Found Line via padded search: ${padded}`);
-            }
 
             if (line) {
                 Util.log(`VDV Line found: ${line.STR_LID}`);
@@ -1342,8 +1342,7 @@ class IBISController implements IBISControllerInterface {
     public getUpcomingStopShortId(): number {
         if (!this.upcomingStop || !this.upcomingStop.stop || !this.upcomingStop.stop.recOrt) return 0;
 
-        const ortNr = this.upcomingStop.stop.recOrt.ORT_NR;
-        const parentId = this.upcomingStop.stop.recOrt.ORT_REF_ORT || Math.floor(ortNr / 10000);
+        const parentId = this.upcomingStop.stop.recOrt.ORT_REF_ORT_LangNr;
         return parentId % 1000;
     }
 
@@ -1453,6 +1452,82 @@ class IBISController implements IBISControllerInterface {
     // Direkt verbinden, also -VLS- statisch anzeigen
     setFunkrueckfall() {
         this.funkmodus = 2;
+    }
+
+    setTfsEnabled(enabled: boolean) {
+        if (this.tfsEnabled !== enabled) {
+            this.tfsEnabled = enabled;
+            Util.log(`TFS Status changed to: ${enabled}`);
+
+            if (this.aTerminal) {
+                if (enabled) this.aTerminal.enterTFSMode();
+                else this.aTerminal.exitTFSMode();
+            }
+            if (this.bTerminal) {
+                if (enabled) this.bTerminal.enterTFSMode();
+                else this.bTerminal.exitTFSMode();
+            }
+        }
+    }
+
+    executeTestFunction(functionCode: number, terminalKey: 'A' | 'B') {
+        Util.log(`Executing Test Function: ${functionCode} on Terminal ${terminalKey}`);
+
+        const terminal = terminalKey === 'A' ? this.aTerminal : this.bTerminal;
+        if (!terminal) return;
+
+        switch (functionCode) {
+            case IBISTestFunction.ProgramRestart:
+                Util.log("TFS: RESTART requested. Exiting process...");
+                process.exit(0);
+                break;
+            case IBISTestFunction.Melodie:
+                terminal.setDisplayMode(TerminalDisplayMode.TestMelodie);
+                break;
+            case IBISTestFunction.SprachKanal:
+                terminal.setDisplayMode(TerminalDisplayMode.TestSprachkanal);
+                break;
+            case IBISTestFunction.DatenKanal:
+                terminal.setDisplayMode(TerminalDisplayMode.TestDatenkanal);
+                break;
+            case IBISTestFunction.LSAKanal:
+                terminal.setDisplayMode(TerminalDisplayMode.TestLSAKanal);
+                break;
+            case IBISTestFunction.Ortsmarke:
+                terminal.setDisplayMode(TerminalDisplayMode.TestOrtsmarke);
+                break;
+            default:
+                Util.log("TFS: Unknown function code.");
+                break;
+        }
+    }
+
+    setRadioChannel(type: 'voice' | 'data' | 'lsa', channel: number): void {
+        if (!this.deviceConfig.RADIO) return;
+        Util.log(`TFS: Setting ${type} channel to ${channel}`);
+        switch (type) {
+            case 'voice':
+                this.deviceConfig.RADIO.channels.voice = channel;
+                break;
+            case 'data':
+                this.deviceConfig.RADIO.channels.data = channel;
+                break;
+            case 'lsa':
+                this.deviceConfig.RADIO.channels.lsa = channel;
+                break;
+        }
+        // TODO: Persist config? Or just runtime? Assuming runtime for now.
+    }
+
+    getRadioChannel(type: 'voice' | 'data' | 'lsa'): number {
+        if (!this.deviceConfig.RADIO) return 0;
+        return this.deviceConfig.RADIO.channels[type];
+    }
+
+    getLocationStatus(): { ortNr: number, weg: number } {
+        const ortNr = this.upcomingStop ? this.upcomingStop.ORT_NR : 0;
+        const weg = this.locationController.impulsesSinceReset;
+        return { ortNr, weg };
     }
 
 }

@@ -57,7 +57,7 @@ function main() {
     // load DB from Sequelize
     // Point to ifesx-backend DB
     const sequelize = new Sequelize({
-      storage: '../ifesx-backend/test.sqlite3',
+      storage: './test.sqlite3',
       dialect: 'sqlite',
       logging: false
     })

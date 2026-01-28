@@ -14,6 +14,7 @@ import { AudioController } from '../../../controllers/AudioController';
 import { DeviceConfig } from '../DeviceConfig';
 import { Meldung } from '../../database/Meldung';
 import { LidVerlauf } from '../../database/VDV/LidVerlauf';
+import { IBISTestFunction } from '../../../enums/IBISTestFunction';
 
 class IBISTerminal {
     private isPrimary: boolean = true
@@ -31,6 +32,8 @@ class IBISTerminal {
     public firstActivation: boolean = true
     // active function definition
     currentDisplayMode: TerminalDisplayMode = TerminalDisplayMode.None
+
+    private isInTestMode: boolean = false;
 
     public errors: string[] = [];
 
@@ -118,9 +121,9 @@ class IBISTerminal {
                 if (keyConfig) {
                     // we have a config for this key
 
-                    // Fix: If we are in Zuglaenge mode, do not execute number keys as functions (e.g. 1 -> Besetzgrad)
-                    if (this.currentDisplayMode === TerminalDisplayMode.Zuglaenge && !isNaN(parseInt(key))) {
-                        Util.log('Ignoring key function action in Zuglaenge mode for key: ' + key);
+                    // Fix: If we are in Zuglaenge mode or TestFunktion mode, do not execute number keys as functions (e.g. 1 -> Besetzgrad)
+                    if ((this.currentDisplayMode === TerminalDisplayMode.Zuglaenge || this.currentDisplayMode === TerminalDisplayMode.TestFunktion) && !isNaN(parseInt(key))) {
+                        Util.log('Ignoring key function action in Zuglaenge/TestFunktion mode for key: ' + key);
                         return;
                     }
 
@@ -218,7 +221,13 @@ class IBISTerminal {
                 this.setDisplayMode(this.previousDisplayMode)
 
             }
-        } else {
+        }
+        // TFS Back Navigation
+        else if (this.isInTestMode) {
+            // Always return to main TFS menu
+            this.enterTFSMode();
+        }
+        else {
             this.setDisplayMode(TerminalDisplayMode.None)
         }
     }
@@ -387,7 +396,33 @@ class IBISTerminal {
                 break
             case TerminalDisplayMode.Zuglaenge:
                 this.setZuglaenge(numberString);
+                break;
+            case TerminalDisplayMode.TestFunktion:
+                this.handleTFSSelection(parseInt(numberString));
+                break;
+            case TerminalDisplayMode.TestMelodie:
+                this.playSound(parseInt(numberString));
+                break;
+            case TerminalDisplayMode.TestSprachkanal:
+                this.ibisController.setRadioChannel('voice', parseInt(numberString));
+                this.promptForRadioChannel('voice');
+                break;
+            case TerminalDisplayMode.TestDatenkanal:
+                this.ibisController.setRadioChannel('data', parseInt(numberString));
+                this.promptForRadioChannel('data');
+                break;
+            case TerminalDisplayMode.TestLSAKanal:
+                this.ibisController.setRadioChannel('lsa', parseInt(numberString));
+                this.promptForRadioChannel('lsa');
+                break;
+            case TerminalDisplayMode.TestOrtsmarke:
+                // Read only
+                break;
         }
+    }
+
+    private handleTFSSelection(code: number) {
+        this.ibisController.executeTestFunction(code, this.isPrimary ? 'A' : 'B');
     }
 
 
@@ -417,6 +452,16 @@ class IBISTerminal {
         this.setText(0, " ".padEnd(16))
     }
     updateSecondLine() {
+        if (this.isInTestMode) {
+            // Special handling for Ortsmarke which uses line 1 (index 1) for logic
+            if (this.currentDisplayMode == TerminalDisplayMode.TestOrtsmarke) {
+                const status = this.ibisController.getLocationStatus();
+                this.setText(1, "WEG      :" + status.weg.toString().padStart(5, ' '), IBISTerminalMode.FUNCTION);
+                return;
+            }
+            this.setText(1, ''.padEnd(16), this.mode)
+            return
+        }
 
 
         let linie = '   '
@@ -434,7 +479,7 @@ class IBISTerminal {
         }
 
         if (this.ibisController.linie) {
-            linie = this.ibisController.linie.STR_LID.padStart(3, '0')
+            linie = this.ibisController.linie.LID_NR.toString().padStart(3, '0')
         }
         if (this.ibisController.ziel) {
             ziel = this.ibisController.ziel.ZNR_NR.toString().padStart(3, '0')
@@ -633,7 +678,7 @@ class IBISTerminal {
 
     }
 
-    private setDisplayMode(displayMode: TerminalDisplayMode) {
+    public setDisplayMode(displayMode: TerminalDisplayMode) {
         this.previousDisplayMode = this.currentDisplayMode
         this.currentDisplayMode = displayMode
         switch (displayMode) {
@@ -709,6 +754,24 @@ class IBISTerminal {
             case TerminalDisplayMode.Zuglaenge:
                 this.promptZuglaenge()
                 break
+            case TerminalDisplayMode.TestFunktion:
+                this.promptForTestFunction();
+                break;
+            case TerminalDisplayMode.TestMelodie:
+                this.promptForMelody();
+                break;
+            case TerminalDisplayMode.TestSprachkanal:
+                this.promptForRadioChannel('voice');
+                break;
+            case TerminalDisplayMode.TestDatenkanal:
+                this.promptForRadioChannel('data');
+                break;
+            case TerminalDisplayMode.TestLSAKanal:
+                this.promptForRadioChannel('lsa');
+                break;
+            case TerminalDisplayMode.TestOrtsmarke:
+                this.promptForLocation();
+                break;
         }
     }
 
@@ -795,7 +858,10 @@ class IBISTerminal {
     }
 
     public refreshText() {
-        if (this.currentDisplayMode == TerminalDisplayMode.None) {
+        if (this.isInTestMode) {
+            // Force refresh of current mode (Ortsmarke Updates etc)
+            this.setDisplayMode(this.currentDisplayMode);
+        } else if (this.currentDisplayMode == TerminalDisplayMode.None) {
             this.showNormalMode()
         }
     }
@@ -860,11 +926,9 @@ class IBISTerminal {
         this.mode = IBISTerminalMode.FUNCTION
         if (this.ibisController.upcomingStop != null) {
             const stop = this.ibisController.upcomingStop;
-            let name = "Unknown";
+            let name = "";
             if (stop instanceof LidVerlauf) {
-                name = stop.stop?.recOrt?.ORT_NAME || "Unknown";
-            } else if (stop.stop && stop.stop.information) {
-                name = stop.stop.information.shortName;
+                name = stop.stop?.recOrt?.ORT_REF_ORT_NAME || "";
             }
             this.setText(0, name.toUpperCase().padEnd(16))
         } else {
@@ -907,11 +971,9 @@ class IBISTerminal {
         if (this.currentDisplayMode == TerminalDisplayMode.None) {
             if (this.ibisController.upcomingStop) {
                 const stop = this.ibisController.upcomingStop;
-                let name = "Unknown";
+                let name = "";
                 if (stop instanceof LidVerlauf) {
-                    name = stop.stop?.recOrt?.ORT_NAME || "Unknown";
-                } else if (stop.stop && stop.stop.information) {
-                    name = stop.stop.information.shortName;
+                    name = stop.stop?.recOrt?.ORT_REF_ORT_NAME || "";
                 }
                 this.setText(0, name.toUpperCase().padEnd(16))
             }
@@ -960,6 +1022,51 @@ class IBISTerminal {
 
     onAbmeldung() {
         // Abmeldung, eventuell "ABMELDUNG... blinkedn anzeigen"
+    }
+
+    public enterTFSMode() {
+        this.isInTestMode = true;
+        this.setDisplayMode(TerminalDisplayMode.TestFunktion);
+    }
+
+    public exitTFSMode() {
+        this.isInTestMode = false;
+        this.setDisplayMode(TerminalDisplayMode.None);
+    }
+
+    private promptForTestFunction() {
+        this.mode = IBISTerminalMode.BLINKING_DIGITS;
+        this.setText(0, "TESTFUNKTION:   ");
+        this.updateSecondLine();
+    }
+
+    private promptForMelody() {
+        this.mode = IBISTerminalMode.DIGITS; // Or Blinking? Usually melody is instant 1-9.
+        this.setText(0, "MELODIE:        ");
+        this.updateSecondLine();
+    }
+
+    private promptForRadioChannel(type: 'voice' | 'data' | 'lsa') {
+        this.mode = IBISTerminalMode.BLINKING_DIGITS;
+        const current = this.ibisController.getRadioChannel(type);
+        let label = "KANAL:";
+        if (type == 'voice') label = "SPRACHKANAL:";
+        if (type == 'data') label = "DATENKANAL:";
+        if (type == 'lsa') label = "LSA-KANAL:";
+
+        let text = label + current.toString().padStart(16 - label.length, ' ');
+        // If label is long, padding might be tricky.
+        // SPRACHKANAL: is 12 chars. + 4 chars for number.
+
+        this.setText(0, text);
+        this.updateSecondLine();
+    }
+
+    private promptForLocation() {
+        this.mode = IBISTerminalMode.FUNCTION; // Read Only
+        const status = this.ibisController.getLocationStatus();
+        this.setText(0, "ORTSMARKE:" + status.ortNr.toString().padStart(6, ' '));
+        this.updateSecondLine(); // Will draw WEG on line 1
     }
 }
 export { IBISTerminal }
