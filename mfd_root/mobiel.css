@@ -1,0 +1,740 @@
+/* mobiOWL / mfdjs Design - typ=mobiel */
+
+@font-face {
+    font-family: 'TheSans-Bold';
+    src: url('fonts/thesans/TheSans-7_Bold_TRIAL.woff2') format('woff2');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'FFMetaProBold';
+    src: url('fonts/meta/FFMetaProBold.TTF') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'TheSans-Plain';
+    src: url('fonts/thesans/TheSans-5_Plain_TRIAL.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+:root {
+    --main-orange: #FA6401;
+    --main-blue: #003264;
+    --mobiel-font: Arial, sans-serif;
+    --mobiel-font-bold: Arial, sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    font-family: var(--mobiel-font);
+    background: white;
+    overflow: hidden;
+}
+
+.screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* === HEADER (Destination) === */
+.destination-row {
+    height: 20%;
+    background: var(--main-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    align-items: center;
+    padding: 0;
+    padding: 0;
+    flex-shrink: 0;
+    position: relative;
+    /* z-index removed to avoid trapping children below timeline */
+}
+
+.destination-row .left-column {
+    display: none !important;
+}
+
+/* Destination Dot - centered at 19vw */
+.destination-row::after {
+    content: '';
+    position: absolute;
+    left: calc(19vw - 1.5vh);
+    top: calc(50% - 1.5vh);
+    width: 3vh;
+    height: 3vh;
+    box-sizing: border-box;
+    background: var(--main-blue);
+    border-radius: 50%;
+    border: 0.3vh solid var(--main-orange);
+    outline: 0.2vh solid white;
+    z-index: 30;
+}
+
+.destination-row .destination {
+    flex-grow: 1;
+    font-size: 8vh;
+    font-family: var(--mobiel-font-bold);
+    padding-right: 0;
+    /* Remove padding for clock */
+    overflow: hidden;
+    /* Ensure content stays inside */
+    position: relative;
+    z-index: 20;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    /* Align with stops: 14vw (left time col) + 8vw (margin) = 22vw visual start */
+    padding-left: 8vw !important;
+    text-align: left !important;
+}
+
+.destination-row .relative-time-column {
+    display: flex;
+    width: 14vw;
+    justify-content: flex-end;
+    align-items: center;
+    color: white;
+    font-family: var(--mobiel-font-bold);
+    font-size: 6vh;
+    /* Slightly smaller than destination to fit 14vw */
+    padding-right: 1vw;
+    order: -1;
+    /* Move to left */
+    flex-shrink: 0;
+}
+
+/* === MAIN CONTENT === */
+#mfdtable {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: white;
+    padding: 0;
+}
+
+#content-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 100%;
+    z-index: auto;
+    /* Ensure it doesn't trap timeline */
+}
+
+#upcoming-stops-list {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+/* Vertical Timeline Dots Line - centered at 19vw */
+/* Vertical Timeline Dots Line - centered at 19vw */
+#mfdtable::before {
+    content: '';
+    position: absolute;
+    /* Start at center of header (20% height -> 10% center) */
+    top: 10vh;
+    bottom: 0;
+    left: calc(19vw - 0.75vw);
+    width: 1.5vw;
+    box-sizing: border-box;
+    /* Ensure borders are included in width */
+    background: #ccc;
+    border-left: 0.4vw solid white;
+    border-right: 0.4vw solid white;
+    z-index: 5;
+    /* Visible on top of standard backgrounds (footer is auto/0) */
+}
+
+/* Footer Background - separate pseudo-element */
+#mfdtable::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 20vh;
+    background: var(--main-orange);
+    z-index: 1;
+}
+
+/* === STOP ROWS === */
+.stop-row {
+    display: flex;
+    align-items: center;
+    padding: 0;
+    color: black;
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 20;
+    /* Higher than timeline (10) */
+}
+
+.stop-row .left-column {
+    width: 14vw;
+    text-align: right;
+    padding-right: 1vw;
+    font-size: 2.5vh;
+    font-weight: bold;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.stop-row .left-column .triangle-up,
+.stop-row .left-column .track,
+.stop-row .left-column .trackdot {
+    display: none;
+}
+
+/* Stop Dot - centered at 19vw */
+.stop-row::after {
+    content: '';
+    position: absolute;
+    left: calc(19vw - 1.5vh);
+    top: calc(50% - 1.5vh);
+    width: 3vh;
+    height: 3vh;
+    box-sizing: border-box;
+    background: var(--main-blue);
+    border-radius: 50%;
+    border: 0.3vh solid var(--main-orange);
+    outline: 0.2vh solid white;
+    z-index: 30;
+}
+
+.stop-row .stop-name-column {
+    margin-left: 8vw;
+    font-size: 4vh;
+    font-family: var(--mobiel-font-bold);
+}
+
+.stop-row .relative-time-column {
+    display: none;
+}
+
+/* Sizing variations for upcoming stops */
+#upcoming-stop-3 {
+    font-size: 3vh;
+}
+
+#upcoming-stop-3 .stop-name-column {
+    font-size: 3vh;
+}
+
+#upcoming-stop-2 {
+    font-size: 3.5vh;
+}
+
+#upcoming-stop-2 .stop-name-column {
+    font-size: 3.5vh;
+}
+
+#upcoming-stop-1 {
+    font-size: 4vh;
+}
+
+#upcoming-stop-1 .stop-name-column {
+    font-size: 4vh;
+}
+
+/* === FOOTER (Current Stop) === */
+footer {
+    height: 20vh;
+    background: transparent !important;
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 20;
+    /* Removed z-index to avoid trapping children below timeline */
+    margin-top: auto;
+}
+
+#next-stop-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    /* Ensure centering works in adaptive high-footer layouts */
+    padding: 0;
+}
+
+/* Line Number Box */
+footer .line-number-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14vw;
+    height: 20vh;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    background: var(--main-orange);
+    /* Fallback when no line is set */
+    border-right: 0.8vw solid white;
+    color: white;
+    font-size: 12.4vh;
+    font-family: 'FFMetaProBold', var(--mobiel-font-bold);
+    flex-shrink: 0;
+    z-index: 100 !important;
+}
+
+/* If a line is set but has no specific style, use Navy Blue */
+footer .line-number-box[data-line]:not([data-line=""]) {
+    background: var(--main-blue);
+}
+
+#next-stop-row .left-column {
+    display: flex !important;
+    width: 14vw;
+    visibility: hidden;
+    flex-shrink: 0;
+}
+
+/* Current Stop Dot - aligned with timeline dots */
+/* Current Stop Dot - aligned with timeline dots */
+#next-stop-row::after {
+    content: '';
+    display: block;
+    /* Override display:none */
+    position: absolute;
+    /* Center at 19vw. Parent (#next-stop-row) starts at 0. */
+    left: calc(19vw - 1.75vh);
+    top: calc(50% - 1.75vh);
+    width: 3.5vh;
+    height: 3.5vh;
+    box-sizing: border-box;
+    background: var(--main-blue);
+    border-radius: 50%;
+    border: 0.3vh solid var(--main-orange);
+    outline: 0.2vh solid white;
+    z-index: 30;
+}
+
+#next-stop-row .stop-name-column {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    font-size: 5vh;
+    font-family: var(--mobiel-font-bold);
+    color: black;
+    color: black;
+    flex-grow: 1;
+    /* Match list stops margin: 8vw */
+    margin-left: 8vw !important;
+    position: relative;
+}
+
+#next-stop-row .stop-label {
+    flex-grow: 1;
+}
+
+.next-stop-text {
+    display: none;
+}
+
+.terminus-info {
+    display: none;
+}
+
+/* Hide relative time column in footer */
+#next-stop-row .relative-time-column {
+    display: none;
+}
+
+
+
+/* Line color variations */
+/* Line 1 removed - falls back to Navy Blue as per user request (not blue default) */
+
+.line-number-box[data-line="2"] {
+    background: #00ff00 !important;
+}
+
+.line-number-box[data-line="3"] {
+    background: #fff000 !important;
+    color: black !important;
+}
+
+.line-number-box[data-line="4"] {
+    background: #ff0000 !important;
+}
+
+/* Ensure line number is always on top */
+footer .line-number-box {
+    z-index: 100 !important;
+}
+
+/* Clock in lower right corner */
+.clock-container {
+    position: absolute;
+    height: 20vh;
+    width: 21vw;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--main-orange);
+    z-index: 30;
+}
+
+.clock {
+    font-size: 8vh;
+    background: white;
+    font-weight: bold;
+    font-family: var(--mobiel-font-bold);
+    border: 0.5vh solid black;
+    padding: 0.8vh 2vw;
+    margin-right: 2vw;
+    color: black;
+    line-height: 1.2;
+}
+
+/* Connection Lines (Anschlusslinien) */
+.stop-name-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: center !important;
+    /* Force vertical centering */
+    align-items: flex-start;
+}
+
+.departure-info {
+    font-size: 3.2vh;
+    color: black;
+    margin-top: 0.5vh;
+    font-family: var(--mobiel-font);
+}
+
+.connection-lines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-top: 0.5vh;
+}
+
+.line-badge {
+    display: inline-block;
+    padding: 0.3vh 0;
+    width: 6.5vh;
+    /* Enough for 3 digits */
+    font-size: 2.2vh;
+    font-family: 'FFMetaProBold', var(--mobiel-font-bold);
+    color: white;
+    background: #000080;
+    /* navy blue default */
+    border-radius: 0;
+    text-align: center;
+}
+
+/* Line-specific colors (moBiel style) */
+.line-badge[data-line="1"] {
+    background: #0000ff !important;
+    /* blue */
+}
+
+.line-badge[data-line="2"] {
+    background: #00ff00 !important;
+    /* green */
+}
+
+/* === DYNAMIC LAYOUT FOR FEW REMAINING STOPS === */
+
+/* General Override Logic:
+   Use flex-grow to fill space.
+   Hide unused slots.
+   Adjust destination header height/flex properties.
+   Adjust vertical line position.
+*/
+
+/* --- 4 STOPS REMAINING (Footer + Up1 + Up2 + Up3/Dest) --- */
+#mfdtable[data-remaining-stop-count="4"] #upcoming-stop-3 {
+    display: flex;
+    /* Ensure destination stop in list is visible */
+}
+
+#mfdtable[data-remaining-stop-count="4"] #upcoming-stop-3,
+#mfdtable[data-remaining-stop-count="4"] #upcoming-stop-2,
+#mfdtable[data-remaining-stop-count="4"] #upcoming-stop-1 {
+    flex: 0 0 20vh !important;
+    height: 20vh !important;
+    background: transparent !important;
+}
+
+#mfdtable[data-view="ARRIVAL"]::before,
+#mfdtable[data-view="CONNECTIONS"]::before,
+#mfdtable[data-view="INFO"]::before,
+#mfdtable[data-view="ARRIVAL"] .destination-row::after,
+#mfdtable[data-view="CONNECTIONS"] .destination-row::after,
+#mfdtable[data-view="INFO"] .destination-row::after,
+#mfdtable[data-view="ARRIVAL"] .track,
+#mfdtable[data-view="CONNECTIONS"] .track,
+#mfdtable[data-view="INFO"] .track,
+#mfdtable[data-view="ARRIVAL"] .trackdot,
+#mfdtable[data-view="CONNECTIONS"] .trackdot,
+#mfdtable[data-view="INFO"] .trackdot {
+    display: none !important;
+}
+
+#mfdtable[data-remaining-stop-count="4"] .destination-row,
+#mfdtable[data-remaining-stop-count="4"] footer {
+    flex: 0 0 20vh !important;
+    height: 20vh !important;
+}
+
+#mfdtable[data-remaining-stop-count="4"] footer {
+    background: var(--main-orange) !important;
+}
+
+#mfdtable[data-remaining-stop-count="4"] .destination-row {
+    background: var(--main-blue) !important;
+    /* Ensure full navy coverage */
+}
+
+#mfdtable[data-remaining-stop-count="4"] .destination-row::after {
+    display: none;
+    /* Hide orange dot in empty header */
+}
+
+/* Vertical line top: Center of Header (1/5th of 80%? No, flex-grow logic).
+   Header and 3 stops share 80%. If each fills approx 20%, top is ~10%. */
+#mfdtable[data-remaining-stop-count="4"]::before {
+    top: 30vh !important;
+    /* Header (20vh) + 1/2 Up3 (10vh) = 30vh */
+}
+
+
+/* --- 3 STOPS REMAINING (Footer + Up1 + Up2/Dest) --- */
+#mfdtable[data-remaining-stop-count="3"] #upcoming-stop-3 {
+    display: none;
+}
+
+#mfdtable[data-remaining-stop-count="3"] #upcoming-stop-2 {
+    display: flex;
+    /* Destination stop */
+    flex-grow: 1;
+}
+
+#mfdtable[data-remaining-stop-count="3"] #upcoming-stop-2,
+#mfdtable[data-remaining-stop-count="3"] #upcoming-stop-1 {
+    flex: 0 0 30vh !important;
+    height: 30vh !important;
+}
+
+#mfdtable[data-remaining-stop-count="3"] .destination-row,
+#mfdtable[data-remaining-stop-count="3"] footer {
+    flex: 0 0 20vh !important;
+    height: 20vh !important;
+}
+
+#mfdtable[data-remaining-stop-count="3"] footer {
+    background: var(--main-orange) !important;
+}
+
+#mfdtable[data-remaining-stop-count="3"] .destination-row {
+    background: var(--main-blue) !important;
+}
+
+#mfdtable[data-remaining-stop-count="3"] .destination-row::after {
+    display: none;
+}
+
+#mfdtable[data-remaining-stop-count="3"]::before {
+    top: 35vh !important;
+    /* Header (20vh) + 1/2 Row2 (15vh) = 35vh */
+}
+
+
+/* --- 2 STOPS REMAINING (Footer + Up1/Dest) --- */
+#mfdtable[data-remaining-stop-count="2"] #upcoming-stop-3,
+#mfdtable[data-remaining-stop-count="2"] #upcoming-stop-2 {
+    display: none;
+}
+
+#mfdtable[data-remaining-stop-count="2"] #upcoming-stop-1 {
+    display: flex;
+    flex: 0 0 60vh !important;
+    height: 60vh !important;
+    background: transparent !important;
+}
+
+#mfdtable[data-remaining-stop-count="2"] .destination-row,
+#mfdtable[data-remaining-stop-count="2"] footer {
+    flex: 0 0 20vh !important;
+    height: 20vh !important;
+}
+
+#mfdtable[data-remaining-stop-count="2"] footer {
+    background: var(--main-orange) !important;
+}
+
+#mfdtable[data-remaining-stop-count="2"] .destination-row {
+    background: var(--main-blue) !important;
+}
+
+#mfdtable[data-remaining-stop-count="2"] .destination-row::after {
+    display: none;
+}
+
+#mfdtable[data-remaining-stop-count="2"]::before {
+    top: 50vh !important;
+    /* Header (20vh) + 1/2 Row2 (30vh) = 50vh */
+}
+
+
+/* --- 1 STOP REMAINING (Footer/Terminus ONLY) --- */
+#mfdtable[data-remaining-stop-count="1"] #upcoming-stop-3,
+#mfdtable[data-remaining-stop-count="1"] #upcoming-stop-2,
+#mfdtable[data-remaining-stop-count="1"] #upcoming-stop-1 {
+    display: none !important;
+}
+
+#mfdtable[data-remaining-stop-count="1"] .destination-row,
+#mfdtable[data-remaining-stop-count="1"] footer {
+    flex: 0 0 20vh !important;
+    height: 20vh !important;
+}
+
+#mfdtable[data-remaining-stop-count="1"] footer {
+    background: var(--main-orange) !important;
+    margin-top: auto !important;
+    /* Preserves the white area between fixed header and footer */
+}
+
+#mfdtable[data-remaining-stop-count="1"] .destination-row {
+    background: var(--main-blue) !important;
+}
+
+#mfdtable[data-remaining-stop-count="1"] .destination-row::after {
+    display: none;
+}
+
+#mfdtable[data-remaining-stop-count="1"]::before {
+    top: 80vh !important;
+    bottom: 0 !important;
+    /* Extend to the very bottom of the screen */
+}
+
+.line-badge[data-line="3"] {
+    background: #ffff00 !important;
+    /* yellow */
+    color: black !important;
+}
+
+.line-badge[data-line="4"] {
+    background: #ff0000 !important;
+    /* red */
+}
+
+/* Arrival View Styles */
+#mfdtable[data-view="ARRIVAL"] #next-stop-row,
+#mfdtable[data-view="INFO"] #next-stop-row {
+    flex: 0 0 60vh !important;
+    height: 60vh !important;
+    background: white !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+#mfdtable[data-view="ARRIVAL"] .upcoming-stop-row,
+#mfdtable[data-view="INFO"] .upcoming-stop-row {
+    display: none !important;
+}
+
+.arrival-header {
+    width: 100%;
+    text-align: center;
+    font-size: 5vh;
+    font-weight: bold;
+    color: white;
+    line-height: normal;
+}
+
+.arrival-message {
+    color: black;
+    font-size: 4.5vh;
+    text-align: center;
+    padding: 0 10vw;
+    font-weight: normal;
+}
+
+.dest-highlight {
+    font-weight: bold;
+}
+
+/* Connections Display Overlay */
+#connections-display {
+    display: none;
+    position: absolute;
+    top: 20vh;
+    left: 0;
+    width: 100%;
+    height: 60vh;
+    background: black;
+    z-index: 100;
+}
+
+.connections-container {
+    width: 100%;
+    height: 100%;
+    background: black;
+}
+
+.connections-table {
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+    color: white;
+}
+
+.connections-table tr {
+    height: 10vh;
+    border-bottom: 1px solid #333;
+}
+
+.conn-time {
+    width: 20%;
+    padding-left: 5vh;
+    font-size: 4vh;
+}
+
+.conn-line {
+    width: 20%;
+    text-align: center;
+}
+
+.conn-dest {
+    width: 60%;
+    font-size: 4vh;
+}
+
+.info-message {
+    color: black;
+    font-size: 6vh;
+    text-align: center;
+    font-weight: bold;
+}

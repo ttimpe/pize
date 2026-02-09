@@ -26,6 +26,9 @@ export interface IBISControllerInterface {
     setRadioChannel(type: 'voice' | 'data' | 'lsa', channel: number): void;
     getRadioChannel(type: 'voice' | 'data' | 'lsa'): number;
     getLocationStatus(): { ortNr: number, weg: number };
+    setDateOffset(dateString: string): void;
+    setTimeOffset(timeString: string): void;
+    getCurrentSystemTime(): Date;
 
     // Properties needed by Terminal
     upcomingStop: any // Can be RecOrt or similar structure, keeping any for flexibility during refactor

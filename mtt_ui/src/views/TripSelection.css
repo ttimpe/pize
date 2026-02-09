@@ -1,0 +1,158 @@
+.trip-selection-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.view-title {
+    height: 40px;
+    background-color: black;
+    color: #ffff00;
+    /* Yellow title */
+    display: flex;
+    align-items: center;
+    padding-left: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    justify-content: space-between;
+    padding-right: 20px;
+}
+
+.title-icon {
+    width: 30px;
+    height: 30px;
+    filter: invert(1);
+    /* Assuming white icon needed? */
+}
+
+.ts-content {
+    display: flex;
+    flex: 1;
+    padding: 20px;
+}
+
+/* Left Menu */
+.ts-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-right: 20px;
+}
+
+.menu-item {
+    display: flex;
+    flex-direction: column;
+    /* Or row? Screenshot says "Linie/Kurs   Fahrplan" */
+    /* Actually it looks like "Linie/Kurs" is small label and "Fahrplan" is main text */
+    /* Screenshot: "Linie/Kurs" (Left aligned) "Fahrplan" (Right aligned?) No, they are columns */
+    padding: 5px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.menu-item.active {
+    background-color: rgba(0, 0, 0, 0.3);
+    /* Selected item darker */
+    border: 1px solid white;
+}
+
+.menu-item .label {
+    font-size: 14px;
+    color: #ccc;
+}
+
+.menu-item .value {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.menu-header {
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    margin-top: 20px;
+    margin-bottom: 5px;
+    border-bottom: 2px solid white;
+}
+
+/* Right Input Area */
+.ts-input-area {
+    width: 250px;
+    /* Fixed width for numpad area */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    /* Align right */
+}
+
+.input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+    justify-content: flex-end;
+}
+
+.input-box {
+    background: white;
+    color: black;
+    font-size: 28px;
+    font-weight: bold;
+    padding: 5px;
+    text-align: center;
+    border: 2px solid #555;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.line-box {
+    width: 80px;
+}
+
+.kurs-box {
+    width: 50px;
+}
+
+.input-box.focused {
+    border-color: #00f;
+    /* Blue highlight */
+    box-shadow: 0 0 5px #00f;
+}
+
+/* Numpad */
+.numpad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    width: 100%;
+}
+
+.num-btn {
+    height: 60px;
+    background: linear-gradient(to bottom, #02696B, #013131);
+    /* Teal gradient button */
+    border: 1px solid white;
+    border-right: 2px solid black;
+    border-bottom: 2px solid black;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.num-btn:active {
+    border-top: 2px solid black;
+    border-left: 2px solid black;
+}
+
+.ok-btn {
+    grid-column: 3;
+    grid-row: 4 /span 2;
+    /* If we want it tall? Screenshot suggests standard grid but OK might be special */
+    /* Screenshot: C 0 OK are on row 4. OK looks normal size? */
+    /* Actually C and 0 are separate. OK is next to 0. */
+}

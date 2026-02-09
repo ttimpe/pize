@@ -28,5 +28,7 @@ export enum TerminalDisplayMode {
     TestSprachkanal = 26,
     TestDatenkanal = 27,
     TestLSAKanal = 28,
-    TestOrtsmarke = 29
+    TestOrtsmarke = 29,
+    TestDatum = 30,
+    TestUhrzeit = 31
 }

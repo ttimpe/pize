@@ -121,8 +121,11 @@ class IBISTerminal {
                 if (keyConfig) {
                     // we have a config for this key
 
-                    // Fix: If we are in Zuglaenge mode or TestFunktion mode, do not execute number keys as functions (e.g. 1 -> Besetzgrad)
-                    if ((this.currentDisplayMode === TerminalDisplayMode.Zuglaenge || this.currentDisplayMode === TerminalDisplayMode.TestFunktion) && !isNaN(parseInt(key))) {
+                    // Fix: If we are in Zuglaenge mode or TestFunktion/Input mode, do not execute number keys as functions
+                    if ((this.currentDisplayMode === TerminalDisplayMode.Zuglaenge ||
+                        this.currentDisplayMode === TerminalDisplayMode.TestFunktion ||
+                        this.currentDisplayMode === TerminalDisplayMode.TestDatum ||
+                        this.currentDisplayMode === TerminalDisplayMode.TestUhrzeit) && !isNaN(parseInt(key))) {
                         Util.log('Ignoring key function action in Zuglaenge/TestFunktion mode for key: ' + key);
                         return;
                     }
@@ -360,7 +363,7 @@ class IBISTerminal {
         this.setDisplayMode(TerminalDisplayMode.Besetzung)
     }
 
-    private onNumber(numberString: string) {
+    private async onNumber(numberString: string) {
         // Fix no input from number prompt
         if (!numberString) {
             numberString = '0'
@@ -380,19 +383,20 @@ class IBISTerminal {
                 this.setMeldung(numberString)
                 break
             case TerminalDisplayMode.LinieKurs:
-                this.setLinieKurs(numberString)
-                if (this.firstActivation == true) {
+                await this.setLinieKurs(numberString)
+                // Only prompt for Zuglaenge if it's the first activation AND we didn't just logoff (Line 0)
+                if (this.firstActivation == true && parseInt(numberString) !== 0) {
                     this.setDisplayMode(TerminalDisplayMode.Zuglaenge)
                 }
                 break
             case TerminalDisplayMode.Route:
-                this.setRoute(numberString)
+                await this.setRoute(numberString)
                 break
             case TerminalDisplayMode.Sonderzeichen:
-                this.setSonderzeichen(numberString)
+                await this.setSonderzeichen(numberString)
                 break
             case TerminalDisplayMode.Ziel:
-                this.setZiel(numberString)
+                await this.setZiel(numberString)
                 break
             case TerminalDisplayMode.Zuglaenge:
                 this.setZuglaenge(numberString);
@@ -418,11 +422,32 @@ class IBISTerminal {
             case TerminalDisplayMode.TestOrtsmarke:
                 // Read only
                 break;
+            case TerminalDisplayMode.TestDatum:
+                this.handleDateInput(numberString);
+                break;
+            case TerminalDisplayMode.TestUhrzeit:
+                this.handleTimeInput(numberString);
+                break;
         }
     }
 
     private handleTFSSelection(code: number) {
         this.ibisController.executeTestFunction(code, this.isPrimary ? 'A' : 'B');
+    }
+
+    private handleDateInput(numberString: string) {
+        this.ibisController.setDateOffset(numberString);
+        this.setDisplayMode(TerminalDisplayMode.TestFunktion); // Return to Test Menu? Or None?
+        // User workflow: usually enters date, confirmed.
+        // Returning to TFS menu might be good if they want to do more tests.
+        // But standard behavior for setting data is often return to default.
+        // Let's return to TFS Menu (TestFunktion) to allow setting Time right after.
+        this.enterTFSMode();
+    }
+
+    private handleTimeInput(numberString: string) {
+        this.ibisController.setTimeOffset(numberString);
+        this.enterTFSMode();
     }
 
 
@@ -772,6 +797,12 @@ class IBISTerminal {
             case TerminalDisplayMode.TestOrtsmarke:
                 this.promptForLocation();
                 break;
+            case TerminalDisplayMode.TestDatum:
+                this.promptForDate();
+                break;
+            case TerminalDisplayMode.TestUhrzeit:
+                this.promptForTime();
+                break;
         }
     }
 
@@ -798,6 +829,36 @@ class IBISTerminal {
     public setWeisung(weisung: string) {
         this.currentWeisung = weisung
         this.setDisplayMode(TerminalDisplayMode.Weisung)
+    }
+
+    private promptForDate() {
+        this.mode = IBISTerminalMode.DIGITS;
+        const now = this.ibisController.getCurrentSystemTime();
+        const day = now.getDate().toString().padStart(2, '0');
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const year = now.getFullYear().toString();
+        const fullYear = now.getFullYear().toString();
+
+        // IBIS usually takes DDMMYYYY or DDMMYY?
+        // Logic in IBISController.setDateOffset uses 4 digits for year if provided?
+        // Let's check handleDateInput in next step if needed, but for now prefill DDMMYYYY.
+        const dateString = `${day}${month}${fullYear}`;
+
+        // this.currentInputBuffer = dateString;
+        this.setText(0, `DATUM: ${dateString}`.padEnd(16));
+        this.updateSecondLine();
+    }
+
+    private promptForTime() {
+        this.mode = IBISTerminalMode.DIGITS;
+        const now = this.ibisController.getCurrentSystemTime();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const timeString = `${hours}${minutes}`;
+
+        // this.currentInputBuffer = timeString;
+        this.setText(0, `UHRZEIT: ${timeString}`.padEnd(16));
+        this.updateSecondLine();
     }
 
 
@@ -851,7 +912,7 @@ class IBISTerminal {
         const scheduleFound = await this.ibisController.setCourseNumber(kurs)
         if (!scheduleFound) {
             Util.log('No schedule found for Line/Kurs, prompting for Route');
-            this.promptForRoute(); // Ask for specific Route (Fahrt-Nr/Lid-Verlauf)
+            this.setDisplayMode(TerminalDisplayMode.Route); // Ask for specific Route (Fahrt-Nr/Lid-Verlauf)
         } else if (!this.firstActivation) {
             this.setDisplayMode(TerminalDisplayMode.None)
         }

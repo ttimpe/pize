@@ -38,10 +38,24 @@ class AudioController {
 
     }
 
+    private getPlayerOptions() {
+        const audioConfig = (this.deviceConfig as any).AUDIO?.announcements;
+        if (!audioConfig || audioConfig.output_device === 'default') {
+            return {};
+        }
+
+        const device = audioConfig.output_device;
+        return {
+            afplay: ['-d', device],
+            mplayer: ['-ao', `coreaudio:device_id=${device}`], // Example for Mac mplayer
+            aplay: ['-D', device]
+        };
+    }
+
     async playAnnouncement(announcement: IAnnouncement, callback: Function) {
         if (this.announcementsMuted == false) {
             Util.log('PLAY ANNOUNCEMENT', announcement);
-            PlaySound().play('./announcements/' + announcement.fileName, (err) => {
+            PlaySound().play('./announcements/' + announcement.fileName, this.getPlayerOptions(), (err) => {
                 callback();
             })
 
@@ -53,18 +67,18 @@ class AudioController {
 
             if (routeStop.announcement) {
                 this.lastAnnouncement = routeStop.announcement
-                PlaySound().play('./announcements/Gong.wav', (err) => {
+                PlaySound().play('./announcements/Gong.wav', this.getPlayerOptions(), (err) => {
                     this.playAnnouncement(routeStop.announcement, () => {
                         // Play door side
                         if (routeStop.doorSide != undefined) {
                             switch (routeStop.doorSide) {
                                 case 1:
-                                    PlaySound().play('./announcements/Rechts.wav', (err) => {
+                                    PlaySound().play('./announcements/Rechts.wav', this.getPlayerOptions(), (err) => {
                                         callback();
                                     });
                                     break;
                                 case 2:
-                                    PlaySound().play('./announcements/Links.wav', (err) => {
+                                    PlaySound().play('./announcements/Links.wav', this.getPlayerOptions(), (err) => {
                                         callback();
 
                                     });
@@ -85,7 +99,7 @@ class AudioController {
     }
     async playEndAnnouncement() {
         if (this.announcementsMuted == false) {
-            PlaySound().play('./announcements/Ende.wav');
+            PlaySound().play('./announcements/Ende.wav', this.getPlayerOptions());
         }
     }
 

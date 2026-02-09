@@ -23,7 +23,8 @@ import { RecFrt } from "../models/database/VDV/RecFrt";
 import { RecSel } from "../models/database/VDV/RecSel";
 import { RecOrt } from '../models/database/VDV/RecOrt';
 import { LidVerlauf } from '../models/database/VDV/LidVerlauf';
-
+import { SelFztFeld } from '../models/database/VDV/SelFztFeld';
+import { Firmenkalender } from '../models/database/VDV/Firmenkalender';
 import { RecAnr } from '../models/database/VDV/RecAnr';
 import { IBISControllerInterface } from './IBISControllerInterface';
 
@@ -60,8 +61,14 @@ class IBISController implements IBISControllerInterface {
 
     // VDV Properties
     public currentTrips: RecFrt[] = [];
+    public currentTrip?: RecFrt; // Active trip with FRT_START
     public currentStops: LidVerlauf[] = []; // VDV
     public currentRouteNumber: string = "";
+    public infoMessage: string = ""; // Placeholder for passenger-facing info messages
+
+    public get distanceToNextStop(): number {
+        return this.locationController.currentDistNextStop;
+    }
 
     public sonderzeichen?: SpecialCharacter
 
@@ -100,6 +107,49 @@ class IBISController implements IBISControllerInterface {
     public tfsEnabled: boolean = false;
 
     private timersInterrupted: boolean = false
+    private timeOffsetMs: number = 0;
+    private currentBetriebstag: number = 0;
+    public tagesartNr: number = -1;
+
+    /**
+     * Get operational day info (Betriebstag YYYYMMDD and seconds since its start).
+     * If a referenceBetriebstag is provided, it calculates seconds relative to that day.
+     * Otherwise, it uses the current calendar day.
+     */
+    public getOperationalDayInfo(referenceBetriebstag?: number): { betriebstag: number, secondsSinceStart: number } {
+        const now = this.getCurrentSystemTime();
+
+        let bDate: Date;
+        if (referenceBetriebstag) {
+            const bStr = String(referenceBetriebstag);
+            bDate = new Date(
+                parseInt(bStr.substring(0, 4)),
+                parseInt(bStr.substring(4, 6)) - 1,
+                parseInt(bStr.substring(6, 8))
+            );
+        } else {
+            bDate = new Date(now);
+            bDate.setHours(0, 0, 0, 0);
+        }
+
+        const secondsSinceStart = Math.floor((now.getTime() - bDate.getTime()) / 1000);
+
+        const yyyy = bDate.getFullYear();
+        const mm = String(bDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(bDate.getDate()).padStart(2, '0');
+        const betriebstag = parseInt(`${yyyy}${mm}${dd}`);
+
+        return { betriebstag, secondsSinceStart };
+    }
+
+    get isDoorsOpen(): boolean {
+        return this.tuerkriteriumStatus;
+    }
+
+    getCurrentSystemTime(): Date {
+        return new Date(Date.now() + this.timeOffsetMs);
+    }
+
 
     get upcomingStop(): LidVerlauf | null {
         if (this.currentStops && this.currentStops.length > 0 && this.stopIndex < this.currentStops.length) {
@@ -116,6 +166,17 @@ class IBISController implements IBISControllerInterface {
         if (this.bTerminal && this.bTerminal.isActive) {
             return 'B';
         }
+    }
+
+    public get nextTrip(): RecFrt | null {
+        if (!this.currentTrip || !this.currentTrips || this.currentTrips.length === 0) {
+            return null;
+        }
+        const currentIndex = this.currentTrips.findIndex(t => t.FRT_FID === this.currentTrip?.FRT_FID);
+        if (currentIndex !== -1 && currentIndex < this.currentTrips.length - 1) {
+            return this.currentTrips[currentIndex + 1];
+        }
+        return null;
     }
 
     public route?: any
@@ -230,7 +291,7 @@ class IBISController implements IBISControllerInterface {
             if (this.currentStops.length > 0) {
                 client.send(this.getRouteDebugPayload());
             }
-            client.on('message', (data) => {
+            client.on('message', async (data) => {
                 const messageObject = JSON.parse(data.toString())
                 Util.log(messageObject)
                 switch (messageObject['channel']) {
@@ -248,22 +309,22 @@ class IBISController implements IBISControllerInterface {
                         switch (messageObject['data']['criteria']) {
                             case 'TK':
                                 // Türkriterium
-                                this.onTuerkriterium(messageObject['data']['value'])
+                                this.onTuerkriterium(messageObject['data']['value'] || false)
                                 break;
                             case 'KBA':
                                 // Kupplung A Status
-                                this.onKupplungA(messageObject['data']['value'])
+                                this.onKupplungA(messageObject['data']['value'] || false)
                                 break;
                             case 'KBB':
                                 // Kupplung B Status
-                                this.onKupplungB(messageObject['data']['value'])
+                                this.onKupplungB(messageObject['data']['value'] || false)
                                 break;
                             case 'UEB':
                                 this.onUeberfall();
                                 break;
                             case 'WEISUNG':
                                 Util.log('Weisung anzeigen: ', messageObject['data']['value']['text'])
-                                this.aTerminal.setWeisung(messageObject['data']['value']['text'])
+                                if (this.aTerminal) this.aTerminal.setWeisung(messageObject['data']['value']['text'])
                                 break;
                             case 'DRIVING':
                                 // value reading
@@ -276,7 +337,7 @@ class IBISController implements IBISControllerInterface {
                             case 'RADIO':
                                 const radioValue = messageObject['data']['value'];
                                 const bits = radioValue['bits']
-                                this.radioController.playFFSKBits(bits);
+                                if (this.radioController) this.radioController.playFFSKBits(bits);
                                 break;
                             case 'WBSD_STOP':
                                 this.timersInterrupted = messageObject['data']['value'];
@@ -293,6 +354,29 @@ class IBISController implements IBISControllerInterface {
                                 break;
                             case 'TFS_TOGGLE':
                                 this.setTfsEnabled(messageObject['data']['value']);
+                                break;
+                            case 'WAV_UPLOAD':
+                                const wavData = messageObject['data']['value'];
+                                Util.log(`[Simulation] WAV Upload: ${wavData['filename']}`);
+                                this.radioController.processWavUpload(wavData['data'], wavData['filename']);
+                                break;
+                            case 'FUNKRUECKFALL':
+                                const enabled = messageObject['data']['value'];
+                                Util.log(`[Simulation] Funkrückfall: ${enabled ? 'aktiviert' : 'deaktiviert'}`);
+                                this.radioController.setFunkrueckfallEnabled(enabled);
+                                break;
+                            case 'JUMP_TO_POS':
+                                Util.log('Received JUMP_TO_POS command');
+                                await this.updatePositionToSchedule();
+                                break;
+                            case 'START_LIVE_DRIVE':
+                                const liveDriveEnabled = messageObject['data']['value'];
+                                Util.log(`Received START_LIVE_DRIVE command: ${liveDriveEnabled}`);
+                                if (liveDriveEnabled) {
+                                    this.startLiveDrive();
+                                } else {
+                                    this.stopLiveDrive();
+                                }
                                 break;
                         }
                         break;
@@ -485,7 +569,7 @@ class IBISController implements IBISControllerInterface {
                     Util.log("HAG OK")
                 } else {
                     // Have not received status, throw error
-                    this.throwError("H.ANSAG DEF!");
+                    this.throwError("H.ANSAG. DEF!");
                     Util.log("HAG FAIL")
                     this.HAGstatus = null;
                 }
@@ -510,7 +594,7 @@ class IBISController implements IBISControllerInterface {
             if (!hasRecentResponse) {
                 // Defect Detected
                 Util.log(`IRIS ${direction} DEFEKT! Keine Antwort.`);
-                this.throwError(`IRIS ${direction} DEFEKT`);
+                this.throwError(`IRIS.   DEF.1:${direction}`);
                 if (isA) this.IRIS_A_Defect = true;
                 else this.IRIS_B_Defect = true;
             } else {
@@ -797,13 +881,13 @@ class IBISController implements IBISControllerInterface {
 
     tick60Seconds() {
         // Uhrzeit
-        this.sendTelegram(TelegramGenerator.DS005(new Date()))
+        this.sendTelegram(TelegramGenerator.DS005(this.getCurrentSystemTime()))
         // Datum 5-stellig
-        this.sendTelegram(TelegramGenerator.DS006(new Date()))
+        this.sendTelegram(TelegramGenerator.DS006(this.getCurrentSystemTime()))
         // Datum 6 stellig
-        this.sendTelegram(TelegramGenerator.DS006a(new Date()))
+        this.sendTelegram(TelegramGenerator.DS006a(this.getCurrentSystemTime()))
         // Jahreszahl 4 stellig
-        this.sendTelegram(TelegramGenerator.DS010d(new Date()))
+        this.sendTelegram(TelegramGenerator.DS010d(this.getCurrentSystemTime()))
 
 
     }
@@ -886,7 +970,7 @@ class IBISController implements IBISControllerInterface {
 
                 // If Kurs is already set, try loading schedule
                 if (this.kurs > 0) {
-                    this.loadVDVSchedule();
+                    await this.loadVDVSchedule();
                 }
 
                 return true
@@ -931,12 +1015,43 @@ class IBISController implements IBISControllerInterface {
     }
 
     onAbmeldung() {
+        Util.log("Performing Logoff (Abmeldung)");
+
+        // Reset internal state
+        this.linie = undefined;
+        this.route = undefined; // Legacy
+        this.currentRouteNumber = "";
+        this.kurs = 0;
+        this.ziel = undefined;
+
+        // Stop & Trips
+        this.currentStops = [];
+        this.stopIndex = 0;
+        this.currentTrips = [];
+        this.currentTrip = undefined;
+
+        // Vehicle State
+        this.zuglaenge = 0;
+        this.locationController.impulsesSinceReset = 0;
+        // Optionally update distances to 0?
+        this.locationController.currentDistLastStop = 0;
+        this.locationController.currentDistNextStop = 0;
+
+        // Notify terminals
         if (this.aTerminal && this.aTerminal.isActive) {
             this.aTerminal.onAbmeldung();
         }
         if (this.bTerminal && this.bTerminal.isActive) {
             this.bTerminal.onAbmeldung();
         }
+
+        // Clear UESTRA LVAs
+        for (var i = 0; i < this.uestraLVAs.length; i++) {
+            this.uestraLVAs[i].clearSign();
+        }
+
+        // Debug update
+        this.sendRouteDebugData();
     }
 
     setRichtung(direction: number) {
@@ -977,8 +1092,13 @@ class IBISController implements IBISControllerInterface {
         if (this.linie && this.kurs > 0) {
             Util.log(`Attempting to load VDV schedule for Line ${this.linie.STR_LID}, Kurs ${this.kurs}`);
             return await this.loadVDVSchedule();
+        } else if (!this.linie) {
+            // If line is not set (e.g. result of Logoff / Line 0), we consider this a valid state (Logoff successful)
+            // and do not want to prompt for a route.
+            Util.log('Skipping VDV load - Line is unset (Logoff state).');
+            return true;
         } else {
-            Util.log('Skipping VDV load - Line not set or Kurs <= 0');
+            Util.log('Skipping VDV load - Line set but Kurs <= 0');
             return false;
         }
     }
@@ -988,9 +1108,12 @@ class IBISController implements IBISControllerInterface {
     // Helper: Load a specific trip
     private async loadTrip(trip: RecFrt) {
         try {
-            Util.log(`Loading Trip: FRT_FID ${trip.FRT_FID}, Variant ${trip.STR_LI_VAR}`);
+            Util.log(`Loading Trip: FRT_FID ${trip.FRT_FID}, Variant ${trip.STR_LI_VAR}, Start ${trip.FRT_START}`);
+            this.currentTrip = trip;
             // Delegate to shared stop sequence loader
             await this.loadStopSequence(trip.STR_LI_VAR);
+            // Compute planned arrival times for each stop
+            await this.computeStopTimes();
         } catch (error) {
             Util.log('Error loading VDV Trip:', error);
         }
@@ -1008,35 +1131,100 @@ class IBISController implements IBISControllerInterface {
                 return false;
             }
 
+
             // Find Trips
+            // Determine Tagesart based on operational day (Betriebstag)
+            // By default, we use the current calendar date unless a manual override or specific trip logic dictates otherwise.
+            const opInfo = this.getOperationalDayInfo();
+            const betriebstag = opInfo.betriebstag;
+            this.currentBetriebstag = betriebstag;
+
+            let tagesartNr = -1;
+            const kalender = await Firmenkalender.findOne({ where: { BETRIEBSTAG: betriebstag } });
+            if (kalender) {
+                tagesartNr = kalender.TAGESART_NR;
+                this.tagesartNr = tagesartNr;
+                Util.log(`Smart Trip Selection: Date ${betriebstag} -> Tagesart ${tagesartNr} (${kalender.BETRIEBSTAG_TEXT})`);
+            } else {
+                this.tagesartNr = 1; // Default
+                Util.log(`Smart Trip Selection: No entry in FIRMENKALENDER for ${betriebstag}. Trips will not be filtered by day type.`);
+            }
+
+            const whereClause: any = {
+                LI_NR: recLid.LI_NR,
+                LI_KU_NR: this.kurs
+            };
+
+            if (tagesartNr !== -1) {
+                whereClause.TAGESART_NR = tagesartNr;
+            }
+
             this.currentTrips = await RecFrt.findAll({
-                where: {
-                    LI_NR: recLid.LI_NR,
-                    LI_KU_NR: this.kurs
-                },
+                where: whereClause,
                 order: [['FRT_START', 'ASC']]
             });
 
+            // FALLBACK: If no trips found for this Tagesart, try fallback to Tagesart 1 (Standard)
+            if (this.currentTrips.length === 0 && tagesartNr !== 1) {
+                Util.log(`VDV: No trips found for Tagesart ${tagesartNr}. Falling back to Tagesart 1...`);
+                const fallbackWhere = { ...whereClause, TAGESART_NR: 1 };
+                this.currentTrips = await RecFrt.findAll({
+                    where: fallbackWhere,
+                    order: [['FRT_START', 'ASC']]
+                });
+            }
+
+            // FINAL FALLBACK: If still no trips, try without Tagesart filter at all
+            if (this.currentTrips.length === 0) {
+                Util.log(`VDV: No trips found for Line/Kurs (even with fallback). Trying without Tagesart filter...`);
+                const totalWhere = { LI_NR: recLid.LI_NR, LI_KU_NR: this.kurs };
+                this.currentTrips = await RecFrt.findAll({
+                    where: totalWhere,
+                    order: [['FRT_START', 'ASC']]
+                });
+            }
+
             if (this.currentTrips.length > 0) {
-                // Select active trip (Simplification: Take the first one for now or based on time if we had logic)
-                // TODO: Implement time-based selection
-                this.activeTripIndex = 0;
+                // Smart Trip Selection:
+                // Select the last trip that has already started (FRT_START <= now)
+                // or the first trip if none have started yet.
+
+                const opInfo = this.getOperationalDayInfo();
+                const currentSeconds = opInfo.secondsSinceStart;
+
+                this.activeTripIndex = 0; // Default to first trip
+
+                for (let i = 0; i < this.currentTrips.length; i++) {
+                    const trip = this.currentTrips[i];
+                    // Check if trip start time is defined and valid
+                    if (trip.FRT_START !== undefined && trip.FRT_START <= currentSeconds) {
+                        this.activeTripIndex = i;
+                    } else {
+                        // Trips are ordered by FRT_START. 
+                        // Once we find a trip in the future, we stop.
+                        // The previous one (if any) remains the selected one.
+                        break;
+                    }
+                }
+
+                Util.log(`Smart Trip Selection: Time ${currentSeconds}s. Selected Trip Index ${this.activeTripIndex} (Start: ${this.currentTrips[this.activeTripIndex].FRT_START}s)`);
+
                 await this.loadTrip(this.currentTrips[this.activeTripIndex]);
                 return true;
             } else {
-                Util.log('No trips found for this Line/Kurs');
+                Util.log('No trips found for this Line/Kurs - prompting for manual Route input');
                 this.route = undefined;
                 this.ziel = undefined;
                 this.currentStops = [];
                 this.stopIndex = 0;
 
-                // Clear Terminals
+                // Clear Terminals and prompt for Route
                 if (this.aTerminal) {
-                    this.aTerminal.onSetRoute();
+                    this.aTerminal.setDisplayMode(TerminalDisplayMode.Route);
                     this.aTerminal.onSetZiel();
                 }
                 if (this.bTerminal) {
-                    this.bTerminal.onSetRoute();
+                    this.bTerminal.setDisplayMode(TerminalDisplayMode.Route);
                     this.bTerminal.onSetZiel();
                 }
 
@@ -1083,15 +1271,31 @@ class IBISController implements IBISControllerInterface {
 
             if (!this.linie) return false;
 
-            // Use this.linie.LI_NR directly. this.linie is now the correct Variant (RecLid).
-            const lidVerlaufEntries = await LidVerlauf.findAll({
+            // NEW: Determine the BASIS_VERSION to use. 
+            // If multiple versions exist in LID_VERLAUF for this Line/Variant, we might get duplicates.
+            // We pick the highest version found for this specific line/variant.
+            const maxVersionEntry = await LidVerlauf.findOne({
                 where: {
                     LI_NR: this.linie.LI_NR,
                     STR_LI_VAR: variant
                 },
+                order: [['BASIS_VERSION', 'DESC']]
+            });
+
+            const targetVersion = maxVersionEntry ? maxVersionEntry.BASIS_VERSION : 1;
+            Util.log(`[loadStopSequence] Identified target BASIS_VERSION: ${targetVersion} for Variant: ${variant}`);
+
+            // Use this.linie.LI_NR directly. this.linie is now the correct Variant (RecLid).
+            const lidVerlaufEntries = await LidVerlauf.findAll({
+                where: {
+                    LI_NR: this.linie.LI_NR,
+                    STR_LI_VAR: variant,
+                    BASIS_VERSION: targetVersion
+                },
                 order: [['LI_LFD_NR', 'ASC']]
             });
 
+            Util.log(`[loadStopSequence] Found ${lidVerlaufEntries.length} stops in database.`);
             if (lidVerlaufEntries.length === 0) {
                 Util.log(`No stops found for variant ${variant} (LI_NR: ${this.linie.LI_NR})`);
                 return false;
@@ -1231,6 +1435,78 @@ class IBISController implements IBISControllerInterface {
             Util.log('Error loading Stop Sequence:', error);
             return false;
         }
+    }
+
+    /**
+     * Compute planned arrival times for each stop based on:
+     * - FRT_START from currentTrip (departure time at first stop in seconds since midnight)
+     * - SEL_FZT from SEL_FZT_FELD (travel time between consecutive stops)
+     */
+    private async computeStopTimes(): Promise<void> {
+        if (!this.currentTrip || !this.currentStops || this.currentStops.length === 0) {
+            Util.log('[computeStopTimes] No trip or stops available');
+            return;
+        }
+
+        const tripStart = this.currentTrip.FRT_START;
+        if (tripStart === undefined || tripStart === null) {
+            Util.log('[computeStopTimes] Trip has no FRT_START');
+            return;
+        }
+
+        Util.log(`[computeStopTimes] Computing times from FRT_START=${tripStart} (${Math.floor(tripStart / 3600)}:${Math.floor((tripStart % 3600) / 60).toString().padStart(2, '0')})`);
+
+        let cumulativeTime = tripStart;
+
+        for (let i = 0; i < this.currentStops.length; i++) {
+            const stop = this.currentStops[i];
+
+            // First stop: arrival time = trip start time
+            if (i === 0) {
+                stop.plannedArrival = cumulativeTime;
+                Util.log(`  Stop ${i}: ${stop.stop?.recOrt?.ORT_NAME || 'Unknown'} -> Arrival: ${this.formatTime(cumulativeTime)}`);
+                continue;
+            }
+
+            // For subsequent stops, look up travel time from previous stop
+            const prevStop = this.currentStops[i - 1];
+
+            // Query SEL_FZT_FELD for travel time between prevStop and current stop
+            // Use FGR_NR from the trip if available, otherwise default to 1
+            const fgrNr = this.currentTrip.FGR_NR || 1;
+
+            const selFzt = await SelFztFeld.findOne({
+                where: {
+                    ORT_NR: prevStop.ORT_NR,
+                    ONR_TYP_NR: prevStop.ONR_TYP_NR,
+                    SEL_ZIEL: stop.ORT_NR,
+                    SEL_ZIEL_TYP: stop.ONR_TYP_NR,
+                    FGR_NR: fgrNr
+                }
+            });
+
+            if (selFzt && selFzt.SEL_FZT !== undefined) {
+                cumulativeTime += selFzt.SEL_FZT;
+                Util.log(`  Stop ${i}: ${stop.stop?.recOrt?.ORT_NAME || 'Unknown'} -> Travel time: ${selFzt.SEL_FZT}s, Arrival: ${this.formatTime(cumulativeTime)}`);
+            } else {
+                // Fallback: assume 60 seconds if no data found
+                cumulativeTime += 60;
+                Util.log(`  Stop ${i}: ${stop.stop?.recOrt?.ORT_NAME || 'Unknown'} -> No SEL_FZT found, using 60s default, Arrival: ${this.formatTime(cumulativeTime)}`);
+            }
+
+            stop.plannedArrival = cumulativeTime;
+        }
+
+        Util.log(`[computeStopTimes] Completed. Last stop arrival: ${this.formatTime(cumulativeTime)}`);
+    }
+
+    /**
+     * Format seconds since midnight as HH:MM
+     */
+    private formatTime(seconds: number): string {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     }
 
 
@@ -1496,6 +1772,12 @@ class IBISController implements IBISControllerInterface {
             case IBISTestFunction.Ortsmarke:
                 terminal.setDisplayMode(TerminalDisplayMode.TestOrtsmarke);
                 break;
+            case IBISTestFunction.SetDatum:
+                terminal.setDisplayMode(TerminalDisplayMode.TestDatum);
+                break;
+            case IBISTestFunction.SetUhrzeit:
+                terminal.setDisplayMode(TerminalDisplayMode.TestUhrzeit);
+                break;
             default:
                 Util.log("TFS: Unknown function code.");
                 break;
@@ -1520,14 +1802,180 @@ class IBISController implements IBISControllerInterface {
     }
 
     getRadioChannel(type: 'voice' | 'data' | 'lsa'): number {
-        if (!this.deviceConfig.RADIO) return 0;
-        return this.deviceConfig.RADIO.channels[type];
+        return this.deviceConfig.RADIO ? this.deviceConfig.RADIO.channels[type] : 0;
+    }
+
+    setDateOffset(dateString: string) {
+        // Format: DDMMYYYY
+        if (dateString.length !== 8) {
+            Util.log("Date string must be DDMMYYYY");
+            return;
+        }
+        const day = parseInt(dateString.substring(0, 2));
+        const month = parseInt(dateString.substring(2, 4)) - 1; // Months are 0-indexed
+        const year = parseInt(dateString.substring(4, 8));
+
+        // Create target date preserving current system TIME (offset applied)
+        const currentSystemTime = this.getCurrentSystemTime();
+        const targetDate = new Date(currentSystemTime);
+        targetDate.setFullYear(year);
+        targetDate.setMonth(month);
+        targetDate.setDate(day);
+
+        // Validating date logic
+        if (isNaN(targetDate.getTime())) {
+            Util.log("Invalid date entered");
+            return;
+        }
+
+        // Calculate new offset: Target - RealNow
+        const realNow = new Date();
+        this.timeOffsetMs = targetDate.getTime() - realNow.getTime();
+        Util.log(`Date Offset Updated. New System Time: ${this.getCurrentSystemTime().toLocaleString()}`);
+
+        // Immediate Update
+        this.tick60Seconds();
+    }
+
+    setTimeOffset(timeString: string) {
+        // Format: HHMM
+        if (timeString.length !== 4) {
+            Util.log("Time string must be HHMM");
+            return;
+        }
+        const hours = parseInt(timeString.substring(0, 2));
+        const minutes = parseInt(timeString.substring(2, 4));
+
+        const currentSystemTime = this.getCurrentSystemTime();
+        const targetTime = new Date(currentSystemTime);
+        targetTime.setHours(hours);
+        targetTime.setMinutes(minutes);
+        targetTime.setSeconds(0); // Reset seconds for clean start? Or keep? Usually setting HHMM resets seconds.
+
+        if (isNaN(targetTime.getTime())) {
+            Util.log("Invalid time entered");
+            return;
+        }
+
+        // Calculate new offset: Target - RealNow
+        const realNow = new Date();
+        this.timeOffsetMs = targetTime.getTime() - realNow.getTime();
+        Util.log(`Time Offset Updated. New System Time: ${this.getCurrentSystemTime().toLocaleString()}`);
+
+        // Immediate Update
+        this.tick60Seconds();
     }
 
     getLocationStatus(): { ortNr: number, weg: number } {
         const ortNr = this.upcomingStop ? this.upcomingStop.ORT_NR : 0;
         const weg = this.locationController.impulsesSinceReset;
         return { ortNr, weg };
+    }
+
+    private liveDriveInterval: any;
+
+    public startLiveDrive() {
+        if (this.liveDriveInterval) clearInterval(this.liveDriveInterval);
+        Util.log("Starting Live Drive Simulation");
+        this.updatePositionToSchedule(); // Immediate update
+        this.liveDriveInterval = setInterval(() => {
+            this.updatePositionToSchedule();
+        }, 1000); // Update every second
+    }
+
+    public stopLiveDrive() {
+        if (this.liveDriveInterval) {
+            clearInterval(this.liveDriveInterval);
+            this.liveDriveInterval = null;
+            Util.log("Stopped Live Drive Simulation");
+        }
+    }
+
+    public async updatePositionToSchedule() {
+        if (!this.currentStops || this.currentStops.length < 2) {
+            Util.log("[Live Drive] No sufficient stops loaded.");
+            return;
+        }
+
+        const opInfo = this.getOperationalDayInfo(this.currentBetriebstag);
+        const secondsSinceMidnight = opInfo.secondsSinceStart;
+
+        // 1. Find the current segment
+        // We look for i such that stops[i].time <= now < stops[i+1].time
+        let foundIndex = -1;
+
+        for (let i = 0; i < this.currentStops.length - 1; i++) {
+            const currentStop = this.currentStops[i];
+            const nextStop = this.currentStops[i + 1];
+
+            if (currentStop.plannedArrival != undefined && nextStop.plannedArrival != undefined) {
+                if (secondsSinceMidnight >= currentStop.plannedArrival && secondsSinceMidnight < nextStop.plannedArrival) {
+                    foundIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (foundIndex !== -1) {
+            // We are between foundIndex and foundIndex + 1
+            const currentStop = this.currentStops[foundIndex];
+            const nextStop = this.currentStops[foundIndex + 1];
+            const targetIndex = foundIndex + 1;
+
+            // Sync segment to LocationController
+            await this.locationController.arriveAtStop(currentStop, false);
+
+            // Update IBIS Stop Index if needed
+            if (this.stopIndex !== targetIndex) {
+                Util.log(`[Live Drive] Segment match! Time: ${this.formatTime(secondsSinceMidnight)}. Jumping to index ${targetIndex} (${nextStop.stop?.recOrt?.ORT_NAME})`);
+                this.stopIndex = targetIndex;
+            }
+
+            // Calculate Progress
+            const duration = (nextStop.plannedArrival || 1) - (currentStop.plannedArrival || 0);
+            const elapsed = secondsSinceMidnight - (currentStop.plannedArrival || 0);
+            const progress = Math.max(0, Math.min(1, elapsed / (duration || 1))); // 0..1
+
+            // Calculate Distance
+            const distTotal = (nextStop as any).distanceToPrevious || 0;
+            const distTraveled = Math.round(distTotal * progress);
+
+            // Update LocationController
+            // 4 impulses per meter
+            const impulses = Math.round(distTraveled * 4);
+
+            // Log every 10s roughly
+            if (secondsSinceMidnight % 10 === 0) {
+                Util.log(`[Live Drive] Time: ${this.formatTime(secondsSinceMidnight)}. Seg: ${foundIndex}->${foundIndex + 1}. Prog: ${(progress * 100).toFixed(1)}%. Dist: ${distTraveled}/${distTotal}m.`);
+            }
+
+            this.locationController.impulsesSinceReset = impulses;
+            this.locationController.updateDistances();
+
+        } else {
+            // Check if before start or after end
+            const firstStop = this.currentStops[0];
+            const lastStop = this.currentStops[this.currentStops.length - 1];
+
+            if (firstStop.plannedArrival != undefined && secondsSinceMidnight < firstStop.plannedArrival) {
+                // Before start
+                if (this.stopIndex != 0) {
+                    Util.log(`[Live Drive] Before trip start (${this.formatTime(secondsSinceMidnight)} < ${this.formatTime(firstStop.plannedArrival)}). Resetting to start.`);
+                    await this.locationController.onSetRoute();
+                }
+            } else if (lastStop.plannedArrival != undefined && secondsSinceMidnight >= lastStop.plannedArrival) {
+                // After end
+                const targetIndex = this.currentStops.length - 1;
+                if (this.stopIndex !== targetIndex) {
+                    Util.log(`[Live Drive] After trip end (${this.formatTime(secondsSinceMidnight)} >= ${this.formatTime(lastStop.plannedArrival)}). Setting to last stop.`);
+                    await this.locationController.arriveAtStop(lastStop, false);
+                    this.stopIndex = targetIndex;
+                    this.locationController.updateDistances();
+                }
+            } else {
+                Util.log(`[Live Drive] No segment found for time ${this.formatTime(secondsSinceMidnight)}. Stops count: ${this.currentStops.length}`);
+            }
+        }
     }
 
 }

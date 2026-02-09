@@ -4,6 +4,7 @@ import { RecHp } from './RecHp';
 import { RecZnr } from './RecZnr';
 import { RecAnr } from './RecAnr';
 import { BasisVersion } from './BasisVersion';
+import { RecOrt } from './RecOrt';
 
 @Table({
     tableName: 'LID_VERLAUF',
@@ -39,7 +40,7 @@ export class LidVerlauf extends Model {
     @Column(DataType.INTEGER)
     ONR_TYP_NR!: number;
 
-    @ForeignKey(() => RecHp)
+    @ForeignKey(() => RecOrt)
     @Column(DataType.INTEGER)
     ORT_NR!: number;
 
@@ -78,6 +79,9 @@ export class LidVerlauf extends Model {
     @BelongsTo(() => RecLid, { foreignKey: 'LI_NR', targetKey: 'LI_NR' })
     line?: RecLid;
 
+    @BelongsTo(() => RecOrt, { foreignKey: 'ORT_NR', targetKey: 'ORT_NR' })
+    recOrt?: RecOrt;
+
     // Stop association via HALTEPUNKT_NR removed per VDV optimization
     // Use JOIN with REC_HP on ORT_NR + ONR_TYP_NR if specific stop point is needed,
     // though in VDV 452 LID_VERLAUF mainly relies on ORT_NR. 
@@ -89,4 +93,7 @@ export class LidVerlauf extends Model {
 
     @BelongsTo(() => RecAnr, { foreignKey: 'ANR_NR', targetKey: 'ANR_NR' })
     announcement?: RecAnr;
+
+    // Computed at runtime: planned arrival time in seconds since midnight
+    plannedArrival?: number;
 }

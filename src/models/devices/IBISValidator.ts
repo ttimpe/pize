@@ -29,7 +29,7 @@ class IBISValidator {
 
                 } else {
                     // Have not received status, throw error
-                    this.ibisController.throwError("ENTWERT.DEF.1: " + this.address.toString().padStart(2, '0'));
+                    this.ibisController.throwError("ENTWERT.DEF.1:" + this.address.toString().padStart(2, '0'));
                     Util.log("Entwerter ", this.address, " FAIL")
                     this.status = null;
 

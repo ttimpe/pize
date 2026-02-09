@@ -1,0 +1,72 @@
+.sidebar {
+    width: 70px;
+    background-color: #aaa;
+    /* Gray background */
+    display: flex;
+    flex-direction: column;
+    padding: 0 5px;
+    /* Slight padding */
+    gap: 5px;
+    padding-top: 5px;
+}
+
+.sidebar-btn {
+    width: 60px;
+    height: 60px;
+    /* Square buttons */
+    border: 2px solid black;
+    /* Bevel style */
+    border-left-color: white;
+    border-top-color: white;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.sidebar-btn:active {
+    border-left-color: black;
+    border-top-color: black;
+    border-right-color: white;
+    border-bottom-color: white;
+    transform: translate(1px, 1px);
+}
+
+.btn-warning {
+    background-color: #ffcccc;
+    /* Light red */
+    border-right-color: #cc0000;
+    border-bottom-color: #cc0000;
+}
+
+.btn-warning img {
+    filter: none;
+}
+
+/* Original colors */
+
+.btn-call {
+    background-color: #ffffcc;
+    /* Light yellow */
+    border-right-color: #999900;
+    border-bottom-color: #999900;
+}
+
+.btn-gray {
+    background-color: #e0e0e0;
+    border-right-color: #444;
+    border-bottom-color: #444;
+}
+
+.btn-key {
+    background-color: #e0e0e0;
+    margin-top: auto;
+    /* Push to bottom if needed, or just flow */
+    margin-bottom: 20px;
+}
+
+.sidebar-btn img {
+    width: 40px;
+    height: 40px;
+}

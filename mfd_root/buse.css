@@ -1,0 +1,199 @@
+@font-face {
+    font-family: 'TheSans-5_Plain_TRIAL';
+    src: url('fonts/thesans/TheSans-5_Plain_TRIAL.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'TheSans-7_Bold_TRIAL';
+    src: url('fonts/thesans/TheSans-7_Bold_TRIAL.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+:root {
+    --navy-blue: #1c2e42;
+    --orange: #ea5006;
+    --buse-font: 'TheSans-5_Plain_TRIAL', 'Arial', sans-serif;
+    --buse-font-bold: 'TheSans-7_Bold_TRIAL', 'Arial', sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    font-family: var(--buse-font);
+    overflow: hidden;
+    background-color: white;
+    color: var(--navy-blue);
+    display: flex;
+    flex-direction: column;
+}
+
+.screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+/* HEADER - 140px / 768px = 18.23vh */
+.destination-row {
+    height: 18.23vh;
+    background-color: var(--navy-blue);
+    color: var(--orange);
+    display: flex;
+    align-items: center;
+    padding: 0 2vw;
+    box-sizing: border-box;
+    font-size: 13vh;
+    font-family: var(--buse-font-bold);
+
+    /* PUSH EVERYTHING ELSE TO BOTTOM */
+    margin-bottom: auto;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.destination-row .line {
+    font-size: 14vh;
+    font-weight: bold;
+    margin-right: 3vw;
+    background: none !important;
+    padding: 0;
+}
+
+.destination-row .destination {
+    flex-grow: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: center;
+    /* Center text after line number */
+}
+
+.destination-row .relative-time-column {
+    display: none;
+}
+
+/* MAIN CONTENT CONTAINER */
+#mfdtable {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: 0;
+    background-color: white;
+    /* Base white */
+}
+
+/* 
+   THE GRAPHIC CONTAINER
+   This pseudo-element creates the visual of the Arrow + The Footer Background.
+   It sits 5vw from the left, creating the white gap.
+*/
+#mfdtable::before {
+    content: '';
+    position: absolute;
+    top: -18.23vh;
+    /* Extend to top of header */
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    /* The Arrow Line: Tapering effect */
+    /* Bottom-Left (Vertical start) is thick */
+    border-left: 3vw solid var(--orange);
+    /* Top-Left (Horizontal end) is thin/zero */
+    border-top: 0px solid transparent;
+
+    /* The Curve */
+    border-top-left-radius: 100% 100%;
+
+    /* The Footer Background */
+    /* Total height is now 118.23vh. Footer is 20.83vh. */
+    background: linear-gradient(to bottom, transparent calc(100% - 20.83vh), var(--orange) calc(100% - 20.83vh));
+
+    z-index: 0;
+    pointer-events: none;
+}
+
+.stop-row {
+    display: flex;
+    align-items: center;
+    padding: 0 2vw 0 0;
+    /* Added Right Padding */
+    color: var(--navy-blue);
+    border: none;
+    z-index: 1;
+    flex-shrink: 0;
+    flex-grow: 1;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.stop-row .stop-name-column {
+    font-family: var(--buse-font-bold);
+    width: 100%;
+}
+
+.stop-row .left-column,
+.stop-row .relative-time-column {
+    display: none;
+}
+
+/* Decreasing font sizes & Indentation to clear the curve */
+#upcoming-stop-3 {
+    font-size: 3.1vh;
+    opacity: 0.7;
+    padding-left: 35vw;
+    /* Top of curve: needs most indent */
+    align-items: flex-end;
+}
+
+#upcoming-stop-2 {
+    font-size: 4.2vh;
+    opacity: 0.85;
+    padding-left: 27vw;
+    /* Middle of curve */
+    align-items: center;
+}
+
+#upcoming-stop-1 {
+    font-size: 5.5vh;
+    font-weight: bold;
+    padding-left: 20vw;
+    /* Bottom of curve */
+    padding-bottom: 2vh;
+    align-items: center;
+}
+
+/* FOOTER - 160px / 768px = 20.83vh */
+footer {
+    height: 20.83vh;
+    background-color: transparent;
+    /* TRANSPARENT! Background provided by ::before */
+    color: var(--navy-blue);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 15vw;
+    /* Align relative to indented stops */
+    z-index: 2;
+    flex-shrink: 0;
+    position: relative;
+}
+
+#next-stop-row {
+    font-size: 6.5vh;
+    font-family: var(--buse-font-bold);
+    color: var(--navy-blue);
+}
+
+.next-stop-text,
+.terminus-info {
+    display: none;
+}

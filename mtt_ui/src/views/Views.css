@@ -1,0 +1,86 @@
+.button-std {
+    background-color: #02696B;
+    border: 1px solid white;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.route-list {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.route-header {
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stops-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.stop-item {
+    display: flex;
+    align-items: center;
+    height: 50px;
+}
+
+.stop-item.current {
+    font-weight: bold;
+    color: #ffff00;
+    /* Yellow for current */
+}
+
+.stop-time {
+    width: 60px;
+    text-align: right;
+    margin-right: 10px;
+}
+
+.stop-line {
+    width: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    margin-right: 10px;
+}
+
+.stop-line .dot {
+    width: 12px;
+    height: 12px;
+    background-color: white;
+    border-radius: 50%;
+    z-index: 2;
+    margin-top: 18px;
+    /* Center in 50px height approx */
+}
+
+.stop-item.current .stop-line .dot {
+    background-color: #ffff00;
+}
+
+.stop-line .line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: white;
+    z-index: 1;
+}
+
+.stop-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

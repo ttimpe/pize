@@ -11,5 +11,7 @@ export enum IBISTestFunction {
     // 4: Datenkanal
     // 5: LSA-Kanal
     // 6: Ortsmarke
-    Ortsmarke = 6
+    Ortsmarke = 6,
+    SetDatum = 7,
+    SetUhrzeit = 8
 }

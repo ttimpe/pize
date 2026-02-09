@@ -1,0 +1,62 @@
+.tab-button {
+    width: 140px;
+    /* 730px space / 5 buttons = 146px max. */
+    height: 58px;
+    /* From .button height: 58px */
+    background-color: #aaaaaa;
+    /* Default unselected bg? Or maybe #02696B for content match? Usually tabs differ. Let's use the .button-beige or similar if active? */
+    /* Actually original styles had .button-beige etc. Let's assume a default dark teal or gray */
+    background-color: #02696B;
+
+    /* Inherits .button styles from index.css manually or via class */
+    border-left: 1px solid white;
+    border-top: 1px solid white;
+    border-right: 2px solid black;
+    border-bottom: 2px solid black;
+    border-radius: 3px;
+
+    color: white;
+    font-family: Arial;
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+}
+
+.tab-button.active {
+    background-color: #014f51;
+    /* Darker when active or pressed */
+    border-left: 1px solid black;
+    border-top: 1px solid black;
+    border-right: 2px solid white;
+    border-bottom: 1px solid white;
+}
+
+.tab-button.disabled {
+    filter: grayscale(100%);
+    opacity: 0.7;
+}
+
+.icon-container {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 2px;
+}
+
+.icon-container img {
+    height: 100%;
+    /* Original icons might be colored or black/white. If SVGs are black, invert them for dark bg */
+    filter: invert(1);
+}
+
+.label {
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}

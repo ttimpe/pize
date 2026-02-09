@@ -1,0 +1,58 @@
+.bottom-tabs {
+    height: 60px;
+    /* Approx height */
+    background-color: #02696B;
+    /* Or transparent? Bottom area seems to have the same dark green bg or gray of the screen? */
+    /* Screenshot shows tabs are on the bottom strip. */
+    background-color: #aaa;
+    display: flex;
+    padding-left: 35px;
+    /* Align with content */
+    align-items: flex-end;
+    /* Bottom align tabs */
+}
+
+.tab-item {
+    width: 100px;
+    height: 50px;
+    background-color: #02696B;
+    /* Default teal */
+    border: none;
+    margin-right: -10px;
+    /* Overlap for slanted effect? */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+    /* Slanted trapezoid */
+    /* Wait, CSS clip-path removes borders. Better to use transform skew or background image? */
+    /* Simpler approach: Rectangles with slanted borders or separate divs. */
+    /* Let's use skew on the container, unskew content */
+    transform: skewX(-20deg);
+    border-top: 2px solid white;
+    border-right: 2px solid black;
+    /* Right border shadow */
+    margin-right: 5px;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.tab-item img {
+    transform: skewX(20deg);
+    /* Unskew icon */
+    width: 30px;
+    height: 30px;
+    filter: invert(1);
+}
+
+.tab-item.active {
+    background-color: #014f51;
+    /* Darker */
+    height: 55px;
+    /* Pop up slightly? */
+}
+
+.tab-item:active {
+    background-color: #003638;
+}

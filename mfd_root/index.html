@@ -1,80 +1,93 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MFD</title>
     <link rel="stylesheet" href="fonts/stylesheet.css">
-    <link rel="stylesheet" href="style.css">
+    <!-- <link rel="stylesheet" href="style.css"> Styles injected by mfd.js based on type -->
 </head>
+
 <body>
     <div class="screen">
-    <div id="mfdtable">
-        <header class="destination-row">
-            <div class="column left-column"><span class="line" id="line-number-label"></span></div>
-            <div class="column destination stop-name-column" id="destination-label"></div>
-            <div class="column relative-time-column" id="clock">00:00</div>
-        </header>
-            <div class="terminus-info">
-                <p>
+        <div id="mfdtable">
+            <header class="destination-row">
+                <div class="column left-column"><span class="line" id="line-number-label"></span></div>
+                <div class="column destination stop-name-column" id="destination-label"></div>
+                <div class="column relative-time-column" id="header-clock">00:00</div>
+            </header>
+            <div id="content-wrapper">
+                <div class="terminus-info">
+                    <p>
                     <h2>Endhaltestelle</h2>
                     Wir bitten alle Fahrgäste auszusteigen.
-                </p>
-                <p>
+                    </p>
+                    <p>
                     <h2>Terminus</h2>
                     We kindly request all passengers to alight.
-                </p>
+                    </p>
+                </div>
+
+                <div id="upcoming-stops-list">
+                    <div class="row stop-row upcoming-stop-3" id="upcoming-stop-3">
+                        <div class="column left-column">
+                            <span class="triangle-up">▲</span>
+                            <span class="track"></span>
+                            <span class="trackdot"></span>
+                        </div>
+                        <div class="column stop-name-column">
+                            <span class="stop-label"></span>
+                        </div>
+                        <div class="column relative-time-column">
+                            <span class="relative-time-label"></span>
+                        </div>
+                    </div>
+                    <div class="row stop-row" id="upcoming-stop-2">
+                        <div class="column left-column"><span class="track"></span><span class="trackdot"></span></div>
+                        <div class="column stop-name-column">
+                            <span class="stop-label"></span>
+                        </div>
+                        <div class="column relative-time-column">
+                            <span class="relative-time-label"></span>
+                        </div>
+                    </div>
+                    <div class="row stop-row" id="upcoming-stop-1">
+                        <div class="column left-column"><span class="track"></span><span class="trackdot"></span></div>
+                        <div class="column stop-name-column">
+                            <span class="stop-label"></span>
+                        </div>
+                        <div class="column relative-time-column">
+                            <span class="relative-time-label"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="connections-display"></div>
             </div>
 
-            <div class="row stop-row upcoming-stop-3" id="upcoming-stop-3">
-                <div class="column left-column">
-                    <span class="triangle-up">▲</span>
-                    <span class="track"></span>
-                    <span class="trackdot"></span>
-                </div>
-                <div class="column stop-name-column">
-                    <span class="stop-label"></span>
-                </div>
-                <div class="column relative-time-column">
-                    <span class="relative-time-label"></span>
+
+            <footer>
+                <div class="line-number-box" id="footer-line-number"></div>
+                <div class="row stop-row next-stop-row" id="next-stop-row">
+                    <div class="column left-column"><span class="track"></span><span class="trackdot"></span></div>
+                    <div class="column stop-name-column">
+                        <span class="next-stop-text">Nächste Haltestelle / next stop:</span>
+                        <span class="stop-label" id="next-stop-label"></span>
                     </div>
-            </div>
-            <div class="row stop-row" id="upcoming-stop-2">
-                <div class="column left-column"><span class="track"></span><span class="trackdot"></span></div>
-                <div class="column stop-name-column">
-                    <span class="stop-label"></span>
-                </div>
-                <div class="column relative-time-column">
-                    <span class="relative-time-label"></span>
-                    </div>
-            </div>
-            <div class="row stop-row" id="upcoming-stop-1">
-                <div class="column left-column"><span class="track"></span><span class="trackdot"></span></div> 
-                <div class="column stop-name-column">
-                    <span class="stop-label"></span>
-                </div>             
-                <div class="column relative-time-column">
-                    <span class="relative-time-label"></span>
-                    </div>
-            </div>
-           
- 
-        <footer>
-            <div class="row stop-row next-stop-row" id="next-stop-row">
-                <div class="column left-column"><span class="track"></span><span class="trackdot"></span></div>
-                <div class="column stop-name-column">
-                    <span class="next-stop-text">Nächste Haltestelle / next stop:</span>
-                    <span class="stop-label" id="next-stop-label"></span>
-                </div>
-                <div class="column relative-time-column">
-                    <!--<div class="door-side-triangle">
+                    <div class="column relative-time-column">
+                        <!--<div class="door-side-triangle">
                     <div class="triangle"></div>-->
+                    </div>
                 </div>
+                <div class="clock-container">
+                    <div class="clock" id="clock"></div>
                 </div>
-            </div>
-            </footer>
+        </div>
+        </footer>
     </div>
-</div>
-<script src="mfd.js"></script>
+    </div>
+    <script src="mfd.js"></script>
 </body>
+
 </html>

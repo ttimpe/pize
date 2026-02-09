@@ -324,11 +324,39 @@ function setStringWithMode(startColumn, y, string, blinking) {
 }
 
 
-setStringWithMode(0, 0, 'IBIS GESTOERT 1', false);
+
+let statusTimeout;
+
+function resetStatusTimeout() {
+  if (statusTimeout) {
+    clearTimeout(statusTimeout);
+  }
+  statusTimeout = setTimeout(() => {
+    // Clear screen first? Or just overwrite?
+    // Assuming overwrite or just setting the message is enough as per requirement
+    // "IBIS GESTOERT 1" was the original text, user said "IBIS GESTOERT"
+    // The original code used 'IBIS GESTOERT 1', the user request says "IBIS GESTOERT sollte erst angezeigt werden".
+    // I will use 'IBIS GESTOERT' centered/placed appropriately.
+    // I will use that for consistency but check if user wants it purely "IBIS GESTOERT".
+    // "IBIS GESTOERT sollte erst angezeigt werden..." -> implies the text is "IBIS GESTOERT". 
+    // I'll stick to 'IBIS GESTOERT 1' as it seems to be the system message, or maybe just 'IBIS GESTOERT'.
+    // Let's use 'IBIS GESTOERT 1' to match the previous behavior's look, assuming the '1' is an error code.
+    setStringWithMode(0, 0, 'IBIS GESTOERT 1', false);
+  }, 60000);
+}
+
+// Start the timeout initially
+resetStatusTimeout();
 
 function onReceiveTelegram(telegram) {
   telegram = telegram.substring(0, telegram.length - 2)
   console.log('Parsing telegram', telegram)
+
+  // Reset timeout on status queries
+  if (telegram.startsWith('mS') || telegram.startsWith('tS')) {
+    resetStatusTimeout();
+  }
+
   if (telegram.startsWith('mC')) {
     // Character setting
     const mode = parseInt(telegram[2]);

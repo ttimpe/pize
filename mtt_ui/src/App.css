@@ -1,0 +1,34 @@
+.app-container {
+  width: 800px;
+  height: 600px;
+  background-color: #aaa;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.middle-section {
+  flex: 1;
+  /* Fills space between Header and Footer */
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.content-area {
+  width: 730px;
+  /* Exact width from original CSS */
+  background-color: #02696B;
+  border-top: 2px solid white;
+  border-top-right-radius: 4px;
+  /* Only top right curved? */
+  position: relative;
+  /* Scanline effect */
+  background-image: repeating-linear-gradient(transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.1) 3px);
+  background-size: 100% 4px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}

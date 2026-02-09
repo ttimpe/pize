@@ -186,6 +186,18 @@
                 <label for="radio-telegram-bitfield">FFSK-Bitfolge</label>
                 <input type="text" id="radio-telegram-bitfield">
                 <button id="sendBitsButton">SEND</button>
+
+                <hr style="margin: 10px 0;">
+
+                <label for="wav-upload">WAV-Datei (FFSK-Test)</label>
+                <input type="file" id="wav-upload" accept=".wav">
+                <button id="uploadWavButton">WAV HOCHLADEN</button>
+                <div id="wav-upload-status" style="margin-top: 5px; font-size: 12px;"></div>
+
+                <label>
+                    <input type="checkbox" id="funkrueckfall-checkbox" checked>
+                    Funkrückfall aktiviert
+                </label>
             </div>
 
             <div class="iris-simulation">
@@ -193,6 +205,13 @@
                 <input type="text" name="iris-code" id="iris-code" placeholder="00000FA3">
                 <button id="iris-obi-button">OBI (Interrupt)</button>
                 <button id="iris-send-button">Sende Daten</button>
+            </div>
+
+            <div class="schedule-simulation">
+                <h3>Fahrplan Simulation</h3>
+                <button id="jumpToPosButton">Springe zu aktueller Position</button>
+                <button id="toggleLiveDriveButton">Live-Fahrt Starten/Stoppen</button>
+                <span id="liveDriveStatus" style="margin-left: 10px; font-weight: bold; color: red;">OFF</span>
             </div>
 
             <div class="debug-table">
@@ -402,7 +421,10 @@
             const irisObiButton = document.getElementById('iris-obi-button');
             const irisSendButton = document.getElementById('iris-send-button');
 
-
+            const wavUploadInput = document.getElementById('wav-upload');
+            const uploadWavButton = document.getElementById('uploadWavButton');
+            const wavUploadStatus = document.getElementById('wav-upload-status');
+            const funkrueckfallCheckbox = document.getElementById('funkrueckfall-checkbox');
 
             const websocket = new WebSocket(`ws://${window.location.hostname}:1815`);
 
@@ -569,6 +591,101 @@
                 };
                 console.log(payload);
                 websocket.send(JSON.stringify(payload));
+            });
+
+            uploadWavButton.addEventListener('click', () => {
+                const file = wavUploadInput.files[0];
+                if (!file) {
+                    wavUploadStatus.textContent = 'Keine Datei ausgewählt';
+                    wavUploadStatus.style.color = 'red';
+                    return;
+                }
+
+                if (!file.name.endsWith('.wav')) {
+                    wavUploadStatus.textContent = 'Nur .wav Dateien erlaubt';
+                    wavUploadStatus.style.color = 'red';
+                    return;
+                }
+
+                wavUploadStatus.textContent = 'Lade WAV...';
+                wavUploadStatus.style.color = 'blue';
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const arrayBuffer = e.target.result;
+                    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+                    const payload = {
+                        'channel': 'simulation',
+                        'data': {
+                            'criteria': 'WAV_UPLOAD',
+                            'value': {
+                                'filename': file.name,
+                                'data': base64
+                            }
+                        }
+                    };
+
+                    websocket.send(JSON.stringify(payload));
+                    wavUploadStatus.textContent = `${file.name} hochgeladen (${(arrayBuffer.byteLength / 1024).toFixed(1)} KB)`;
+                    wavUploadStatus.style.color = 'green';
+                };
+
+                reader.onerror = () => {
+                    wavUploadStatus.textContent = 'Fehler beim Lesen der Datei';
+                    wavUploadStatus.style.color = 'red';
+                };
+
+                reader.readAsArrayBuffer(file);
+            });
+
+            funkrueckfallCheckbox.addEventListener('change', (e) => {
+                const payload = {
+                    'channel': 'simulation',
+                    'data': {
+                        'criteria': 'FUNKRUECKFALL',
+                        'value': e.target.checked
+                    }
+                };
+                console.log('Funkrückfall:', e.target.checked);
+                websocket.send(JSON.stringify(payload));
+            });
+
+            // Schedule Simulation
+            const jumpToPosButton = document.getElementById('jumpToPosButton');
+            const toggleLiveDriveButton = document.getElementById('toggleLiveDriveButton');
+            const liveDriveStatus = document.getElementById('liveDriveStatus');
+
+            jumpToPosButton.addEventListener('click', () => {
+                const payload = {
+                    'channel': 'simulation',
+                    'data': {
+                        'criteria': 'JUMP_TO_POS',
+                        'value': true
+                    }
+                };
+                console.log('Jumping to position...');
+                websocket.send(JSON.stringify(payload));
+            });
+
+            toggleLiveDriveButton.addEventListener('click', () => {
+                // Determine current state based on status text (simplification, ideally sync state)
+                const isCurrentlyOn = liveDriveStatus.textContent === 'ON';
+                const newState = !isCurrentlyOn;
+
+                const payload = {
+                    'channel': 'simulation',
+                    'data': {
+                        'criteria': 'START_LIVE_DRIVE',
+                        'value': newState
+                    }
+                };
+                console.log('Toggling Live Drive:', newState);
+                websocket.send(JSON.stringify(payload));
+
+                // Optimistic UI update
+                liveDriveStatus.textContent = newState ? 'ON' : 'OFF';
+                liveDriveStatus.style.color = newState ? 'green' : 'red';
             });
 
             function sanatizeOutputForLog(telegram) {

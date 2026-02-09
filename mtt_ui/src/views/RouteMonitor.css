@@ -1,0 +1,114 @@
+.route-monitor-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.rm-content {
+    display: flex;
+    flex: 1;
+    position: relative;
+    padding: 10px;
+}
+
+.scroll-buttons {
+    width: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-right: 10px;
+}
+
+.scroll-btn {
+    width: 40px;
+    height: 40px;
+    background-color: #02696B;
+    border: 2px solid white;
+    border-radius: 4px;
+    color: white;
+}
+
+.rm-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column-reverse;
+    /* Times increase upwards in list? Or we render in reverse order? */
+    /* Screenshot: 
+       Lohmannshof 13:34 (Top, Dest)
+       Rosenhohe 13:04
+       Sennefriedhof 13:03
+       Senne 13:02 (Current)
+       Senne 12:50 (Bottom)
+       
+       Render normal order (Top is index 0), assume list is sorted by time desc?
+    */
+    overflow-y: hidden;
+    justify-content: center;
+    /* Center current? */
+}
+
+.rm-row {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.rm-row.current {
+    background-color: #013131;
+    /* Dark bar highlight */
+    color: white;
+    border: 1px solid yellow;
+    /* Yellow border highlight? */
+}
+
+.rm-row.past {
+    color: #ccc;
+}
+
+.rm-name {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+}
+
+.rm-timeline {
+    width: 40px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.rm-timeline .line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: white;
+    z-index: 1;
+}
+
+.rm-timeline .dot {
+    width: 12px;
+    height: 12px;
+    background: white;
+    border-radius: 50%;
+    z-index: 2;
+    border: 2px solid #02696B;
+    /* Gap effect */
+}
+
+.rm-row.current .rm-timeline .dot {
+    background: #ffa500;
+    /* Orange/Salmon dot for current */
+}
+
+.rm-time {
+    width: 80px;
+    text-align: right;
+    padding-right: 10px;
+}

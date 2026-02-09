@@ -10,6 +10,7 @@ import { SpecialCharacter } from './models/database/SpecialCharacter';
 import readline from 'readline';
 import { IBISTelegram } from './extensions/IBISTelegram';
 import { MFDController } from './controllers/MFDController';
+import { MTTController } from './controllers/MTTController';
 import { DeviceConfig } from './models/devices/DeviceConfig';
 import { LocationController } from './controllers/LocationController';
 import express, { Express, Request, Response } from "express";
@@ -31,6 +32,8 @@ import { RecZnr } from './models/database/VDV/RecZnr';
 import { RecAnr } from './models/database/VDV/RecAnr';
 import { RecSel } from './models/database/VDV/RecSel';
 import { RecSelZp } from './models/database/VDV/RecSelZp';
+import { SelFztFeld } from './models/database/VDV/SelFztFeld';
+import { Firmenkalender } from './models/database/VDV/Firmenkalender';
 
 
 
@@ -75,7 +78,9 @@ function main() {
       RecZnr,
       RecAnr,
       RecSel,
-      RecSelZp
+      RecSelZp,
+      SelFztFeld,
+      Firmenkalender
     ])
     // Init terminal(s)
 
@@ -148,6 +153,9 @@ function main() {
     if (deviceConfig.MFD == true) {
       let mfdController = new MFDController(ibisController, app);
     }
+
+    // Initialize MTT Controller
+    let mttController = new MTTController(ibisController, app);
 
     if (deviceConfig.RADIO.enabled == true) {
       let radioController = new RadioController('vehicle', ibisController)

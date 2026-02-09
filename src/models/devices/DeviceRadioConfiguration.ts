@@ -5,6 +5,7 @@ class DeviceRadioChannelConfiguration {
 }
 class DeviceRadioConfiguration {
     enabled: boolean
+    vehicle_address: number
     channels: DeviceRadioChannelConfiguration
 }
 export { DeviceRadioConfiguration, DeviceRadioChannelConfiguration }

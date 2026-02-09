@@ -1,0 +1,66 @@
+:root {
+  --color-bg: #aaaaaa;
+  --color-header-bg: #013131;
+  --color-header-text: #5aba52;
+  --color-content-bg: #02696B;
+  --color-text: #ffffff;
+  --font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #333;
+  /* Dark background outside the screen */
+  font-family: var(--font-family);
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+#root {
+  width: 800px;
+  height: 600px;
+  position: relative;
+  background-color: var(--color-bg);
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  /* Just to make it pop slightly from the browser bg */
+}
+
+/* Base styles from original styles.css */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+}
+
+.button {
+  border-left: 1px solid white;
+  border-top: 1px solid white;
+  border-right: 2px solid black;
+  border-bottom: 2px solid black;
+  border-radius: 3px;
+  color: white;
+  font-family: Arial;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button:active,
+.button.active {
+  border-left: 1px solid black;
+  border-top: 1px solid black;
+  border-right: 2px solid white;
+  border-bottom: 1px solid white;
+}

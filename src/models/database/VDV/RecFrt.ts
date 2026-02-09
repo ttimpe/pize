@@ -1,4 +1,4 @@
-import { Model, Table, Column, DataType, ForeignKey, PrimaryKey } from 'sequelize-typescript';
+import { Model, Table, Column, DataType, ForeignKey, PrimaryKey, BelongsTo } from 'sequelize-typescript';
 import { RecUmlauf } from './RecUmlauf';
 import { RecLid } from './RecLid';
 
@@ -43,4 +43,7 @@ export class RecFrt extends Model {
 
     @Column(DataType.INTEGER)
     BEREICH_NR?: number;
+
+    @BelongsTo(() => RecLid, { foreignKey: 'LI_NR', targetKey: 'LI_NR' })
+    line?: RecLid;
 }
