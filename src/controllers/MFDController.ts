@@ -35,9 +35,10 @@ export class MFDController {
             const nextTrip = this.ibisController?.nextTrip;
             let nextTripInfo = null;
             if (nextTrip) {
+                const basisVersion = await this.ibisController.getActiveBasisVersion();
                 // Get destination text for next trip (last productive stop)
                 const nextTripStops = await LidVerlauf.findAll({
-                    where: { LI_NR: nextTrip.LI_NR, STR_LI_VAR: nextTrip.STR_LI_VAR },
+                    where: { LI_NR: nextTrip.LI_NR, STR_LI_VAR: nextTrip.STR_LI_VAR, BASIS_VERSION: basisVersion },
                     order: [['LI_LFD_NR', 'DESC']],
                     limit: 1
                 });
@@ -47,7 +48,7 @@ export class MFDController {
 
                 nextTripInfo = {
                     line: nextTrip.LI_NR,
-                    lineKuerzel: (await RecLid.findOne({ where: { LI_NR: nextTrip.LI_NR } }))?.LI_KUERZEL,
+                    lineKuerzel: (await RecLid.findOne({ where: { LI_NR: nextTrip.LI_NR, BASIS_VERSION: basisVersion } }))?.LI_KUERZEL,
                     destination: nextDestName,
                     isSameLine: nextTrip.LI_NR === this.ibisController?.linie?.LI_NR
                 };
@@ -88,8 +89,9 @@ export class MFDController {
             const opInfo = (this.ibisController as any)?.getOperationalDayInfo(currentBetriebstag) || { betriebstag: 0, secondsSinceStart: 0 };
             const currentSeconds = opInfo.secondsSinceStart;
             const tagesartNr = (this.ibisController as any)?.tagesartNr !== -1 ? (this.ibisController as any)?.tagesartNr : 1;
+            const basisVersion = await this.ibisController.getActiveBasisVersion();
 
-            const currentOrt = await RecOrt.findOne({ where: { ORT_NR: ortNr } });
+            const currentOrt = await RecOrt.findOne({ where: { ORT_NR: ortNr, BASIS_VERSION: basisVersion } });
             if (!currentOrt) return [];
 
             const parentOrtNr = currentOrt.ORT_REF_ORT || currentOrt.ORT_NR;
@@ -102,6 +104,7 @@ export class MFDController {
 
             // 1. Find all line variants (LI_NR, STR_LI_VAR) that pass through the stop (ID or ParentID)
             const passingRoutes = await LidVerlauf.findAll({
+                where: { BASIS_VERSION: basisVersion },
                 include: [{
                     model: RecOrt,
                     required: true,
@@ -138,6 +141,7 @@ export class MFDController {
             // 2. Find Trips (RecFrt) that match these variants and time window
             const trips = await RecFrt.findAll({
                 where: {
+                    BASIS_VERSION: basisVersion,
                     TAGESART_NR: tagesartNr,
                     FRT_START: { [Op.between]: [startTime, endTime] },
                     [Op.or]: orConditions
@@ -171,7 +175,7 @@ export class MFDController {
                 if (row.stop_sequence > 1) {
                     // Fetch all segments up to this stop
                     const sequence = await LidVerlauf.findAll({
-                        where: { LI_NR: row.LI_NR, STR_LI_VAR: row.STR_LI_VAR, LI_LFD_NR: { [Op.lte]: row.stop_sequence } },
+                        where: { LI_NR: row.LI_NR, STR_LI_VAR: row.STR_LI_VAR, BASIS_VERSION: basisVersion, LI_LFD_NR: { [Op.lte]: row.stop_sequence } },
                         order: [['LI_LFD_NR', 'ASC']]
                     });
 
@@ -180,6 +184,7 @@ export class MFDController {
                         const curr = sequence[i];
                         const fzt = await SelFztFeld.findOne({
                             where: {
+                                BASIS_VERSION: basisVersion,
                                 ORT_NR: prev.ORT_NR,
                                 ONR_TYP_NR: prev.ONR_TYP_NR || 1, // Assumption
                                 SEL_ZIEL: curr.ORT_NR,
@@ -196,7 +201,7 @@ export class MFDController {
                 // Find Destination
                 let destinationName = "Unknown";
                 const lastStop = await LidVerlauf.findOne({
-                    where: { LI_NR: trip.LI_NR, STR_LI_VAR: trip.STR_LI_VAR },
+                    where: { LI_NR: trip.LI_NR, STR_LI_VAR: trip.STR_LI_VAR, BASIS_VERSION: basisVersion },
                     order: [['LI_LFD_NR', 'DESC']],
                     include: [{ model: RecOrt, required: false }]
                 });
@@ -206,7 +211,7 @@ export class MFDController {
                     destinationName = lastStop.stop.recOrt.ORT_NAME;
                 } else if (lastStop) {
                     // Manual fetch if relation not perfect
-                    const ort = await RecOrt.findOne({ where: { ORT_NR: lastStop.ORT_NR } });
+                    const ort = await RecOrt.findOne({ where: { ORT_NR: lastStop.ORT_NR, BASIS_VERSION: basisVersion } });
                     if (ort) destinationName = ort.ORT_NAME;
                 }
 

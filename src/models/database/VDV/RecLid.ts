@@ -27,11 +27,12 @@ export class RecLid extends Model {
     @Column(DataType.STRING(128))
     LinienID?: string; // T-LID
 
+    @PrimaryKey
     @Column({
         type: DataType.INTEGER,
         defaultValue: 1
     })
-    BASIS_VERSION!: number;
+    BASIS_VERSION!: number; // VDV 452: Teil des PK (BASIS_VERSION, LI_NR, STR_LI_VAR)
 
     // Getters for compatibility map new fields to old property names if I want to avoid refactoring controller everywhere?
     // No, better refactor controller.

@@ -105,21 +105,19 @@ export class MTTController {
      */
     private async getTripsForToday(): Promise<any[]> {
         try {
-            // Get current Tagesart
-            const now = new Date();
-            const yyyy = now.getFullYear();
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const dd = String(now.getDate()).padStart(2, '0');
-            const betriebstag = parseInt(`${yyyy}${mm}${dd}`);
+            // Get current operational day + active BASIS_VERSION (offset/time-travel aware, VDV 452)
+            const betriebstag = this.ibisController.getOperationalDayInfo().betriebstag;
+            const basisVersion = await this.ibisController.getActiveBasisVersion();
 
-            const kalender = await Firmenkalender.findOne({ where: { BETRIEBSTAG: betriebstag } });
+            const kalender = await Firmenkalender.findOne({ where: { BETRIEBSTAG: betriebstag, BASIS_VERSION: basisVersion } });
             const tagesartNr = kalender ? kalender.TAGESART_NR : 1;
 
-            Util.log(`MTT: Getting trips for Tagesart ${tagesartNr}`);
+            Util.log(`MTT: Getting trips for Tagesart ${tagesartNr}, BASIS_VERSION ${basisVersion}`);
 
             // Get all trips for today
             const trips = await RecFrt.findAll({
                 where: {
+                    BASIS_VERSION: basisVersion,
                     TAGESART_NR: tagesartNr,
                     FRT_START: {
                         [Op.not]: null
@@ -135,13 +133,14 @@ export class MTTController {
 
             // Format trips
             const formattedTrips = await Promise.all(trips.map(async (trip) => {
-                const line = await RecLid.findOne({ where: { LI_NR: trip.LI_NR } });
+                const line = await RecLid.findOne({ where: { LI_NR: trip.LI_NR, BASIS_VERSION: basisVersion } });
 
                 // Get destination from route
                 const routeStops = await LidVerlauf.findAll({
                     where: {
                         LI_NR: trip.LI_NR,
-                        STR_LI_VAR: trip.STR_LI_VAR || ''
+                        STR_LI_VAR: trip.STR_LI_VAR || '',
+                        BASIS_VERSION: basisVersion
                     },
                     include: [{
                         model: RecZnr,
@@ -156,6 +155,7 @@ export class MTTController {
                     where: {
                         LI_NR: trip.LI_NR,
                         STR_LI_VAR: trip.STR_LI_VAR || '',
+                        BASIS_VERSION: basisVersion,
                         PRODUKTIV: true
                     }
                 });
@@ -183,11 +183,14 @@ export class MTTController {
      */
     private async getRouteStops(lineNr: number, kurs: number): Promise<any[]> {
         try {
+            const basisVersion = await this.ibisController.getActiveBasisVersion();
+
             // Find the trip
             const trip = await RecFrt.findOne({
                 where: {
                     LI_NR: lineNr,
-                    FRT_FID: kurs
+                    FRT_FID: kurs,
+                    BASIS_VERSION: basisVersion
                 }
             });
 
@@ -200,7 +203,8 @@ export class MTTController {
             const stops = await LidVerlauf.findAll({
                 where: {
                     LI_NR: lineNr,
-                    STR_LI_VAR: trip.STR_LI_VAR || ''
+                    STR_LI_VAR: trip.STR_LI_VAR || '',
+                    BASIS_VERSION: basisVersion
                 },
                 include: [{
                     model: RecHp,

@@ -26,3 +26,22 @@ Glossar (ausgegraut, wird nicht verwendet)
 Meldungen
 Linienverlauf
 
+
+# TODO VDV 452 – offene Konformitätspunkte
+
+Abgeglichen gegen `ifesx-backend/VDV452_v1.5.xsd`. Die BASIS_VERSION-Auflösung
+(datumsbasiert über `BASIS_VER_GUELTIGKEIT`, inkl. Zeit-Offset/Zeitreise) ist
+umgesetzt. Noch offen:
+
+- **SEL_FZT_FELD-Lookup ignoriert `BEREICH_NR`.** `IBISController.computeStopTimes`
+  und `MFDController.getConnectionDepartures` filtern Fahrzeiten inzwischen nach
+  `BASIS_VERSION`, aber nicht nach `BEREICH_NR`. Bei mehreren Bereichen kann
+  `findOne` die falsche Fahrzeit liefern. `BEREICH_NR` liegt auf `REC_FRT`
+  (`currentTrip.BEREICH_NR`) und gehört in die where-Klausel.
+- **`REC_LID` fehlen Spalten aus der XSD:** `LI_RI_NR` (Richtung 1=Hin/2=Rück),
+  `BEREICH_NR`, `ROUTEN_ART`, `LINIEN_CODE`. Modell `RecLid.ts` ergänzen, damit
+  Richtung/Bereich aus den Daten ableitbar sind (ifesx-backend schreibt diese
+  Felder bereits).
+- **60-s-Default in `computeStopTimes`** fabriziert Fahrplandaten, wenn keine
+  `SEL_FZT` gefunden wird – nicht VDV-konform, ggf. als „unbekannt" markieren.
+

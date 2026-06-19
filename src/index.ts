@@ -34,6 +34,7 @@ import { RecSel } from './models/database/VDV/RecSel';
 import { RecSelZp } from './models/database/VDV/RecSelZp';
 import { SelFztFeld } from './models/database/VDV/SelFztFeld';
 import { Firmenkalender } from './models/database/VDV/Firmenkalender';
+import { BasisVerGueltigkeit } from './models/database/VDV/BasisVerGueltigkeit';
 
 
 
@@ -69,6 +70,7 @@ function main() {
       Meldung,
       // VDV
       BasisVersion,
+      BasisVerGueltigkeit,
       RecOrt,
       RecHp,
       RecLid,

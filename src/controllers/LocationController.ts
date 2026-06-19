@@ -164,7 +164,8 @@ class LocationController {
       console.log(`[getPossibleNextStops] Querying RecSel with ORT_NR = ${currentOrtNr}`);
       let possibleStops = await RecSel.findAll({
         where: {
-          ORT_NR: currentOrtNr
+          ORT_NR: currentOrtNr,
+          BASIS_VERSION: routeStop.BASIS_VERSION
         }
       });
       console.log(`[getPossibleNextStops] Query returned ${possibleStops.length} entries`);

@@ -26,7 +26,10 @@ import { LidVerlauf } from '../models/database/VDV/LidVerlauf';
 import { SelFztFeld } from '../models/database/VDV/SelFztFeld';
 import { Firmenkalender } from '../models/database/VDV/Firmenkalender';
 import { RecAnr } from '../models/database/VDV/RecAnr';
+import { BasisVerGueltigkeit } from '../models/database/VDV/BasisVerGueltigkeit';
+import { BasisVersion } from '../models/database/VDV/BasisVersion';
 import { IBISControllerInterface } from './IBISControllerInterface';
+import { Op } from 'sequelize';
 
 
 class IBISController implements IBISControllerInterface {
@@ -110,6 +113,8 @@ class IBISController implements IBISControllerInterface {
     private timeOffsetMs: number = 0;
     private currentBetriebstag: number = 0;
     public tagesartNr: number = -1;
+    private activeBasisVersion: number = 1;
+    private resolvedVersionDay: number = -1;
 
     /**
      * Get operational day info (Betriebstag YYYYMMDD and seconds since its start).
@@ -140,6 +145,48 @@ class IBISController implements IBISControllerInterface {
         const betriebstag = parseInt(`${yyyy}${mm}${dd}`);
 
         return { betriebstag, secondsSinceStart };
+    }
+
+    /**
+     * Determine the BASIS_VERSION valid for the current operational day.
+     *
+     * Per VDV 452, BASIS_VER_GUELTIGKEIT maps an operational day
+     * (VER_GUELTIGKEIT, YYYYMMDD) to the BASIS_VERSION valid on/from that day.
+     * The day is derived from the (time-offset-adjusted) system clock, so test
+     * "time travel" via setDateOffset/setTimeOffset automatically selects the
+     * matching data version (e.g. jumping to 2002 loads the 2002 dataset).
+     *
+     * The result is cached per operational day and re-resolved whenever the
+     * simulated day changes.
+     */
+    public async getActiveBasisVersion(): Promise<number> {
+        const { betriebstag } = this.getOperationalDayInfo();
+        if (betriebstag === this.resolvedVersionDay) {
+            return this.activeBasisVersion;
+        }
+
+        // Latest validity entry that is not in the future relative to the
+        // operational day. Handles both "one row per day" and
+        // "one row per validity start" representations.
+        const gueltig = await BasisVerGueltigkeit.findOne({
+            where: { VER_GUELTIGKEIT: { [Op.lte]: betriebstag } },
+            order: [['VER_GUELTIGKEIT', 'DESC']]
+        });
+
+        let version = gueltig?.BASIS_VERSION;
+
+        if (version === undefined || version === null) {
+            // Fallback: highest known basis version.
+            const latest = await BasisVersion.findOne({ order: [['BASIS_VERSION', 'DESC']] });
+            version = latest ? latest.BASIS_VERSION : 1;
+            Util.log(`[Version] No BASIS_VER_GUELTIGKEIT entry <= ${betriebstag}; using latest BASIS_VERSION ${version}.`);
+        } else {
+            Util.log(`[Version] Betriebstag ${betriebstag} -> BASIS_VERSION ${version} (per BASIS_VER_GUELTIGKEIT).`);
+        }
+
+        this.activeBasisVersion = version;
+        this.resolvedVersionDay = betriebstag;
+        return version;
     }
 
     get isDoorsOpen(): boolean {
@@ -946,10 +993,12 @@ class IBISController implements IBISControllerInterface {
     async setLine(lineNumber: string): Promise<boolean> {
         Util.log(`setLine called with: '${lineNumber}'`);
         if (parseInt(lineNumber) > 0) {
-            // Linie in VDV RecLid suchen
+            // Linie in VDV RecLid suchen (in der für das aktuelle Datum gültigen Basisversion)
+            const basisVersion = await this.getActiveBasisVersion();
             let line = await RecLid.findOne({
                 where: {
-                    LI_NR: lineNumber
+                    LI_NR: lineNumber,
+                    BASIS_VERSION: basisVersion
                 }
             })
 
@@ -992,10 +1041,12 @@ class IBISController implements IBISControllerInterface {
         }
 
         // VDV Logic: Route Number (ROUTEN_NR) maps to a specific Variant (STR_LI_VAR) in REC_LID.
+        const basisVersion = await this.getActiveBasisVersion();
         const variantRecord = await RecLid.findOne({
             where: {
                 LI_NR: this.linie.LI_NR,
-                ROUTEN_NR: routeNumber
+                ROUTEN_NR: routeNumber,
+                BASIS_VERSION: basisVersion
             }
         });
 
@@ -1007,7 +1058,7 @@ class IBISController implements IBISControllerInterface {
             Util.log(`No Variant found for Line ${this.linie.LI_KUERZEL} (LI_NR: ${this.linie.LI_NR}) / Route ${routeNumber}`);
 
             // Debug info
-            const allVariants = await RecLid.findAll({ where: { LI_NR: this.linie.LI_NR } });
+            const allVariants = await RecLid.findAll({ where: { LI_NR: this.linie.LI_NR, BASIS_VERSION: basisVersion } });
             Util.log(`DEBUG: Available variants for Line ${this.linie.LI_NR}: ${allVariants.map(v => `${v.STR_LI_VAR} (R:${v.ROUTEN_NR})`).join(', ')}`);
 
             return false;
@@ -1064,7 +1115,8 @@ class IBISController implements IBISControllerInterface {
     async setZiel(destinationNumber: number): Promise<boolean> {
         const destination = await RecZnr.findOne({
             where: {
-                ZNR_NR: destinationNumber
+                ZNR_NR: destinationNumber,
+                BASIS_VERSION: await this.getActiveBasisVersion()
             }
         })
         if (destination) {
@@ -1125,32 +1177,34 @@ class IBISController implements IBISControllerInterface {
             // 1. Find all Trips (RecFrt) for this Line (RecLid) and Kurs (LI_KU_NR)
             const lineId = this.linie['LI_NR'];
 
-            const recLid = await RecLid.findOne({ where: { LI_KUERZEL: this.linie.STR_LID } });
+            // Determine operational day and the BASIS_VERSION valid for it (VDV 452).
+            const opInfo = this.getOperationalDayInfo();
+            const betriebstag = opInfo.betriebstag;
+            this.currentBetriebstag = betriebstag;
+            const basisVersion = await this.getActiveBasisVersion();
+
+            const recLid = await RecLid.findOne({ where: { LI_KUERZEL: this.linie.STR_LID, BASIS_VERSION: basisVersion } });
             if (!recLid) {
-                Util.log('VDV Error: RecLid not found for', this.linie.STR_LID);
+                Util.log('VDV Error: RecLid not found for', this.linie.STR_LID, 'in BASIS_VERSION', basisVersion);
                 return false;
             }
 
 
             // Find Trips
-            // Determine Tagesart based on operational day (Betriebstag)
-            // By default, we use the current calendar date unless a manual override or specific trip logic dictates otherwise.
-            const opInfo = this.getOperationalDayInfo();
-            const betriebstag = opInfo.betriebstag;
-            this.currentBetriebstag = betriebstag;
-
+            // Determine Tagesart based on operational day (Betriebstag) within the active version.
             let tagesartNr = -1;
-            const kalender = await Firmenkalender.findOne({ where: { BETRIEBSTAG: betriebstag } });
+            const kalender = await Firmenkalender.findOne({ where: { BETRIEBSTAG: betriebstag, BASIS_VERSION: basisVersion } });
             if (kalender) {
                 tagesartNr = kalender.TAGESART_NR;
                 this.tagesartNr = tagesartNr;
-                Util.log(`Smart Trip Selection: Date ${betriebstag} -> Tagesart ${tagesartNr} (${kalender.BETRIEBSTAG_TEXT})`);
+                Util.log(`Smart Trip Selection: Date ${betriebstag} -> Tagesart ${tagesartNr} (${kalender.BETRIEBSTAG_TEXT}), BASIS_VERSION ${basisVersion}`);
             } else {
                 this.tagesartNr = 1; // Default
-                Util.log(`Smart Trip Selection: No entry in FIRMENKALENDER for ${betriebstag}. Trips will not be filtered by day type.`);
+                Util.log(`Smart Trip Selection: No entry in FIRMENKALENDER for ${betriebstag}/v${basisVersion}. Trips will not be filtered by day type.`);
             }
 
             const whereClause: any = {
+                BASIS_VERSION: basisVersion,
                 LI_NR: recLid.LI_NR,
                 LI_KU_NR: this.kurs
             };
@@ -1177,7 +1231,7 @@ class IBISController implements IBISControllerInterface {
             // FINAL FALLBACK: If still no trips, try without Tagesart filter at all
             if (this.currentTrips.length === 0) {
                 Util.log(`VDV: No trips found for Line/Kurs (even with fallback). Trying without Tagesart filter...`);
-                const totalWhere = { LI_NR: recLid.LI_NR, LI_KU_NR: this.kurs };
+                const totalWhere = { BASIS_VERSION: basisVersion, LI_NR: recLid.LI_NR, LI_KU_NR: this.kurs };
                 this.currentTrips = await RecFrt.findAll({
                     where: totalWhere,
                     order: [['FRT_START', 'ASC']]
@@ -1271,19 +1325,10 @@ class IBISController implements IBISControllerInterface {
 
             if (!this.linie) return false;
 
-            // NEW: Determine the BASIS_VERSION to use. 
-            // If multiple versions exist in LID_VERLAUF for this Line/Variant, we might get duplicates.
-            // We pick the highest version found for this specific line/variant.
-            const maxVersionEntry = await LidVerlauf.findOne({
-                where: {
-                    LI_NR: this.linie.LI_NR,
-                    STR_LI_VAR: variant
-                },
-                order: [['BASIS_VERSION', 'DESC']]
-            });
-
-            const targetVersion = maxVersionEntry ? maxVersionEntry.BASIS_VERSION : 1;
-            Util.log(`[loadStopSequence] Identified target BASIS_VERSION: ${targetVersion} for Variant: ${variant}`);
+            // Determine the BASIS_VERSION valid for the current operational day (VDV 452),
+            // so the stop sequence matches the dataset active for that date.
+            const targetVersion = await this.getActiveBasisVersion();
+            Util.log(`[loadStopSequence] Using active BASIS_VERSION: ${targetVersion} for Variant: ${variant}`);
 
             // Use this.linie.LI_NR directly. this.linie is now the correct Variant (RecLid).
             const lidVerlaufEntries = await LidVerlauf.findAll({
@@ -1315,7 +1360,8 @@ class IBISController implements IBISControllerInterface {
                 recHp = await RecHp.findOne({
                     where: {
                         ORT_NR: entry.ORT_NR,
-                        ONR_TYP_NR: entry.ONR_TYP_NR
+                        ONR_TYP_NR: entry.ONR_TYP_NR,
+                        BASIS_VERSION: entry.BASIS_VERSION
                         // HALTEPUNKT_NR removed from LidVerlauf, allows any HP (or we could assume 0)
                     },
                     include: [{
@@ -1326,12 +1372,12 @@ class IBISController implements IBISControllerInterface {
 
                 // Destination Resolution
                 if (entry.ZNR_NR) {
-                    destination = await RecZnr.findOne({ where: { ZNR_NR: entry.ZNR_NR } });
+                    destination = await RecZnr.findOne({ where: { ZNR_NR: entry.ZNR_NR, BASIS_VERSION: entry.BASIS_VERSION } });
                 }
 
                 // Announcement Resolution
                 if (entry.ANR_NR) {
-                    announcement = await RecAnr.findOne({ where: { ANR_NR: entry.ANR_NR } });
+                    announcement = await RecAnr.findOne({ where: { ANR_NR: entry.ANR_NR, BASIS_VERSION: entry.BASIS_VERSION } });
                 }
 
                 // Attach to Instance
@@ -1348,7 +1394,8 @@ class IBISController implements IBISControllerInterface {
                     const recSel = await RecSel.findOne({
                         where: {
                             ORT_NR: prevStop.ORT_NR,
-                            SEL_ZIEL: entry.ORT_NR
+                            SEL_ZIEL: entry.ORT_NR,
+                            BASIS_VERSION: entry.BASIS_VERSION
                         }
                     });
 
@@ -1392,7 +1439,7 @@ class IBISController implements IBISControllerInterface {
                     this.ziel = lastStop.destination;
                 } else if (lastStop.ZNR_NR) {
                     // Try to fetch if only ID is available
-                    const dest = await RecZnr.findOne({ where: { ZNR_NR: lastStop.ZNR_NR } });
+                    const dest = await RecZnr.findOne({ where: { ZNR_NR: lastStop.ZNR_NR, BASIS_VERSION: lastStop.BASIS_VERSION } });
                     if (dest) {
                         this.ziel = dest;
                         Util.log(`Setting Destination to ${dest.ZNR_NR} (${dest.ZNR_TEXT})`);
@@ -1477,6 +1524,7 @@ class IBISController implements IBISControllerInterface {
 
             const selFzt = await SelFztFeld.findOne({
                 where: {
+                    BASIS_VERSION: prevStop.BASIS_VERSION,
                     ORT_NR: prevStop.ORT_NR,
                     ONR_TYP_NR: prevStop.ONR_TYP_NR,
                     SEL_ZIEL: stop.ORT_NR,

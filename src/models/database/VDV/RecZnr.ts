@@ -25,11 +25,12 @@ export class RecZnr extends Model {
     @Column(DataType.STRING(68))
     ZNR_CODE?: string;
 
+    @PrimaryKey
     @Column({
         type: DataType.INTEGER,
         defaultValue: 1
     })
-    BASIS_VERSION!: number;
+    BASIS_VERSION!: number; // VDV 452: Teil des PK (BASIS_VERSION, ZNR_NR)
 
     @BelongsTo(() => BasisVersion, { foreignKey: 'BASIS_VERSION', targetKey: 'BASIS_VERSION', constraints: false })
     basisVersion?: BasisVersion;
