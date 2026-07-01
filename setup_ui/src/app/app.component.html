@@ -1,0 +1,211 @@
+<p-toast></p-toast>
+
+<div class="setup-shell">
+  <div class="setup-header">
+    <h1>IBISplusplus – Einrichtung</h1>
+    <p *ngIf="status">Version {{ status.version }} ·
+      <ng-container *ngIf="status.configured">konfiguriert</ng-container>
+      <ng-container *ngIf="!status.configured">Erstkonfiguration</ng-container>
+      · {{ status.announcementCount }} Ansagen · REC_LID: {{ status.dbRowCounts['REC_LID'] || 0 }}
+    </p>
+  </div>
+
+  <!-- Serial fault: prompt to reconfigure -->
+  <div class="serial-fault" *ngIf="serialFault">
+    <p-message severity="error"
+      text="IBIS-Schnittstelle '{{ status?.serialPort }}' nicht erreichbar: {{ status?.serialError }}">
+    </p-message>
+    <div style="margin-top:.5rem">
+      <button pButton type="button" label="Schnittstelle neu konfigurieren" icon="pi pi-cog"
+        (click)="reconfigureSerial()"></button>
+    </div>
+  </div>
+
+  <div class="step-nav">
+    <div class="step-chip" *ngFor="let s of steps; let i = index"
+      [class.active]="i === activeStep" (click)="goToStep(i)">
+      {{ i + 1 }}. {{ s }}
+    </div>
+  </div>
+
+  <ng-container *ngIf="config as cfg">
+
+    <!-- STEP 1: Fahrzeug -->
+    <p-card *ngIf="activeStep === 0" header="Fahrzeug">
+      <div class="grid-2">
+        <div class="field">
+          <label>Fahrzeugnummer</label>
+          <p-inputNumber [(ngModel)]="cfg.vehicle_number" [useGrouping]="false"></p-inputNumber>
+        </div>
+        <div class="field">
+          <label>IBIS-Schnittstelle (serial_port)</label>
+          <input pInputText [(ngModel)]="cfg.serial_port" placeholder="/dev/ttyUSB0" />
+          <div class="hint">Leer lassen = Einrichtungsmodus ohne serielle Verbindung.</div>
+        </div>
+      </div>
+
+      <div class="row-inline"><p-checkbox [(ngModel)]="cfg.TERMINAL_A" [binary]="true" inputId="ta"></p-checkbox><label for="ta">Terminal A</label></div>
+      <div class="row-inline"><p-checkbox [(ngModel)]="cfg.TERMINAL_B" [binary]="true" inputId="tb"></p-checkbox><label for="tb">Terminal B</label></div>
+      <div class="row-inline"><p-checkbox [(ngModel)]="cfg.MFD" [binary]="true" inputId="mfd"></p-checkbox><label for="mfd">MFD (Multifunktionsdisplay)</label></div>
+      <div class="row-inline"><p-checkbox [(ngModel)]="cfg.IRIS_A" [binary]="true" inputId="irisa"></p-checkbox><label for="irisa">IRIS A</label></div>
+      <div class="row-inline"><p-checkbox [(ngModel)]="cfg.IRIS_B" [binary]="true" inputId="irisb"></p-checkbox><label for="irisb">IRIS B</label></div>
+      <div class="row-inline"><p-checkbox [(ngModel)]="cfg.external_announcements" [binary]="true" inputId="ext"></p-checkbox><label for="ext">Externes Ansagegerät</label></div>
+      <div class="row-inline"><p-checkbox [(ngModel)]="cfg.query_device_status" [binary]="true" inputId="qds"></p-checkbox><label for="qds">Gerätestatus abfragen</label></div>
+      <div class="row-inline"><p-checkbox [(ngModel)]="cfg.line_number_in_ds009" [binary]="true" inputId="ds009"></p-checkbox><label for="ds009">Liniennummer in DS009</label></div>
+
+      <div class="field" style="margin-top:1rem">
+        <label>Ansageabstand vor nächster Haltestelle (m)</label>
+        <p-inputNumber [(ngModel)]="cfg.announcement_distance_before_next_stop" [useGrouping]="false"></p-inputNumber>
+      </div>
+
+      <h4>Funk (RADIO)</h4>
+      <div class="row-inline"><p-checkbox [(ngModel)]="cfg.RADIO!.enabled" [binary]="true" inputId="radio"></p-checkbox><label for="radio">Funk aktiv</label></div>
+      <div class="grid-2">
+        <div class="field"><label>Fahrzeugadresse (Funk)</label><p-inputNumber [(ngModel)]="cfg.RADIO!.vehicle_address" [useGrouping]="false"></p-inputNumber></div>
+        <div class="field"><label>Kanal Sprache</label><p-inputNumber [(ngModel)]="cfg.RADIO!.channels.voice" [useGrouping]="false"></p-inputNumber></div>
+        <div class="field"><label>Kanal Daten</label><p-inputNumber [(ngModel)]="cfg.RADIO!.channels.data" [useGrouping]="false"></p-inputNumber></div>
+        <div class="field"><label>Kanal LSA</label><p-inputNumber [(ngModel)]="cfg.RADIO!.channels.lsa" [useGrouping]="false"></p-inputNumber></div>
+      </div>
+    </p-card>
+
+    <!-- STEP 2: GPIO & Geräte -->
+    <p-card *ngIf="activeStep === 1" header="GPIO & Geräte">
+      <div class="row-inline"><p-checkbox [(ngModel)]="cfg.use_gpio" [binary]="true" inputId="gpio"></p-checkbox><label for="gpio">GPIO verwenden (Raspberry Pi)</label></div>
+
+      <h4>GPIO-Pinbelegung</h4>
+      <div class="grid-2">
+        <div class="field" *ngFor="let pin of gpioPins">
+          <label>{{ pin }}</label>
+          <p-inputNumber [(ngModel)]="cfg.GPIO_PINOUT![pin]" [useGrouping]="false"></p-inputNumber>
+        </div>
+      </div>
+
+      <h4>Anzeigen (signs) – IBIS-Adressen</h4>
+      <div class="row-inline" style="flex-wrap:wrap">
+        <span *ngFor="let a of addresses" style="display:inline-flex;align-items:center;gap:.25rem;margin-right:.5rem">
+          <p-checkbox [value]="a" [(ngModel)]="signsSelected" [inputId]="'sign'+a"></p-checkbox>
+          <label [for]="'sign'+a">{{ a }}</label>
+        </span>
+      </div>
+
+      <h4>Entwerter (validators) – IBIS-Adressen</h4>
+      <div class="row-inline" style="flex-wrap:wrap">
+        <span *ngFor="let a of addresses" style="display:inline-flex;align-items:center;gap:.25rem;margin-right:.5rem">
+          <p-checkbox [value]="a" [(ngModel)]="validatorsSelected" [inputId]="'val'+a"></p-checkbox>
+          <label [for]="'val'+a">{{ a }}</label>
+        </span>
+      </div>
+
+      <h4>ÜSTRA LVA – IBIS-Adressen</h4>
+      <div class="row-inline" style="flex-wrap:wrap">
+        <span *ngFor="let a of addresses" style="display:inline-flex;align-items:center;gap:.25rem;margin-right:.5rem">
+          <p-checkbox [value]="a" [(ngModel)]="cfg.UESTRA_LVA" [inputId]="'lva'+a"></p-checkbox>
+          <label [for]="'lva'+a">{{ a }}</label>
+        </span>
+      </div>
+
+      <h4>DS021 Haltestellenname – IBIS-Adressen</h4>
+      <div class="row-inline" style="flex-wrap:wrap">
+        <span *ngFor="let a of addresses" style="display:inline-flex;align-items:center;gap:.25rem;margin-right:.5rem">
+          <p-checkbox [value]="a" [(ngModel)]="cfg.DS021_STOP_NAME" [inputId]="'ds'+a"></p-checkbox>
+          <label [for]="'ds'+a">{{ a }}</label>
+        </span>
+      </div>
+    </p-card>
+
+    <!-- STEP 3: Terminalbelegung -->
+    <p-card *ngIf="activeStep === 2" header="Terminalbelegung">
+      <p class="hint">Tastenbelegung des Terminals. Erweiterte Einstellung.</p>
+      <table class="kv">
+        <thead>
+          <tr><th>Taste</th><th>Aktion</th><th>Text Zeile 1</th><th>Prompt</th><th>Blinkt</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of cfg.terminal_config.actions">
+            <td>
+              <select [(ngModel)]="row.key">
+                <option value=""></option>
+                <option *ngFor="let k of schema?.keys" [value]="k">{{ k }}</option>
+              </select>
+            </td>
+            <td>
+              <select [(ngModel)]="row.action">
+                <option value=""></option>
+                <option *ngFor="let a of schema?.keyActions" [value]="a">{{ a }}</option>
+              </select>
+            </td>
+            <td><input pInputText [(ngModel)]="row.textLine1" /></td>
+            <td><p-checkbox [(ngModel)]="row.isPrompt" [binary]="true"></p-checkbox></td>
+            <td><p-checkbox [(ngModel)]="row.isBlinking" [binary]="true"></p-checkbox></td>
+            <td><button pButton type="button" icon="pi pi-trash" severity="danger" (click)="removeAction(row)"></button></td>
+          </tr>
+        </tbody>
+      </table>
+      <button pButton type="button" label="Zeile hinzufügen" icon="pi pi-plus" (click)="addAction()" style="margin-top:.75rem"></button>
+
+      <h4>Terminal-Töne</h4>
+      <div class="grid-2">
+        <div class="field"><label>ABFAHRT</label><p-inputNumber [(ngModel)]="cfg.terminal_config.sounds.ABFAHRT" [useGrouping]="false"></p-inputNumber></div>
+        <div class="field"><label>WEISUNG</label><p-inputNumber [(ngModel)]="cfg.terminal_config.sounds.WEISUNG" [useGrouping]="false"></p-inputNumber></div>
+        <div class="field"><label>FEHLER</label><p-inputNumber [(ngModel)]="cfg.terminal_config.sounds.FEHLER" [useGrouping]="false"></p-inputNumber></div>
+      </div>
+    </p-card>
+
+    <!-- STEP 4: Audio -->
+    <p-card *ngIf="activeStep === 3" header="Audio">
+      <div class="grid-2">
+        <div class="field"><label>Funk – Eingabegerät</label><input pInputText [(ngModel)]="cfg.AUDIO!.radio.input_device" /></div>
+        <div class="field"><label>Funk – Ausgabegerät</label><input pInputText [(ngModel)]="cfg.AUDIO!.radio.output_device" /></div>
+        <div class="field"><label>Ansagen – Ausgabegerät</label><input pInputText [(ngModel)]="cfg.AUDIO!.announcements.output_device" /></div>
+      </div>
+    </p-card>
+
+    <!-- STEP 5: Daten-Upload -->
+    <p-card *ngIf="activeStep === 4" header="Daten-Upload (ifesx-Paket)">
+      <p class="hint">ZIP von ifesx: Fahrplan-Datenbank (<code>*.sqlite3</code>) + <code>announcements/</code>.</p>
+      <div class="field">
+        <input type="file" accept=".zip" (change)="onFileSelected($event)" />
+      </div>
+      <button pButton type="button" label="Hochladen & übernehmen" icon="pi pi-upload"
+        [disabled]="!selectedFile || uploading" (click)="upload()"></button>
+      <p-progressSpinner *ngIf="uploading" styleClass="w-2rem h-2rem" strokeWidth="4"></p-progressSpinner>
+
+      <div class="summary-box" *ngIf="uploadSummary">
+        <strong>Übernommen.</strong>
+        <table class="kv">
+          <tr><td>Tabellen</td><td>{{ uploadSummary.db.tables }}</td></tr>
+          <tr><td>REC_LID</td><td>{{ uploadSummary.db.rowCounts['REC_LID'] }}</td></tr>
+          <tr><td>REC_FRT</td><td>{{ uploadSummary.db.rowCounts['REC_FRT'] }}</td></tr>
+          <tr><td>LID_VERLAUF</td><td>{{ uploadSummary.db.rowCounts['LID_VERLAUF'] }}</td></tr>
+          <tr><td>Ansagen</td><td>{{ uploadSummary.announcements }}</td></tr>
+          <tr *ngIf="uploadSummary.backup"><td>Backup</td><td>{{ uploadSummary.backup }}</td></tr>
+        </table>
+        <div class="hint">Wird beim nächsten Neustart übernommen.</div>
+      </div>
+    </p-card>
+
+    <div class="wizard-actions">
+      <button pButton type="button" label="Zurück" icon="pi pi-chevron-left"
+        severity="secondary" [disabled]="activeStep === 0" (click)="prev()"></button>
+
+      <div style="display:flex; gap:.5rem">
+        <button pButton type="button" label="Speichern" icon="pi pi-save"
+          severity="secondary" [disabled]="saving" (click)="saveConfig()"></button>
+        <button *ngIf="activeStep < steps.length - 1" pButton type="button" label="Weiter" icon="pi pi-chevron-right"
+          iconPos="right" (click)="next()"></button>
+        <button *ngIf="activeStep === steps.length - 1" pButton type="button" label="Speichern & Neustart"
+          icon="pi pi-power-off" iconPos="right" [disabled]="saving" (click)="finishAndRestart()"></button>
+      </div>
+    </div>
+
+  </ng-container>
+</div>
+
+<!-- Restart overlay -->
+<div class="restart-overlay" *ngIf="restarting">
+  <p-progressSpinner strokeWidth="4"></p-progressSpinner>
+  <h2>Neustart…</h2>
+  <p>Auf dem Pi kommt das System automatisch zurück.<br />
+     Lokal bitte manuell neu starten (<code>npm run dev</code>).</p>
+  <p class="hint">Diese Seite lädt automatisch neu, sobald der Server wieder erreichbar ist.</p>
+</div>

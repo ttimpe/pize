@@ -133,7 +133,9 @@ export class MTTController {
 
             // Format trips
             const formattedTrips = await Promise.all(trips.map(async (trip) => {
-                const line = await RecLid.findOne({ where: { LI_NR: trip.LI_NR, BASIS_VERSION: basisVersion } });
+                // Exakte Variante der Fahrt verwenden (REC_LID-PK: LI_NR, STR_LI_VAR, BASIS_VERSION),
+                // damit nicht eine beliebige Variante der Linie getroffen wird.
+                const line = await RecLid.findOne({ where: { LI_NR: trip.LI_NR, STR_LI_VAR: trip.STR_LI_VAR || '', BASIS_VERSION: basisVersion } });
 
                 // Get destination from route
                 const routeStops = await LidVerlauf.findAll({

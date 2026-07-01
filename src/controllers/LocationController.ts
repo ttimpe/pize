@@ -185,8 +185,11 @@ class LocationController {
       const ormaCode = parseInt(hexCode, 16);
       Util.log(`[LocationController] Beacon detected on ${direction}: Hex=${hexCode}, Decimal=${ormaCode}`);
 
+      // Ortsbake in der für das aktuelle Datum gültigen Basisversion suchen (VDV 452),
+      // sonst kann eine Bake aus einer anderen Datenversion getroffen werden.
+      const basisVersion = await this.ibisController.getActiveBasisVersion();
       const beacon = await RecOm.findOne({
-        where: { ORMACODE: ormaCode },
+        where: { ORMACODE: ormaCode, BASIS_VERSION: basisVersion },
         include: [RecOrt]
       });
 

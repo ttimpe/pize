@@ -19,6 +19,10 @@ import { AudioController } from './controllers/AudioController';
 import bodyParser, { BodyParser } from 'body-parser'
 import { WebSocketServer } from 'ws';
 import { RadioController } from './controllers/RadioController';
+import { SetupController } from './controllers/SetupController';
+import { defaultDeviceConfig } from './models/devices/defaultDeviceConfig';
+import fs from 'fs';
+import path from 'path';
 import { Meldung } from './models/database/Meldung';
 // VDV Models
 import { BasisVersion } from './models/database/VDV/BasisVersion';
@@ -31,6 +35,7 @@ import { RecUmlauf } from './models/database/VDV/RecUmlauf';
 import { RecZnr } from './models/database/VDV/RecZnr';
 import { RecAnr } from './models/database/VDV/RecAnr';
 import { RecSel } from './models/database/VDV/RecSel';
+import { RecOm } from './models/database/VDV/RecOm';
 import { RecSelZp } from './models/database/VDV/RecSelZp';
 import { SelFztFeld } from './models/database/VDV/SelFztFeld';
 import { Firmenkalender } from './models/database/VDV/Firmenkalender';
@@ -39,24 +44,30 @@ import { BasisVerGueltigkeit } from './models/database/VDV/BasisVerGueltigkeit';
 
 
 let ibisController: IBISController
-let portString: string
+let portString: string | undefined
 let rl: any
 
 let websocket: WebSocketServer;
 let isConnectedToITCS: boolean = false
 
+// Reassigned once the HTTP server exists; used by the setup wizard's restart button and
+// the signal handlers. Falls back to a plain exit until then.
+let gracefulShutdown: () => void = () => process.exit(0);
+
 
 function main() {
   let segfaultHandler = require('node-segfault-handler');
   segfaultHandler.registerHandler();
-  if (process.argv.length === 3) {
 
-    portString = process.argv[2]
-    /*   rl = readline.createInterface({
-         input: process.stdin,
-         output: process.stdout
-       })
-       askForInput();*/
+  // Resilient bootstrap: a fresh device may have no config yet. Write a safe default so
+  // the require() sites succeed and the web server + setup wizard come up in setup mode.
+  const configPath = path.join(__dirname, '..', 'device_config.json');
+  if (!fs.existsSync(configPath)) {
+    Util.log('No device_config.json found - writing default template (setup mode)');
+    fs.writeFileSync(configPath, JSON.stringify(defaultDeviceConfig, null, 2));
+  }
+
+  {
     // read config
     // load DB from Sequelize
     // Point to ifesx-backend DB
@@ -80,6 +91,7 @@ function main() {
       RecZnr,
       RecAnr,
       RecSel,
+      RecOm,
       RecSelZp,
       SelFztFeld,
       Firmenkalender
@@ -87,6 +99,11 @@ function main() {
     // Init terminal(s)
 
     const deviceConfig: DeviceConfig = require('../device_config.json')
+
+    // Serial port resolution: optional argv[2] override (dev/socat convenience), else the
+    // configured serial_port, else none -> IBISController runs in no-serial setup mode.
+    portString = process.argv[2] || deviceConfig.serial_port || undefined
+    Util.log(portString ? `Using serial port: ${portString}` : 'No serial port configured (setup mode)')
 
     websocket = new WebSocketServer({ port: 1815 });
 
@@ -108,8 +125,8 @@ function main() {
           Util.log('Listening for clients on port 2000 (localhost only)');
         });
 
-        // Graceful shutdown handling
-        const gracefulShutdown = () => {
+        // Graceful shutdown handling (also invoked by the setup wizard's restart button)
+        gracefulShutdown = () => {
           Util.log('Received kill signal, shutting down gracefully');
 
           // Close WebSocket server
@@ -159,11 +176,16 @@ function main() {
     // Initialize MTT Controller
     let mttController = new MTTController(ibisController, app);
 
-    if (deviceConfig.RADIO.enabled == true) {
+    if (deviceConfig.RADIO && deviceConfig.RADIO.enabled == true) {
       let radioController = new RadioController('vehicle', ibisController)
       ibisController.radioController = radioController
       radioController.startListening()
     }
+
+    // Setup wizard + ifesx data upload (served at /setup, API under /api/setup).
+    // The restart hook shuts the process down; on the Pi a supervisor brings it back,
+    // locally the wizard shows a manual-restart hint and reconnects when it returns.
+    new SetupController(ibisController, app, () => gracefulShutdown());
 
 
     //if (deviceConfig.use_gpio == true && deviceConfig.GPIO_PINOUT != undefined) {
@@ -228,8 +250,6 @@ function main() {
 
 
 
-  } else {
-    console.error('ERROR: Please specify serial port')
   }
 
 

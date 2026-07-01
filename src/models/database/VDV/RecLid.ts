@@ -21,6 +21,19 @@ export class RecLid extends Model {
     @Column(DataType.INTEGER)
     ROUTEN_NR?: number; // Optional
 
+    // VDV 452: von ifesx geliefert, bisher ignoriert
+    @Column(DataType.INTEGER)
+    LI_RI_NR?: number; // Richtung: 1 = Hin, 2 = Rück
+
+    @Column(DataType.INTEGER)
+    BEREICH_NR?: number; // Bereich der Linie
+
+    @Column(DataType.INTEGER)
+    ROUTEN_ART?: number;
+
+    @Column(DataType.INTEGER)
+    LINIEN_CODE?: number;
+
     @Column(DataType.STRING(100))
     LIDNAME!: string; // Was LIN_NAME
 

@@ -179,21 +179,38 @@ export class MFDController {
                         order: [['LI_LFD_NR', 'ASC']]
                     });
 
+                    let arrivalResolvable = true;
                     for (let i = 1; i < sequence.length; i++) {
                         const prev = sequence[i - 1];
                         const curr = sequence[i];
-                        const fzt = await SelFztFeld.findOne({
-                            where: {
-                                BASIS_VERSION: basisVersion,
-                                ORT_NR: prev.ORT_NR,
-                                ONR_TYP_NR: prev.ONR_TYP_NR || 1, // Assumption
-                                SEL_ZIEL: curr.ORT_NR,
-                                SEL_ZIEL_TYP: curr.ONR_TYP_NR || 1,
-                                FGR_NR: row.FGR_NR || 1
-                            }
-                        });
-                        stopArrival += fzt?.SEL_FZT || 60;
+                        // BEREICH_NR gehört zum SEL_FZT_FELD-PK (VDV 452); ohne sie kann bei
+                        // mehreren Bereichen die falsche Fahrzeit getroffen werden. Fehlt die
+                        // BEREICH_NR der Fahrt in SEL_FZT_FELD, wird ohne Bereichsfilter zurückgefallen.
+                        const fztWhere: any = {
+                            BASIS_VERSION: basisVersion,
+                            ORT_NR: prev.ORT_NR,
+                            ONR_TYP_NR: prev.ONR_TYP_NR || 1, // Assumption
+                            SEL_ZIEL: curr.ORT_NR,
+                            SEL_ZIEL_TYP: curr.ONR_TYP_NR || 1,
+                            FGR_NR: row.FGR_NR || 1
+                        };
+                        let fzt = null;
+                        if (row.BEREICH_NR != null) {
+                            fzt = await SelFztFeld.findOne({ where: { ...fztWhere, BEREICH_NR: row.BEREICH_NR } });
+                            if (!fzt) fzt = await SelFztFeld.findOne({ where: fztWhere });
+                        } else {
+                            fzt = await SelFztFeld.findOne({ where: fztWhere });
+                        }
+                        if (fzt && fzt.SEL_FZT != null) {
+                            stopArrival += fzt.SEL_FZT;
+                        } else {
+                            // Keine Fahrzeit vorhanden: Ankunft nicht berechenbar, keine 60-s-Erfindung.
+                            arrivalResolvable = false;
+                            break;
+                        }
                     }
+                    // Anschluss ohne verlässliche Ankunftszeit nicht anzeigen.
+                    if (!arrivalResolvable) continue;
                 }
 
                 if (stopArrival < currentSeconds) continue; // Past

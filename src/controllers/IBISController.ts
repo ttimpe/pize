@@ -38,7 +38,13 @@ class IBISController implements IBISControllerInterface {
 
     // Timeout waiting for response to status request
     private IBIS_RESPONSE_TIMEOUT = 5
-    private serialPort: SerialPort
+    // Serial port is optional: on a fresh/unconfigured device (or when the configured
+    // port is inaccessible) the controller runs in a degraded "no serial" mode while the
+    // web server + setup wizard stay reachable.
+    private serialPort?: SerialPort
+    private serialPortPath?: string
+    public serialOpen: boolean = false
+    public serialError?: string
 
     // Terminals von Kopf A und B
     private aTerminal?: IBISTerminal
@@ -263,7 +269,7 @@ class IBISController implements IBISControllerInterface {
         }
         return ''
     }
-    constructor(portString: string, interval: number, websocket: WebSocketServer, locationController: LocationController) {
+    constructor(portString: string | undefined, interval: number, websocket: WebSocketServer, locationController: LocationController) {
         this.locationController = locationController
 
 
@@ -274,16 +280,45 @@ class IBISController implements IBISControllerInterface {
         this.interruptUeberfall = this.interruptUeberfall.bind(this);
 
 
-        this.serialPort = new SerialPort({
-            path: portString,
-            baudRate: 1200,
-            dataBits: 7,
-            stopBits: 2,
-            parity: 'even'
-        })
         this.websocket = websocket
+        this.serialPortPath = portString
 
-        const parser = this.serialPort.pipe(new ReadlineParser({ delimiter: '\r' }))
+        if (portString) {
+            try {
+                this.serialPort = new SerialPort({
+                    path: portString,
+                    baudRate: 1200,
+                    dataBits: 7,
+                    stopBits: 2,
+                    parity: 'even'
+                })
+                this.serialPort.on('open', () => {
+                    this.serialOpen = true
+                    this.serialError = undefined
+                    Util.log('Serial port ' + portString + ' opened')
+                })
+                // Inaccessible port (unplugged / wrong path / EACCES): do not crash,
+                // record the fault so the setup wizard can prompt for reconfiguration.
+                this.serialPort.on('error', (err: any) => {
+                    this.serialOpen = false
+                    this.serialError = (err && err.message) ? err.message : String(err)
+                    Util.log('Serial port ' + portString + ' error: ' + this.serialError)
+                })
+                this.serialPort.on('close', () => {
+                    this.serialOpen = false
+                })
+                const parser = this.serialPort.pipe(new ReadlineParser({ delimiter: '\r' }))
+                parser.on('data', (data: any) => {
+                    this.onReceiveTelegram(data)
+                })
+            } catch (e: any) {
+                this.serialOpen = false
+                this.serialError = (e && e.message) ? e.message : String(e)
+                Util.log('Failed to open serial port ' + portString + ': ' + this.serialError)
+            }
+        } else {
+            Util.log('No serial port configured - running in setup/no-serial mode')
+        }
 
         if (this.deviceConfig.TERMINAL_A) {
             this.aTerminal = new IBISTerminal(this, true, this.deviceConfig.terminal_config)
@@ -329,10 +364,6 @@ class IBISController implements IBISControllerInterface {
             }
         }, this.IBIS_QUEUE_SEND_INTERVAL_MS)
 
-        parser.on('data', (data) => {
-            this.onReceiveTelegram(data)
-
-        })
         this.websocket.on('connection', (client) => {
             // Send initial route data
             if (this.currentStops.length > 0) {
@@ -821,7 +852,15 @@ class IBISController implements IBISControllerInterface {
     }
 
     private actuallySendTelegram(telegram: IBISTelegram) {
-        this.serialPort.write(telegram)
+        // No serial (setup mode) or a faulted port: skip the hardware write but still
+        // mirror to the websocket for the debug view.
+        if (this.serialPort) {
+            try {
+                this.serialPort.write(telegram)
+            } catch (e: any) {
+                Util.log('Serial write failed: ' + ((e && e.message) ? e.message : String(e)))
+            }
+        }
         Util.log('out > ' + this.sanatizeOutputForLog(telegram))
         // Also send telegram to websocket for debug
         this.websocket.clients.forEach(client => {
@@ -995,11 +1034,15 @@ class IBISController implements IBISControllerInterface {
         if (parseInt(lineNumber) > 0) {
             // Linie in VDV RecLid suchen (in der für das aktuelle Datum gültigen Basisversion)
             const basisVersion = await this.getActiveBasisVersion();
+            // REC_LID-PK ist (LI_NR, STR_LI_VAR, BASIS_VERSION): eine Liniennummer hat mehrere
+            // Varianten/Richtungen. Die konkrete Variante wird erst über die Route (setRoute)
+            // bestimmt; hier deterministisch die erste Variante wählen (statt beliebiger Reihenfolge).
             let line = await RecLid.findOne({
                 where: {
                     LI_NR: lineNumber,
                     BASIS_VERSION: basisVersion
-                }
+                },
+                order: [['LI_RI_NR', 'ASC'], ['STR_LI_VAR', 'ASC']]
             })
 
 
@@ -1183,7 +1226,13 @@ class IBISController implements IBISControllerInterface {
             this.currentBetriebstag = betriebstag;
             const basisVersion = await this.getActiveBasisVersion();
 
-            const recLid = await RecLid.findOne({ where: { LI_KUERZEL: this.linie.STR_LID, BASIS_VERSION: basisVersion } });
+            // Nur die LI_NR wird hier benötigt (Fahrten sind über LI_NR/LI_KU_NR verschlüsselt).
+            // LI_KUERZEL ist nicht eindeutig über Varianten – deterministisch die aktuelle Variante
+            // bevorzugen, ansonsten stabil sortiert wählen.
+            const recLid = await RecLid.findOne({
+                where: { LI_KUERZEL: this.linie.STR_LID, BASIS_VERSION: basisVersion },
+                order: [['LI_RI_NR', 'ASC'], ['STR_LI_VAR', 'ASC']]
+            });
             if (!recLid) {
                 Util.log('VDV Error: RecLid not found for', this.linie.STR_LID, 'in BASIS_VERSION', basisVersion);
                 return false;
@@ -1403,10 +1452,12 @@ class IBISController implements IBISControllerInterface {
                         (entry as any).distanceToPrevious = recSel.SEL_LAENGE;
                         Util.log(`  -> RecSel found: ${recSel.SEL_LAENGE}m`);
                     } else {
-                        (entry as any).distanceToPrevious = 0;
-                        Util.log(`  -> RecSel MISSING for ${prevStop.ORT_NR} -> ${entry.ORT_NR}`);
+                        // Keine REC_SEL-Strecke: Distanz unbekannt (null) statt vorgetäuschter 0m.
+                        (entry as any).distanceToPrevious = null;
+                        Util.log(`  -> RecSel MISSING for ${prevStop.ORT_NR} -> ${entry.ORT_NR} (distance unknown)`);
                     }
                 } else {
+                    // Erster Halt: kein Vorgänger.
                     (entry as any).distanceToPrevious = 0;
                 }
 
@@ -1504,6 +1555,10 @@ class IBISController implements IBISControllerInterface {
         Util.log(`[computeStopTimes] Computing times from FRT_START=${tripStart} (${Math.floor(tripStart / 3600)}:${Math.floor((tripStart % 3600) / 60).toString().padStart(2, '0')})`);
 
         let cumulativeTime = tripStart;
+        // Sobald für ein Segment keine SEL_FZT vorliegt, sind alle folgenden absoluten
+        // Ankunftszeiten nicht mehr berechenbar. Statt Fahrplandaten zu erfinden (früher
+        // 60-s-Default), werden diese Halte als "unbekannt" markiert (plannedArrival = undefined).
+        let timesResolvable = true;
 
         for (let i = 0; i < this.currentStops.length; i++) {
             const stop = this.currentStops[i];
@@ -1515,6 +1570,12 @@ class IBISController implements IBISControllerInterface {
                 continue;
             }
 
+            // Ist die Kette bereits unterbrochen, bleibt die Ankunft unbekannt.
+            if (!timesResolvable) {
+                stop.plannedArrival = undefined;
+                continue;
+            }
+
             // For subsequent stops, look up travel time from previous stop
             const prevStop = this.currentStops[i - 1];
 
@@ -1522,27 +1583,40 @@ class IBISController implements IBISControllerInterface {
             // Use FGR_NR from the trip if available, otherwise default to 1
             const fgrNr = this.currentTrip.FGR_NR || 1;
 
-            const selFzt = await SelFztFeld.findOne({
-                where: {
-                    BASIS_VERSION: prevStop.BASIS_VERSION,
-                    ORT_NR: prevStop.ORT_NR,
-                    ONR_TYP_NR: prevStop.ONR_TYP_NR,
-                    SEL_ZIEL: stop.ORT_NR,
-                    SEL_ZIEL_TYP: stop.ONR_TYP_NR,
-                    FGR_NR: fgrNr
+            // SEL_FZT_FELD-PK enthält BEREICH_NR (VDV 452). Bei mehreren Bereichen in
+            // SEL_FZT_FELD muss danach gefiltert werden, sonst kann findOne die falsche
+            // Fahrzeit liefern. Enthält der Datenbestand die BEREICH_NR der Fahrt jedoch
+            // nicht (nur ein Bereich in SEL_FZT_FELD), wird ohne BEREICH_NR zurückgefallen –
+            // statt die Zeit fälschlich als unbekannt zu markieren.
+            const selFztWhere: any = {
+                BASIS_VERSION: prevStop.BASIS_VERSION,
+                ORT_NR: prevStop.ORT_NR,
+                ONR_TYP_NR: prevStop.ONR_TYP_NR,
+                SEL_ZIEL: stop.ORT_NR,
+                SEL_ZIEL_TYP: stop.ONR_TYP_NR,
+                FGR_NR: fgrNr
+            };
+            let selFzt: SelFztFeld | null = null;
+            if (this.currentTrip.BEREICH_NR != null) {
+                selFzt = await SelFztFeld.findOne({ where: { ...selFztWhere, BEREICH_NR: this.currentTrip.BEREICH_NR } });
+                if (!selFzt) {
+                    selFzt = await SelFztFeld.findOne({ where: selFztWhere });
+                    if (selFzt) Util.log(`  Stop ${i}: BEREICH_NR ${this.currentTrip.BEREICH_NR} nicht in SEL_FZT_FELD – Fahrzeit ohne Bereichsfilter verwendet`);
                 }
-            });
-
-            if (selFzt && selFzt.SEL_FZT !== undefined) {
-                cumulativeTime += selFzt.SEL_FZT;
-                Util.log(`  Stop ${i}: ${stop.stop?.recOrt?.ORT_NAME || 'Unknown'} -> Travel time: ${selFzt.SEL_FZT}s, Arrival: ${this.formatTime(cumulativeTime)}`);
             } else {
-                // Fallback: assume 60 seconds if no data found
-                cumulativeTime += 60;
-                Util.log(`  Stop ${i}: ${stop.stop?.recOrt?.ORT_NAME || 'Unknown'} -> No SEL_FZT found, using 60s default, Arrival: ${this.formatTime(cumulativeTime)}`);
+                selFzt = await SelFztFeld.findOne({ where: selFztWhere });
             }
 
-            stop.plannedArrival = cumulativeTime;
+            if (selFzt && selFzt.SEL_FZT !== undefined && selFzt.SEL_FZT !== null) {
+                cumulativeTime += selFzt.SEL_FZT;
+                stop.plannedArrival = cumulativeTime;
+                Util.log(`  Stop ${i}: ${stop.stop?.recOrt?.ORT_NAME || 'Unknown'} -> Travel time: ${selFzt.SEL_FZT}s, Arrival: ${this.formatTime(cumulativeTime)}`);
+            } else {
+                // Keine SEL_FZT gefunden: keine Fahrplandaten erfinden, ab hier unbekannt.
+                timesResolvable = false;
+                stop.plannedArrival = undefined;
+                Util.log(`  Stop ${i}: ${stop.stop?.recOrt?.ORT_NAME || 'Unknown'} -> No SEL_FZT found, arrival marked unknown`);
+            }
         }
 
         Util.log(`[computeStopTimes] Completed. Last stop arrival: ${this.formatTime(cumulativeTime)}`);
