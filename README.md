@@ -48,8 +48,77 @@ Leider haben viele Hersteller damals eigene Datensätze entwickelt. Diese werden
 - Datenversorgungs-Editor
 
 
+## Installation und Inbetriebnahme
+
+### Voraussetzungen
+- Node.js 20 oder neuer
+- Für die Entwicklung ohne Hardware: `socat` (erzeugt ein virtuelles serielles Portpaar)
+- Für den Zielbetrieb: Raspberry Pi mit einem IBIS-Pegelwandler an einer seriellen Schnittstelle
+
+### Erststart
+
+```bash
+npm install
+cd setup_ui && npm install && npm run build && cd ..   # Setup-Assistent bauen
+npm run build && npm start                             # oder: npm run dev (virtuelles Port-Paar via socat)
+```
+
+Beim ersten Start existiert noch keine `device_config.json`. Das Programm legt
+daraufhin automatisch eine minimale Standardkonfiguration an und startet im
+**Setup-Modus**: ohne serielle Schnittstelle, ohne Terminals, ohne Funk — es läuft
+lediglich der Webserver, damit der Setup-Assistent erreichbar ist.
+
+Der Assistent ist anschließend unter **<http://localhost:2000/setup>** erreichbar.
+Dort werden konfiguriert:
+
+1. **Fahrzeug und Schnittstelle** — serielle Schnittstelle (z. B. `/dev/ttyUSB0`), Fahrzeugnummer
+2. **Angeschlossene Geräte** — Terminals, Anzeigen, Entwerter, LVA, IRIS
+3. **Tastenbelegung** des Terminals sowie GPIO-Pinbelegung
+4. **Datenversorgung** — Upload eines `bundle.zip`
+
+Da die Konfiguration beim Start eingelesen und die Datenbankverbindung beim Start
+aufgebaut wird, ist nach Änderungen ein Neustart nötig. Der Assistent bietet dafür
+eine Schaltfläche an; auf dem Raspberry Pi startet ein Supervisor (z. B. systemd
+oder Docker mit `restart: always`) den Prozess automatisch neu.
+
+### Datenversorgung
+
+**Fahrpläne und Ansagen sind nicht Bestandteil dieses Repositories.** Es handelt
+sich um betreiberspezifische und teilweise urheberrechtlich geschützte Daten. Die
+folgenden Pfade sind daher bewusst per `.gitignore` ausgenommen und werden zur
+Laufzeit vom Setup-Assistenten geschrieben:
+
+| Pfad                 | Inhalt                                                            |
+|----------------------|-------------------------------------------------------------------|
+| `test.sqlite3`       | VDV-452-Fahrplandatenbank (Linien, Fahrten, Haltestellen)          |
+| `announcements/`     | Haltestellenansagen als WAV-Dateien                                |
+| `device_config.json` | Gerätekonfiguration des konkreten Fahrzeugs                        |
+
+Die Datenversorgung wird als ZIP-Archiv über den Setup-Assistenten hochgeladen
+(`POST /api/setup/data`). Erwarteter Aufbau:
+
+```
+bundle.zip
+├── <beliebiger_name>.sqlite3     # VDV-452-Datenbank, muss mindestens die Tabellen
+│                                 # REC_LID, LID_VERLAUF und BASIS_VER_GUELTIGKEIT enthalten
+└── announcements/
+    ├── HBF.wav                   # Dateinamen müssen REC_ANR.ANR_DATEI entsprechen
+    ├── Gong.wav                  # Gong vor der Ansage
+    ├── Links.wav                 # Türseite links
+    ├── Rechts.wav                # Türseite rechts
+    └── Ende.wav                  # Endhaltestellenansage
+```
+
+Die hochgeladene Datenbank wird vor dem Überschreiben gesichert und auf die
+erforderlichen VDV-Tabellen geprüft; schlägt die Prüfung fehl, wird die vorherige
+Version wiederhergestellt. Erzeugt werden solche Datenversorgungen mit dem
+separaten Projekt `ifesx-backend` (Datenversorgungs-Editor).
+
 ## Konfiguration
 Die Konfiguration, abgesehen von Datenversorgung, wird über die device_config.json-Datei vorgenommen.
+Als Ausgangspunkt dient `device_config.example.json` — diese Datei kann nach
+`device_config.json` kopiert und von Hand angepasst werden, komfortabler ist
+jedoch der Setup-Assistent unter `/setup`.
 
 In dieser befindet sich die Tastenbelegung des Terminals, die Einstellungen zu den angeschlossenen Geräten wie Anzeigen und Entwertern sowie die Pinbelegung für die GPIO-Pins.
 
@@ -58,6 +127,8 @@ In dieser befindet sich die Tastenbelegung des Terminals, die Einstellungen zu d
 
 Parametername                           |Typ                          |Beschreibung
 ----------------------------------------|-----------------------------|----------------------------------------------------------------------
+*serial_port*                           |Text (optional)              |Pfad zur seriellen IBIS-Schnittstelle, z.B. /dev/ttyUSB0. Ohne Angabe startet das System im Setup-Modus
+*vehicle_number*                        |Zahl (optional)              |Fahrzeug-/Wagennummer (unabhängig von RADIO.vehicle_address)
 *MFD*                                   |Boolean                      |Soll ein Multifunktionsdisplay auf Port 2000 gestartet werden ja/nein
 *external_announcements*                |Boolean                      |Externes Ansagegerät ansteuern ja/nein
 *TERMINAL_A*                            |Boolean                      |Terminal A angeschlossen ja/nein
@@ -94,6 +165,19 @@ K4     |Funkkanal Bit 4
 K8     |Funkkanal Bit 8 (MSB)
 DS     |Funkgerät Umschaltung Daten/Sprache
 STAST  |Funkgerät Sendetastung
+
+## Lizenz
+
+Der Quellcode steht unter der MIT-Lizenz, siehe [LICENSE](LICENSE).
+
+Die Lizenz gilt ausschließlich für den Code dieses Repositories. Fahrplandaten,
+Haltestellenansagen und Gerätekonfigurationen sind nicht Bestandteil des
+Repositories (siehe [Datenversorgung](#datenversorgung)) und unterliegen den
+Rechten des jeweiligen Verkehrsbetriebs.
+
+*IBIS* ist in DIN 43322 bzw. VDV-Schrift 300 spezifiziert. Genannte Hersteller-
+und Betreibernamen dienen ausschließlich der Bezeichnung kompatibler Geräte;
+dieses Projekt steht in keiner Verbindung zu ihnen.
 
 
 

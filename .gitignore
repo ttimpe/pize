@@ -1,6 +1,24 @@
 node_modules/
-device_config.json
-tools/
+
+# Build-Ausgaben
+dist/
 setup_ui/dist/
 setup_ui/.angular/
+mtt_ui/dist/
+
+# Geräte- und betreiberspezifische Datenversorgung.
+# Wird zur Laufzeit vom Setup-Assistenten (/setup) geschrieben und gehört
+# nicht ins Repository. Vorlage: device_config.example.json
+device_config.json
+test.sqlite3
 test.sqlite3.bak-*
+announcements/*
+!announcements/.gitkeep
+
+# Entwicklungsartefakte
+tools/
+ttyV0
+ttyV1
+debug_loc.txt
+hexdump
+.DS_Store

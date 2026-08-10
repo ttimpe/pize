@@ -23,6 +23,9 @@ RUN npm install
 # App-Code kopieren
 COPY . .
 
+# TypeScript nach dist/ uebersetzen (dist/ ist nicht im Repository)
+RUN npm run build
+
 # ===== Run-Stage =====
 FROM node:20-bullseye
 
@@ -47,4 +50,4 @@ ENV DISPLAY=:0
 VOLUME ["/dev"]
 
 # Startbefehl
-CMD ["node", "src/index.js"]
+CMD ["node", "dist/index.js"]

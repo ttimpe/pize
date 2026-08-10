@@ -11,7 +11,7 @@ The domain is German public transit; **code, comments, and identifiers are predo
 ## Commands
 
 - **Run (dev):** `npm run dev` — uses `socat` to create a virtual serial PTY pair (`./ttyV0`/`./ttyV1`), then `tsx watch src ./ttyV0`. Requires `socat` installed. The serial port is resolved as: optional `argv[2]` **override** (what the dev script passes) → `device_config.json.serial_port` → **none** (setup mode). The app **no longer requires a port arg**: with no port it boots into a no-serial "setup mode" so the wizard is reachable.
-- **Run against real hardware:** set `serial_port` in `device_config.json` (via the setup wizard) and run `node src/index.js` (or `docker-compose up`, which forwards `/dev/ttyUSB0` + `/dev/ttyAMA0` and host PulseAudio). A CLI arg still overrides the config if given.
+- **Run against real hardware:** set `serial_port` in `device_config.json` (via the setup wizard) and run `npm run build && npm start` (= `node dist/index.js`), or `docker-compose up`, which builds TS in the image and forwards `/dev/ttyUSB0` + `/dev/ttyAMA0` and host PulseAudio. A CLI arg still overrides the config if given.
 - **Build:** `npm run build` (`tsc` → `dist/`).
 - **Tests:** none. `npm test` is a placeholder that errors. Verify changes via the debug HTTP endpoints (below), not a test runner.
 - **MTT UI (separate React app):** in `mtt_ui/` run `npm run dev` (Vite), `npm run build`, `npm run lint`. Its `build` output must land in `mtt_ui/dist/` — the backend serves that directory at `/mtt`.
@@ -25,6 +25,8 @@ The domain is German public transit; **code, comments, and identifiers are predo
 - **Express HTTP on port 2000 (localhost only)** — hosts the MFD UI (`/mfd`), MTT UI (`/mtt`), diagnostics (`/tfs`, `/diag`, `/debug/*`), and JSON APIs (`/api/mtt/*`, `/api/tripData`).
 - **WebSocket server on port 1815** — pushed to displays/UIs by `IBISController`.
 - **Sequelize over SQLite** at `./test.sqlite3`. This DB is **produced by a separate `ifesx-backend` project** (the data-supply/Datenversorgung editor) — this app is read-mostly against it. Models are registered explicitly in `sequelize.addModels([...])` in `index.ts`; a new model must be added there to be usable.
+
+**Untracked at runtime (gitignored, this is a public repo):** `test.sqlite3`, `announcements/`, `device_config.json` and `dist/` are *not* in git — they are operator-specific data supply written by the setup wizard, or build output. A fresh clone therefore has no schedule data and boots into setup mode; `sequelize.sync()` creates empty tables. Never commit these, and never assume they exist when writing code — `device_config.example.json` is the config template.
 
 Useful debug endpoints while iterating: `GET /diag`, `GET /diag/wi?impulses=N` (simulate odometer pulses → advances location), `POST /diag/sendTelegram`, `GET /debug/set_line/:line`, `GET /debug/set_route/:route`, `GET /debug/test_route`.
 

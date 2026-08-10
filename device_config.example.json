@@ -1,0 +1,216 @@
+{
+    "serial_port": "/dev/ttyUSB0",
+    "vehicle_number": 1,
+    "MFD": true,
+    "TERMINAL_A": true,
+    "TERMINAL_B": false,
+    "validators": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    "signs": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+    ],
+    "UESTRA_LVA": [],
+    "DS021_STOP_NAME": [],
+    "IRIS_A": false,
+    "IRIS_B": false,
+    "line_number_in_ds009": false,
+    "external_announcements": false,
+    "query_device_status": true,
+    "announcement_distance_before_next_stop": 100,
+    "use_gpio": false,
+    "AUDIO": {
+        "radio": {
+            "input_device": "default",
+            "output_device": "default"
+        },
+        "announcements": {
+            "output_device": "default"
+        }
+    },
+    "RADIO": {
+        "enabled": false,
+        "vehicle_address": 0,
+        "channels": {
+            "data": 1,
+            "voice": 1,
+            "lsa": 1
+        }
+    },
+    "GPIO_PINOUT": {
+        "WI": 1,
+        "OBI": 2,
+        "TK": 3,
+        "UEB": 4,
+        "KKA": 5,
+        "KKB": 6,
+        "FLE": 7,
+        "PLE": 8,
+        "K1": 9,
+        "K2": 10,
+        "K4": 11,
+        "K8": 12,
+        "DS": 13,
+        "STAST": 14,
+        "TFS": 15
+    },
+    "terminal_config": {
+        "sounds": {
+            "ABFAHRT": 2,
+            "FEHLER": 3,
+            "WEISUNG": 4
+        },
+        "actions": [
+            {
+                "textLine1": "** IFIS STOP **",
+                "isBlinking": false,
+                "isPrompt": false,
+                "key": "0",
+                "action": "IFIS_STOP"
+            },
+            {
+                "textLine1": "BESETZUNG    :  ",
+                "isBlinking": false,
+                "isPrompt": true,
+                "key": "1",
+                "action": "BESETZGRAD"
+            },
+            {
+                "isBlinking": false,
+                "isPrompt": false,
+                "key": "2",
+                "action": "UHRZEIT_DATUM"
+            },
+            {
+                "key": "3",
+                "isPrompt": false,
+                "isBlinking": false,
+                "action": "NAECHSTE_HST"
+            },
+            {
+                "key": "4",
+                "textLine1": "HALTESTELLE :",
+                "isPrompt": true,
+                "isBlinking": false,
+                "action": "HALTESTELLE"
+            },
+            {
+                "key": "5",
+                "textLine1": "RICHTUNG     :  ",
+                "isPrompt": true,
+                "isBlinking": false,
+                "action": "RICHTUNG"
+            },
+            {
+                "textLine1": "MELDUNG    :   ",
+                "isPrompt": true,
+                "isBlinking": false,
+                "key": "6",
+                "action": "MELDUNG"
+            },
+            {
+                "key": "7",
+                "textLine1": "LINIE-KURS:     ",
+                "isPrompt": true,
+                "isBlinking": true,
+                "action": "LINIE_KURS"
+            },
+            {
+                "key": "8",
+                "textLine1": "ROUTE       :   ",
+                "isPrompt": true,
+                "isBlinking": false,
+                "action": "ROUTE"
+            },
+            {
+                "key": "9",
+                "textLine1": "ZIEL        :   ",
+                "isPrompt": true,
+                "isBlinking": false,
+                "action": "ZIEL"
+            },
+            {
+                "textLine1": "SONDERZEICHEN:  ",
+                "isPrompt": true,
+                "isBlinking": false,
+                "action": "SONDERZEICHEN"
+            },
+            {
+                "key": ":",
+                "action": "WEICHE_LINKS"
+            },
+            {
+                "key": ";",
+                "action": "WEICHE_GERADE"
+            },
+            {
+                "key": "<",
+                "action": "WEICHE_RECHTS"
+            },
+            {
+                "key": "=",
+                "action": "ANSAGE_STUMM"
+            },
+            {
+                "key": ">",
+                "textLine1": "  ** AUSSEN **  ",
+                "isPrompt": true,
+                "isBlinking": false,
+                "action": "ANSAGE_AUSSEN"
+            },
+            {
+                "key": "+",
+                "textLine1": "* LS-FAHRGAST * ",
+                "isPrompt": true,
+                "isBlinking": false,
+                "action": "LST_AN_FG"
+            },
+            {
+                "key": ",",
+                "isPrompt": true,
+                "isBlinking": false,
+                "action": "UNFALL"
+            },
+            {
+                "key": "-",
+                "isPrompt": true,
+                "isBlinking": false,
+                "action": "HST_WIEDERHOLEN"
+            },
+            {
+                "key": ".",
+                "textLine1": "   ** INNEN **  ",
+                "isPrompt": true,
+                "isBlinking": false,
+                "action": "ANSAGE_INNEN"
+            },
+            {
+                "key": "*",
+                "isPrompt": false,
+                "isBlinking": false,
+                "action": "SPRECHWUNSCH"
+            }
+        ]
+    }
+}
