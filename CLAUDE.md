@@ -56,4 +56,4 @@ Useful debug endpoints while iterating: `GET /diag`, `GET /diag/wi?impulses=N` (
 
 - Open work and VDV-conformance gaps are tracked in `TODO.md` (e.g. `SEL_FZT_FELD` lookup ignoring `BEREICH_NR`, missing `REC_LID` columns, the 60-second fallback fabricating schedule data). Read it before touching trip-time/route resolution.
 - The XSD authority for the data schema is `ifesx-backend/VDV452_v1.5.xsd` (sibling project) — models here should conform to it.
-- Root-level `debug_*.js`, `*.ts` scripts (`inspect_calendar.ts`, `list_tables.ts`, `check_vdv_data.ts`, `reproduce_issue.js`, etc.) are one-off diagnostic/repro scripts run directly with `tsx`/`node`; they are not part of the app build.
+- Root-level `*.ts` scripts (`inspect_calendar.ts`, `list_tables.ts`, `sample_calendar.ts`, `verify_calendar.ts`, plus `src/check_vdv_data.ts` and `src/debug_lid.ts`) are one-off diagnostic scripts run directly with `tsx`; they are not part of the app build. The older root-level `debug_*.js`/`test_*.js` repro scripts were removed — recover them from git history if needed.
