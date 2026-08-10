@@ -22,7 +22,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ttimpe/ibisplusplus.git"
+    "url": "git+https://github.com/ttimpe/pize.git"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.5",
