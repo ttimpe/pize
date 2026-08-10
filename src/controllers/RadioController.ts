@@ -18,4 +18,10 @@ export class RadioController {
     setFunkrueckfallEnabled(enabled: boolean) {
         console.log("RadioController (Stub) setFunkrueckfallEnabled", enabled);
     }
+
+    // Ortsmeldung an die Leitstelle: wird vom LocationController bei erkannter
+    // Ortsbake aufgerufen. Bis zur echten FFSK-Implementierung nur geloggt.
+    updateLocation(ortNr: number, ormaCode: number) {
+        console.log("RadioController (Stub) updateLocation", ortNr, ormaCode);
+    }
 }
