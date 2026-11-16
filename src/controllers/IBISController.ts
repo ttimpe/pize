@@ -33,7 +33,14 @@ import { Op } from 'sequelize';
 
 
 class IBISController implements IBISControllerInterface {
+    // Abfrageintervall der Sendewarteschlange, solange sie leer ist
     private IBIS_QUEUE_SEND_INTERVAL_MS = 20
+    // Übertragungsdauer pro Zeichen bei 1200 Bd 7E2 (Start + 7 Daten + Parität + 2 Stopp = 11 Bit)
+    private IBIS_MS_PER_CHAR = 11 * 1000 / 1200
+    // Pause nach jedem Telegramm. Der Elgeba-Entwerter schaltet nach jedem Datentelegramm
+    // (e, eA, l, z, d, u, n) seinen Empfänger für ca. 1–2 ms ab; ein direkt folgendes
+    // Telegramm verliert sonst sein Typzeichen.
+    private IBIS_INTER_TELEGRAM_GAP_MS = 20
     private IBIS_TERMINAL_RECEIVE_INTERVAL = 1
 
     // Timeout waiting for response to status request
@@ -59,6 +66,7 @@ class IBISController implements IBISControllerInterface {
     private terminalStatusTimer: any
     private deviceStatusTimer: any
     private queueSendTimer: any
+    private lastSystemMinute?: number
     private timer: any
     private deviceConfig: DeviceConfig = require('../../device_config.json')
     public audioController: AudioController
@@ -337,8 +345,17 @@ class IBISController implements IBISControllerInterface {
             this.tick10Seconds()
             this.tick60Seconds()
         }
+        this.lastSystemMinute = this.getSystemMinuteKey()
         this.timer = setInterval(() => {
             if (this.timersInterrupted == false) {
+                // Uhrzeit/Datum nur beim Minutenwechsel der Systemzeit senden: u enthält nur
+                // HHMM, Empfänger (Uhren, Entwerter-RTC) setzen dabei ihre Sekunden auf 0.
+                // Vor den übrigen Ticks einreihen, damit u nicht hinter deren Telegrammen wartet.
+                const minute = this.getSystemMinuteKey()
+                if (minute != this.lastSystemMinute) {
+                    this.lastSystemMinute = minute
+                    this.tick60Seconds()
+                }
                 this.tick1Second()
                 let d = new Date()
                 if (d.getSeconds() % 10 == 0) {
@@ -347,22 +364,14 @@ class IBISController implements IBISControllerInterface {
                 if (d.getSeconds() % 30 == 0) {
                     this.tick30Seconds()
                 }
-                if (d.getSeconds() % 60 == 0) {
-                    this.tick60Seconds()
-                }
             }
         }, 1000)
 
 
 
 
-        // Delay sending of different telegrams by a couple of ms
-        this.queueSendTimer = setInterval(() => {
-            if (this.telegramSendQueue.length != 0) {
-                let telegram = this.telegramSendQueue.shift()
-                this.actuallySendTelegram(telegram)
-            }
-        }, this.IBIS_QUEUE_SEND_INTERVAL_MS)
+        // Telegramme einzeln senden, jeweils erst nach Übertragungsdauer + Pause das nächste
+        this.processSendQueue()
 
         this.websocket.on('connection', (client) => {
             // Send initial route data
@@ -845,6 +854,22 @@ class IBISController implements IBISControllerInterface {
         this.telegramSendQueue.push(signedTelegram)
     }
 
+    // Sendet das nächste Telegramm und plant das folgende erst, wenn dieses vollständig
+    // übertragen ist (berechnet, da USB-Seriell-Wandler tcdrain oft zu früh melden) plus Pause.
+    private processSendQueue() {
+        const telegram = this.telegramSendQueue.shift()
+        let delay = this.IBIS_QUEUE_SEND_INTERVAL_MS
+        if (telegram !== undefined) {
+            this.actuallySendTelegram(telegram)
+            delay = Math.ceil(telegram.length * this.IBIS_MS_PER_CHAR) + this.IBIS_INTER_TELEGRAM_GAP_MS
+        }
+        this.queueSendTimer = setTimeout(() => this.processSendQueue(), delay)
+    }
+
+    private getSystemMinuteKey(): number {
+        return Math.floor(this.getCurrentSystemTime().getTime() / 60000)
+    }
+
     sanatizeOutputForLog(telegram: IBISTelegram) {
         return telegram.replace(/[\x00-\x1F\x7F]/g, (char) => {
             return `<${char.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase()}>`;
@@ -935,6 +960,7 @@ class IBISController implements IBISControllerInterface {
         if (this.linie && this.upcomingStop) {
             // VDV: Use upcoming ORT_NR (last 3 digits usually)
             const ortNr = this.upcomingStop.ORT_NR % 1000;
+            // Zone: noch keine eigene Tarifzonen-Quelle, daher Liniennummer (2-stellig)
             this.sendTelegram(TelegramGenerator.DS004(parseInt(this.linie.STR_LID), ortNr, this.richtung));
             // Erweitert für KVRG
         } else {

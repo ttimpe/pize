@@ -99,8 +99,12 @@ class IBISTelegramGenerator {
     }
 
     // DS004 - Entwertermerkmale
-    static DS004(zone: number, kurzstrecke: number, richtung: number) {
-        return 'e' + zone.toString().padStart(2, '0').substring(0, 2) + kurzstrecke.toString().padStart(2, '0') + richtung;
+    // Immer genau 6 Ziffern: Zone (2) + Haltestelle (3) + Richtung (1). Der Elgeba-Entwerter
+    // übernimmt die Zeichen 1–6 ohne Längenprüfung direkt auf die Druckrädchen.
+    static DS004(zone: number, haltestelle: number, richtung: number): IBISTelegram {
+        return 'e' + (zone % 100).toString().padStart(2, '0')
+            + (haltestelle % 1000).toString().padStart(3, '0')
+            + (richtung % 10).toString();
     }
 
     // DS004a - Entwertermerkmale erweitert
@@ -118,8 +122,9 @@ class IBISTelegramGenerator {
 
     }
 
+    // Adresse als '0' + n (10–14 → ':'…'>'), so wie die Geräte sie vergleichen
     static DS070(addresse: IBISAddress) {
-        return 'g' + addresse;
+        return 'g' + String.fromCharCode(0x30 + addresse);
     }
 
     // DS005 - Uhrzeit 4 stellig
