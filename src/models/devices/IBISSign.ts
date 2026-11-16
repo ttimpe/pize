@@ -1,46 +1,34 @@
 import { TelegramGenerator } from "../../IBISTelegramGenerator"
-import { IBISController } from "../../controllers/IBISController"
 import { IBISTelegram } from "../../extensions/IBISTelegram"
-import { Util } from "../../util"
+import { StatusGeraet } from "../../controllers/GeraeteStatusAbfrage"
 
-class IBISSign {
+// Anzeige. Statusantwort a<St> (0 = OK, 1 = angezeigt, 2 = gesucht, 3 = Störung).
+class IBISSign implements StatusGeraet {
     address: IBISAddress
-    ibisController: IBISController
     status?: number
-    lastStatusQueriedTime?: Date
-    lastStatusReceivedTime?: Date
-    constructor(ibisController: IBISController, address: IBISAddress) {
+
+    constructor(address: IBISAddress) {
         this.address = address
-        this.ibisController = ibisController
     }
 
-    queryStatus() {
-        if (this.status === undefined || this.status == 0) {
-
-            this.lastStatusQueriedTime = new Date()
-            this.ibisController.sendTelegram(TelegramGenerator.DS020(this.address))
-            setTimeout(() => {
-                if (this.lastStatusReceivedTime != undefined && (this.lastStatusReceivedTime.getTime() - this.lastStatusQueriedTime.getTime()) <= 6000) {
-                    // Is active, have received status
-                    Util.log("Anzeige ", this.address, " OK")
-                } else {
-                    // Have not received status, throw error
-                    this.ibisController.throwError("ANZEIGE.DEF.1:" + this.address.toString().padStart(2, '0'));
-                    Util.log("Anzeige ", this.address, " FAIL")
-                    this.status = null;
-                }
-                this.ibisController.aktuelleAnzeige = undefined;
-
-            }, 6000);
-        }
+    get name(): string {
+        return 'Anzeige ' + this.address
     }
-    onReceiveTelegram(telegram: IBISTelegram) {
-        if (telegram.match('a[0-9]')) {
-            this.lastStatusReceivedTime = new Date();
-            // Is status back from sign
-            this.status = parseInt(telegram.substring(1, 2));
 
-        }
+    get fehlerText(): string {
+        return "ANZEIGE.DEF.1:" + this.address.toString().padStart(2, '0')
+    }
+
+    abfrageTelegramm(): IBISTelegram {
+        return TelegramGenerator.DS020(this.address)
+    }
+
+    istAntwort(telegram: IBISTelegram): boolean {
+        return /^a[0-9]/.test(telegram as string)
+    }
+
+    onAntwort(telegram: IBISTelegram) {
+        this.status = parseInt(telegram.substring(1, 2))
     }
 }
 export { IBISSign }

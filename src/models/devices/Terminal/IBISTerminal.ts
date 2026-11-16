@@ -37,6 +37,13 @@ class IBISTerminal {
 
     public errors: string[] = [];
 
+    // Textausgabe wie die HPW ZRE4: jedes mC/tC einmal senden und nur wiederholen, wenn das
+    // Terminal nicht antwortet (es antwortet auf jedes an es gerichtete Telegramm).
+    private TEXT_RETRY_INTERVAL_MS = 333
+    private TEXT_MAX_ATTEMPTS = 4
+    private textQueue: { line: number, telegram: IBISTelegram }[] = []
+    private textInFlight?: { line: number, telegram: IBISTelegram, versuch: number, gesendet: boolean, timer?: NodeJS.Timeout }
+
     private get terminalLetter(): string {
         if (this.isPrimary) {
             return 'm'
@@ -69,6 +76,9 @@ class IBISTerminal {
     onReceiveTelegram(telegram: IBISTelegram) {
         // Number returned from the terminal
         Util.log('received')
+        if (telegram.startsWith(this.terminalLetter)) {
+            this.onTerminalAnswer()
+        }
 
         if (telegram.startsWith(this.terminalLetter + '?') && telegram.length > 2) {
             this.isActive = true;
@@ -463,10 +473,48 @@ class IBISTerminal {
         } else {
             telegram = TelegramGenerator.DS044b(mode, x, lineNumber, text)
         }
-        this.ibisController.sendTelegram(telegram)
-        this.ibisController.sendTelegram(telegram)
-        this.ibisController.sendTelegram(telegram)
-        this.ibisController.sendTelegram(telegram)
+        // Ältere, noch nicht gesendete Texte für dieselbe Zeile sind überholt
+        this.textQueue = this.textQueue.filter(e => e.line !== lineNumber)
+        // Derselbe Text ist gerade unterwegs und wird noch quittiert/wiederholt
+        if (this.textInFlight && this.textInFlight.telegram === telegram) return
+        this.textQueue.push({ line: lineNumber, telegram })
+        this.sendNextText()
+    }
+
+    private sendNextText() {
+        if (this.textInFlight) return
+        const next = this.textQueue.shift()
+        if (!next) return
+        this.sendText({ ...next, versuch: 1, gesendet: false })
+    }
+
+    private sendText(entry: { line: number, telegram: IBISTelegram, versuch: number, gesendet: boolean, timer?: NodeJS.Timeout }) {
+        this.textInFlight = entry
+        entry.gesendet = false
+        this.ibisController.sendTelegram(entry.telegram, () => {
+            if (this.textInFlight !== entry) return
+            // Erst Antworten nach dem vollständigen Senden zählen als Quittung für diesen Text
+            entry.gesendet = true
+            entry.timer = setTimeout(() => {
+                if (this.textInFlight !== entry) return
+                const ueberholt = this.textQueue.some(e => e.line === entry.line)
+                if (entry.versuch < this.TEXT_MAX_ATTEMPTS && !ueberholt) {
+                    entry.versuch++
+                    this.sendText(entry)
+                } else {
+                    this.textInFlight = undefined
+                    this.sendNextText()
+                }
+            }, this.TEXT_RETRY_INTERVAL_MS)
+        })
+    }
+
+    private onTerminalAnswer() {
+        const entry = this.textInFlight
+        if (!entry || !entry.gesendet) return
+        if (entry.timer) clearTimeout(entry.timer)
+        this.textInFlight = undefined
+        this.sendNextText()
     }
 
 

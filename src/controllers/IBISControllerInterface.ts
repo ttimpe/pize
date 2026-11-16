@@ -6,7 +6,7 @@ import { RecZnr } from "../models/database/VDV/RecZnr"
 import { RecOrt } from "../models/database/VDV/RecOrt"
 
 export interface IBISControllerInterface {
-    sendTelegram(telegram: IBISTelegram): void
+    sendTelegram(telegram: IBISTelegram, onSent?: () => void): void
     setLine(lineNumber: string): Promise<boolean>
     setCourseNumber(courseNumber: number): Promise<boolean>
     setRoute(routeNumber: number): Promise<boolean>

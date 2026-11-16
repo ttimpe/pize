@@ -1,6 +1,13 @@
 import { IBISSign } from "../IBISSign";
+import { IBISController } from "../../../controllers/IBISController";
 
 class UestraLVA extends IBISSign {
+    ibisController: IBISController
+
+    constructor(ibisController: IBISController, address: IBISAddress) {
+        super(address)
+        this.ibisController = ibisController
+    }
 
 
     onSetRoute(line: any, route: any) {

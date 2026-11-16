@@ -6,6 +6,7 @@ import { TelegramGenerator } from '../IBISTelegramGenerator';
 import { IBISTerminal } from '../models/devices/Terminal/IBISTerminal';
 import { DeviceConfig } from '../models/devices/DeviceConfig';
 import { IBISSign as IBISAnzeige } from '../models/devices/IBISSign';
+import { GeraeteStatusAbfrage } from './GeraeteStatusAbfrage';
 import { IBISValidator as IBISEntwerter } from '../models/devices/IBISValidator';
 import { AudioController } from './AudioController';
 import { IBISTelegram } from '../extensions/IBISTelegram';
@@ -89,14 +90,16 @@ class IBISController implements IBISControllerInterface {
 
     public sonderzeichen?: SpecialCharacter
 
-    public aktuelleAnzeige?: IBISAnzeige
-    public aktuellerEntwerter?: IBISEntwerter
 
 
     // HAG
-    private HAGlastStatusQueriedTime?: Date
-    private HAGlastStatusReceivedTime?: Date
     private HAGstatus?: number
+
+    // Statusabfrage von Anzeigen, Entwertern und Haltestellenansage (ZRE4-Muster)
+    private statusAbfrage = new GeraeteStatusAbfrage(
+        (telegram, onSent) => this.sendTelegram(telegram, onSent),
+        (text) => this.throwError(text)
+    )
 
     // IRIS / Fahrzeuglesegerät FL2. Es ist immer nur ein FLG aktiv (A oder B).
     // Die Antworten (oS…, oD…, oZ…) enthalten kein A/B, deshalb ist immer nur eine
@@ -342,6 +345,7 @@ class IBISController implements IBISControllerInterface {
         this.registerSigns()
         this.registerUestraLVAs()
         this.registerValidators()
+        this.registerHAG()
         if (this.timersInterrupted == false) {
             this.tick10Seconds()
             this.tick60Seconds()
@@ -358,6 +362,7 @@ class IBISController implements IBISControllerInterface {
                     this.tick60Seconds()
                 }
                 this.tick1Second()
+                this.statusAbfrage.tick()
                 let d = new Date()
                 if (d.getSeconds() % 10 == 0) {
                     this.tick10Seconds()
@@ -609,9 +614,22 @@ class IBISController implements IBISControllerInterface {
     private registerSigns() {
         for (let i = 0; i < this.deviceConfig.signs.length; i++) {
             if (this.deviceConfig.signs[i] == true) {
-                this.anzeigen.push(new IBISAnzeige(this, i as IBISAddress))
+                const anzeige = new IBISAnzeige(i as IBISAddress)
+                this.anzeigen.push(anzeige)
+                if (this.deviceConfig.query_device_status) this.statusAbfrage.add(anzeige)
             }
         }
+    }
+
+    private registerHAG() {
+        if (!this.deviceConfig.external_announcements) return
+        this.statusAbfrage.add({
+            name: 'Haltestellenansage',
+            fehlerText: 'H.ANSAG. DEF!',
+            abfrageTelegramm: () => TelegramGenerator.DS030(),
+            istAntwort: (telegram) => /^h[0-9]/.test(telegram as string),
+            onAntwort: (telegram) => { this.HAGstatus = parseInt(telegram.substring(1)) }
+        })
     }
 
     private registerUestraLVAs() {
@@ -626,7 +644,9 @@ class IBISController implements IBISControllerInterface {
     private registerValidators() {
         for (let i = 0; i < this.deviceConfig.validators.length; i++) {
             if (this.deviceConfig.validators[i] == true) {
-                this.entwerter.push(new IBISEntwerter(this, i as IBISAddress))
+                const entwerter = new IBISEntwerter(i as IBISAddress)
+                this.entwerter.push(entwerter)
+                if (this.deviceConfig.query_device_status) this.statusAbfrage.add(entwerter)
             }
         }
     }
@@ -640,22 +660,6 @@ class IBISController implements IBISControllerInterface {
         }
     }
 
-    private queryHAG() {
-        if (this.HAGstatus === undefined || this.HAGstatus == 0) {
-            this.sendTelegram(TelegramGenerator.DS030())
-            setTimeout(() => {
-                if (this.HAGlastStatusReceivedTime != undefined && (this.HAGlastStatusQueriedTime.getTime()) && (this.HAGlastStatusReceivedTime.getTime() - this.HAGlastStatusQueriedTime.getTime()) <= 6000) {
-                    // Is active, have received status
-                    Util.log("HAG OK")
-                } else {
-                    // Have not received status, throw error
-                    this.throwError("H.ANSAG. DEF!");
-                    Util.log("HAG FAIL")
-                    this.HAGstatus = null;
-                }
-            }, 6000);
-        }
-    }
 
     // Aktives FLG: nur eines konfiguriert -> dieses; beide -> nach aktivem Führerstand
     private getActiveIrisDirection(): 'A' | 'B' | undefined {
@@ -744,30 +748,6 @@ class IBISController implements IBISControllerInterface {
     }
 
 
-    // Status scanning logic
-    private queryStatusOfAllSigns() {
-        // TODO: Query status of sign, then wait for n seconds, then query next sign
-
-        this.aktuelleAnzeige = this.anzeigen[0]
-        this.aktuelleAnzeige.queryStatus()
-        for (let i = 1; i < this.anzeigen.length; i++) {
-            setTimeout(() => {
-                this.aktuelleAnzeige = this.anzeigen[i]
-                this.aktuelleAnzeige.queryStatus()
-            }, 5000 * i);
-        }
-    }
-    private queryStatusOfAllValidators() {
-        Util.log('Querying validators')
-        this.aktuellerEntwerter = this.entwerter[0]
-        this.aktuellerEntwerter.queryStatus()
-        for (let i = 1; i < this.entwerter.length; i++) {
-            setTimeout(() => {
-                this.aktuellerEntwerter = this.entwerter[i]
-                this.aktuellerEntwerter.queryStatus()
-            }, 5000 * i);
-        }
-    }
 
 
 
@@ -828,19 +808,8 @@ class IBISController implements IBISControllerInterface {
             this.bTerminal.onReceiveTelegram(telegram.substring(1))
         }
 
-        if (this.aktuelleAnzeige) {
-            // Currently have a sign active, if this is a reply, handle it
-            this.aktuelleAnzeige.onReceiveTelegram(telegram.substring(1))
-        }
-        if (this.aktuellerEntwerter) {
-            // Currently have a validator active, if this is a reply, handle it
-            this.aktuellerEntwerter.onReceiveTelegram(telegram.substring(1))
-        }
-
-        if (telegram.substring(1).match("h[0-9]")) {
-            this.HAGlastStatusReceivedTime = new Date()
-            this.HAGstatus = parseInt(telegram.substring(2))
-        }
+        // Statusantworten von Anzeigen, Entwertern, Haltestellenansage
+        this.statusAbfrage.onTelegram(telegram.substring(1))
 
         // IRIS/FLG-Antworten: oS…, oD…, oZ… (ohne A/B)
         if (telegram.substring(1).match(/^o[SDZ]/)) {
@@ -926,7 +895,17 @@ class IBISController implements IBISControllerInterface {
 
 
     tick10Seconds() {
+        // Fahrtdaten erst nach der Anmeldung (Linie gesetzt), wie die HPW ZRE4. Vorher würden
+        // Anzeigen und Entwerter mit Nullen gestellt.
+        if (this.linie) {
+            this.sendFahrtdaten()
+        }
 
+        // Ortung per IRIS (nur das aktive FLG)
+        this.queryIRIS();
+    }
+
+    private sendFahrtdaten() {
         // Kursnummer
         this.sendTelegram(TelegramGenerator.DS002(this.kurs))
         // Liniennummer
@@ -980,20 +959,6 @@ class IBISController implements IBISControllerInterface {
         } else {
             this.sendTelegram(TelegramGenerator.DS004(0, 0, 0));
         }
-        if (this.deviceConfig.query_device_status) {
-            if (this.anzeigen.length > 0) {
-                this.queryStatusOfAllSigns()
-            }
-            if (this.entwerter.length > 0) {
-                this.queryStatusOfAllValidators()
-            }
-        }
-        if (this.deviceConfig.external_announcements) {
-            this.queryHAG();
-        }
-
-        // Ortung per IRIS (nur das aktive FLG)
-        this.queryIRIS();
     }
 
     tick30Seconds() {
@@ -1165,6 +1130,12 @@ class IBISController implements IBISControllerInterface {
         // Optionally update distances to 0?
         this.locationController.currentDistLastStop = 0;
         this.locationController.currentDistNextStop = 0;
+
+        // Einmalig zurücksetzen; danach gehen bis zur nächsten Anmeldung keine Fahrtdaten raus
+        this.sendTelegram(TelegramGenerator.DS002(0))
+        this.sendTelegram(TelegramGenerator.DS001(0))
+        this.sendTelegram(TelegramGenerator.DS004a(0))
+        this.sendTelegram(TelegramGenerator.DS004(0, 0, 0))
 
         // Notify terminals
         if (this.aTerminal && this.aTerminal.isActive) {

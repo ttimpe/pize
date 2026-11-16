@@ -60,7 +60,8 @@ class IBISTelegramGenerator {
     // DS003a - Außenanzeigen Text
 
     static DS003a(text: string): IBISTelegram {
-        return 'zA' + Math.ceil(text.length / 16).toIBISHexString() + text.toIBISUppercase()
+        // Blockzahl als '0' + n (wie HPW ZRE4: zA4 bei 64 Zeichen), nicht toIBISHexString (47 + n)
+        return 'zA' + String.fromCharCode(0x30 + Math.ceil(text.length / 16)) + text.toIBISUppercase()
     }
 
     // DS003b - Ziel für ZUB / Fahrstraßenanforderung
@@ -70,7 +71,8 @@ class IBISTelegramGenerator {
 
     // DS003c - Haltestellenname
     static DS003c(name: string): IBISTelegram {
-        return 'zI' + Math.ceil(name.length / 4).toIBISHexString() + name.toIBISUppercase()
+        // Blockzahl als '0' + n (wie HPW ZRE4: zI4 bei 16 Zeichen)
+        return 'zI' + String.fromCharCode(0x30 + Math.ceil(name.length / 4)) + name.toIBISUppercase()
     }
 
     // DS003d - Routennummer für ZUB / Fahrstraßenanforderung
