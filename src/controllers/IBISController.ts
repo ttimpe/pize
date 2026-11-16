@@ -98,13 +98,14 @@ class IBISController implements IBISControllerInterface {
     private HAGlastStatusReceivedTime?: Date
     private HAGstatus?: number
 
-    // IRIS
-    private IRIS_A_LastStatusQueriedTime?: Date
-    private IRIS_A_LastStatusReceivedTime?: Date
-    private IRIS_B_LastStatusQueriedTime?: Date
-    private IRIS_B_LastStatusReceivedTime?: Date
-    private IRIS_A_Defect: boolean = false
-    private IRIS_B_Defect: boolean = false
+    // IRIS / Fahrzeuglesegerät FL2. Es ist immer nur ein FLG aktiv (A oder B).
+    // Die Antworten (oS…, oD…, oZ…) enthalten kein A/B, deshalb ist immer nur eine
+    // o-Abfrage offen und die Antwort gehört zu dieser.
+    private IRIS_RETRY_INTERVAL_MS = 1000
+    private IRIS_MAX_ATTEMPTS = 4
+    private irisDirection?: 'A' | 'B'
+    private irisPending?: { kommando: 'S' | 'D', versuch: number, timer?: NodeJS.Timeout }
+    private irisDefect: boolean = false
 
     // Websocket
     private websocket: WebSocketServer
@@ -245,7 +246,7 @@ class IBISController implements IBISControllerInterface {
     public stopIndex: number = 0
     public richtung: number = 0
 
-    private telegramSendQueue: IBISTelegram[] = []
+    private telegramSendQueue: { telegram: IBISTelegram, onSent?: () => void }[] = []
 
 
 
@@ -532,17 +533,9 @@ class IBISController implements IBISControllerInterface {
             Util.log('GPIO-Fehler OBI', err)
             return;
         }
-        // OBI triggert sofortige Datenabfrage (DS061)
-        Util.log("[GPIO] OBI Interrupt detected -> Requesting Data");
-        // Richtung abhängig von Fahrtrichtung/Terminal? 
-        // Wir fragen einfach das aktive Lesegerät ab oder beide wenn unsicher.
-        // IRIS Logic: C 'A' oder 'B'. Wir nehmen an, wir wissen welche aktiv ist.
-        if (this.deviceConfig.IRIS_A && (!this.IRIS_A_Defect)) {
-            this.sendTelegram(TelegramGenerator.DS061('A'));
-        }
-        if (this.deviceConfig.IRIS_B && (!this.IRIS_B_Defect)) {
-            this.sendTelegram(TelegramGenerator.DS061('B'));
-        }
+        // OBI: Bake erkannt -> sofort Status abfragen; bei Status 2 folgt die Datenabfrage
+        Util.log("[GPIO] OBI Interrupt detected -> IRIS-Status abfragen");
+        this.queryIRIS();
     }
 
     private interruptWegimpuls(err: Error | null, value: number) {
@@ -664,32 +657,90 @@ class IBISController implements IBISControllerInterface {
         }
     }
 
-    private queryIRIS(direction: 'A' | 'B') {
-        const isA = direction === 'A';
-        if (isA ? this.IRIS_A_Defect : this.IRIS_B_Defect) return; // Schon defekt
+    // Aktives FLG: nur eines konfiguriert -> dieses; beide -> nach aktivem Führerstand
+    private getActiveIrisDirection(): 'A' | 'B' | undefined {
+        const a = !!this.deviceConfig.IRIS_A
+        const b = !!this.deviceConfig.IRIS_B
+        if (a && b) return (this.bTerminal && this.bTerminal.isActive) ? 'B' : 'A'
+        if (a) return 'A'
+        if (b) return 'B'
+        return undefined
+    }
 
-        if (isA) this.IRIS_A_LastStatusQueriedTime = new Date();
-        else this.IRIS_B_LastStatusQueriedTime = new Date();
+    // Status des aktiven FLG abfragen (DS060). Läuft schon eine Abfrage, wird nichts gesendet.
+    private queryIRIS() {
+        const direction = this.getActiveIrisDirection()
+        if (!direction || this.irisPending) return
+        if (direction !== this.irisDirection) {
+            // Neues/anderes FLG: IR-Empfang einschalten. Nach dem Einschalten des FLG ist er
+            // aus (Status 0), erst oxE schaltet ihn ein.
+            this.irisDirection = direction
+            this.sendTelegram(TelegramGenerator.DS063(direction))
+        }
+        this.sendIrisRequest('S', 1)
+    }
 
-        this.sendTelegram(TelegramGenerator.DS060(direction));
+    // Sendet oxS/oxD und wiederholt ohne Antwort bis zu IRIS_MAX_ATTEMPTS-mal im Abstand von
+    // IRIS_RETRY_INTERVAL_MS (wie die HPW ZRE4). Erst danach gilt das FLG als defekt.
+    private sendIrisRequest(kommando: 'S' | 'D', versuch: number) {
+        const direction = this.irisDirection
+        if (!direction) return
+        const telegram = kommando === 'S' ? TelegramGenerator.DS060(direction) : TelegramGenerator.DS061(direction)
+        const pending: { kommando: 'S' | 'D', versuch: number, timer?: NodeJS.Timeout } = { kommando, versuch }
+        this.irisPending = pending
+        // Wartezeit erst ab dem tatsächlichen Senden, nicht ab dem Einreihen
+        this.sendTelegram(telegram, () => {
+            if (this.irisPending !== pending) return
+            pending.timer = setTimeout(() => {
+                if (this.irisPending !== pending) return
+                this.irisPending = undefined
+                if (versuch < this.IRIS_MAX_ATTEMPTS) {
+                    this.sendIrisRequest(kommando, versuch + 1)
+                } else if (!this.irisDefect) {
+                    this.irisDefect = true
+                    Util.log(`IRIS ${direction} DEFEKT! Keine Antwort nach ${versuch} Versuchen.`)
+                    this.throwError(`IRIS.   DEF.1:${direction}`)
+                }
+            }, this.IRIS_RETRY_INTERVAL_MS)
+        })
+    }
 
-        setTimeout(() => {
-            const lastReceived = isA ? this.IRIS_A_LastStatusReceivedTime : this.IRIS_B_LastStatusReceivedTime;
-            const lastQueried = isA ? this.IRIS_A_LastStatusQueriedTime : this.IRIS_B_LastStatusQueriedTime;
-            const hasRecentResponse = lastReceived && lastQueried && (lastReceived.getTime() > lastQueried.getTime());
+    private onIrisResponse(telegram: string) {
+        const pending = this.irisPending
+        const direction = this.irisDirection
+        if (!pending || !direction) return // keine offene Abfrage -> nicht von uns
+        if (pending.timer) clearTimeout(pending.timer)
+        this.irisPending = undefined
+        if (this.irisDefect) {
+            this.irisDefect = false
+            Util.log(`IRIS ${direction} antwortet wieder.`)
+        }
 
-            if (!hasRecentResponse) {
-                // Defect Detected
-                Util.log(`IRIS ${direction} DEFEKT! Keine Antwort.`);
-                this.throwError(`IRIS.   DEF.1:${direction}`);
-                if (isA) this.IRIS_A_Defect = true;
-                else this.IRIS_B_Defect = true;
-            } else {
-                // OK
-                if (isA) this.IRIS_A_Defect = false;
-                else this.IRIS_B_Defect = false;
+        // DS160 Status: oS0 = IR-Empfang aus, oS1 = ein/nichts Neues, oS2 = neue Bake
+        const status = telegram.match(/^oS([012])$/)
+        if (status) {
+            if (status[1] === '0') {
+                this.sendTelegram(TelegramGenerator.DS063(direction))
+            } else if (status[1] === '2') {
+                Util.log(`IRIS ${direction}: neue Bake, Daten abfragen (DS061)`)
+                this.sendIrisRequest('D', 1)
             }
-        }, 6000);
+            return
+        }
+
+        // DS161 Daten: oD + 4/5 Byte bzw. oZ + 7 Byte, je Nibble '0' + Wert (':'…'?' = A–F)
+        const daten = telegram.match(/^o([DZ])([0-?]+)$/)
+        if (daten) {
+            // Nach einer Bake schaltet das FLG den IR-Empfang ab; oxE schaltet ihn wieder ein
+            this.sendTelegram(TelegramGenerator.DS063(direction))
+            const hex = Array.from(daten[2]).map(c => (c.charCodeAt(0) - 0x30).toString(16)).join('').toUpperCase()
+            // oD: Byte 0 ist Telegrammkennung/Flags (z.B. C2), der Code steht in Byte 1–n.
+            // oZ: das FLG lässt Byte 0 (E0) bereits weg.
+            // ANNAHME: ORMACODE = diese Bytes als Hex-Zahl; gegen REC_OM noch nicht geprüft.
+            const code = daten[1] === 'D' ? hex.substring(2) : hex
+            Util.log(`IRIS ${direction}: Bake o${daten[1]} roh=${hex} code=${code}`)
+            this.locationController.onBeaconDetected(code, direction)
+        }
     }
 
 
@@ -745,27 +796,11 @@ class IBISController implements IBISControllerInterface {
             if (this.aTerminal.currentDisplayMode == TerminalDisplayMode.None) {
                 this.aTerminal.refreshText()
             }
-            // IRIS Power Management
-            if (this.deviceConfig.IRIS_A) {
-                if (this.aTerminal.isActive) {
-                    this.sendTelegram(TelegramGenerator.DS063('A'));
-                } else {
-                    this.sendTelegram(TelegramGenerator.DS064('A'));
-                }
-            }
         }
         if (this.bTerminal) {
             this.bTerminal.updateSecondLine()
             if (this.bTerminal.currentDisplayMode == TerminalDisplayMode.None) {
                 this.bTerminal.refreshText()
-            }
-            // IRIS Power Management
-            if (this.deviceConfig.IRIS_B) {
-                if (this.bTerminal.isActive) {
-                    this.sendTelegram(TelegramGenerator.DS063('B'));
-                } else {
-                    this.sendTelegram(TelegramGenerator.DS064('B'));
-                }
             }
         }
     }
@@ -807,33 +842,9 @@ class IBISController implements IBISControllerInterface {
             this.HAGstatus = parseInt(telegram.substring(2))
         }
 
-        // IRIS DS160 (Status) - o[A/B][0/1/2]
-        // Example: oA0 (Idle), oA1 (Data), oA2 (Changed)
-        if (telegram.substring(1).match(/^o[AB][012]$/)) {
-            const direction = telegram.substring(2, 3) as 'A' | 'B';
-            const status = parseInt(telegram.substring(3, 4));
-
-            if (direction === 'A') {
-                this.IRIS_A_LastStatusReceivedTime = new Date();
-                this.IRIS_A_Defect = false;
-            } else {
-                this.IRIS_B_LastStatusReceivedTime = new Date();
-                this.IRIS_B_Defect = false;
-            }
-
-            if (status === 1 || status === 2) {
-                // Data available, query it!
-                Util.log(`IRIS ${direction} has data (Status ${status}). Requesting DS061...`);
-                this.sendTelegram(TelegramGenerator.DS061(direction));
-            }
-        }
-
-        // IRIS DS161 (Data) - o[A/B]D[Hex8]
-        // Example: oAD00000FA3
-        if (telegram.substring(1).match(/^o[AB]D[0-9A-Fa-f]{8}$/)) {
-            const direction = telegram.substring(2, 3);
-            const hexCode = telegram.substring(4);
-            this.locationController.onBeaconDetected(hexCode, direction);
+        // IRIS/FLG-Antworten: oS…, oD…, oZ… (ohne A/B)
+        if (telegram.substring(1).match(/^o[SDZ]/)) {
+            this.onIrisResponse(telegram.substring(1))
         }
 
 
@@ -841,7 +852,8 @@ class IBISController implements IBISControllerInterface {
         // Throw errors for missing devices
     }
 
-    sendTelegram(telegram: IBISTelegram) {
+    // onSent wird aufgerufen, wenn das Telegramm vollständig übertragen ist
+    sendTelegram(telegram: IBISTelegram, onSent?: () => void) {
         telegram = telegram.replaceAll("ä", "{")
         telegram = telegram.replaceAll("ö", "|")
         telegram = telegram.replaceAll("ü", "}")
@@ -851,17 +863,19 @@ class IBISController implements IBISControllerInterface {
         telegram = telegram.replaceAll("Ü", "]")
 
         const signedTelegram = this.signTelegram(telegram + '\r')
-        this.telegramSendQueue.push(signedTelegram)
+        this.telegramSendQueue.push({ telegram: signedTelegram, onSent })
     }
 
     // Sendet das nächste Telegramm und plant das folgende erst, wenn dieses vollständig
     // übertragen ist (berechnet, da USB-Seriell-Wandler tcdrain oft zu früh melden) plus Pause.
     private processSendQueue() {
-        const telegram = this.telegramSendQueue.shift()
+        const entry = this.telegramSendQueue.shift()
         let delay = this.IBIS_QUEUE_SEND_INTERVAL_MS
-        if (telegram !== undefined) {
-            this.actuallySendTelegram(telegram)
-            delay = Math.ceil(telegram.length * this.IBIS_MS_PER_CHAR) + this.IBIS_INTER_TELEGRAM_GAP_MS
+        if (entry !== undefined) {
+            this.actuallySendTelegram(entry.telegram)
+            const sendeDauer = Math.ceil(entry.telegram.length * this.IBIS_MS_PER_CHAR)
+            delay = sendeDauer + this.IBIS_INTER_TELEGRAM_GAP_MS
+            if (entry.onSent) setTimeout(entry.onSent, sendeDauer)
         }
         this.queueSendTimer = setTimeout(() => this.processSendQueue(), delay)
     }
@@ -978,13 +992,8 @@ class IBISController implements IBISControllerInterface {
             this.queryHAG();
         }
 
-        // Ortung per IRIS
-        if (this.deviceConfig.IRIS_A) {
-            this.queryIRIS('A');
-        }
-        if (this.deviceConfig.IRIS_B) {
-            this.queryIRIS('B');
-        }
+        // Ortung per IRIS (nur das aktive FLG)
+        this.queryIRIS();
     }
 
     tick30Seconds() {
